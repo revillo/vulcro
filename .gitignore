@@ -1,0 +1,11 @@
+Debug
+HelloVulkan.VC.db
+HelloVulkan/Debug
+.vs
+
+*.log
+*.tlog
+*.objls
+*.opendb
+*.db
+*.VC.db
