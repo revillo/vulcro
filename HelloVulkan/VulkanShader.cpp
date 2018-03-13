@@ -21,7 +21,7 @@ void readFile(const char * filepath, uint64 &size, uint32 ** data) {
 }
 
 
-VulkanShader::VulkanShader(VulkanContextRef ctx, const char * vertPath, const char * fragPath) :
+VulkanShader::VulkanShader(VulkanContextRef ctx, const char * name, const char * vertPath, const char * fragPath) :
 	_ctx(ctx)
 { 
 
@@ -29,7 +29,7 @@ VulkanShader::VulkanShader(VulkanContextRef ctx, const char * vertPath, const ch
 	uint32 *vdata;
 	readFile(vertPath, vsize, &vdata);
 
-	auto vertModule = _ctx->getDevice().createShaderModule(
+	_vertModule = _ctx->getDevice().createShaderModule(
 		vk::ShaderModuleCreateInfo(
 			vk::ShaderModuleCreateFlags(),
 			vsize,
@@ -41,7 +41,7 @@ VulkanShader::VulkanShader(VulkanContextRef ctx, const char * vertPath, const ch
 	uint32 *fdata;
 	readFile(fragPath, fsize, &fdata);
 
-	auto fragModule = _ctx->getDevice().createShaderModule(
+	_fragModule = _ctx->getDevice().createShaderModule(
 		vk::ShaderModuleCreateInfo(
 			vk::ShaderModuleCreateFlags(),
 			fsize,
@@ -49,9 +49,29 @@ VulkanShader::VulkanShader(VulkanContextRef ctx, const char * vertPath, const ch
 		)
 	);
 
-
-
 	//delete data?
+	
+
+	_stages.push_back(
+		vk::PipelineShaderStageCreateInfo(
+			vk::PipelineShaderStageCreateFlags(),
+			vk::ShaderStageFlagBits::eVertex,
+			_vertModule,
+			name,
+			nullptr
+		)
+	);
+
+
+	_stages.push_back(
+		vk::PipelineShaderStageCreateInfo(
+			vk::PipelineShaderStageCreateFlags(),
+			vk::ShaderStageFlagBits::eFragment,
+			_vertModule,
+			name,
+			nullptr
+		)
+	);
 	
 }
 

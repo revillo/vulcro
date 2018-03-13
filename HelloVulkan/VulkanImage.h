@@ -12,6 +12,7 @@ public:
 	VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format);
 
 	void createImageView(vk::ImageAspectFlags aspectFlags);
+	void allocateDeviceMemory();
 
 	vk::Format getFormat() {
 		return _format;

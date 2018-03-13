@@ -22,6 +22,36 @@ VulkanImage::VulkanImage(VulkanContextRef ctx, glm::ivec2 size, vk::Format forma
 
 }
 
+void VulkanImage::allocateDeviceMemory()
+{
+	auto memProps = _ctx->getPhysicalDevice().getMemoryProperties();
+
+
+	auto req = _ctx->getDevice().getImageMemoryRequirements(_image);
+
+	uint32 memTypeIndex = 1000;
+	auto reqBits = req.memoryTypeBits;
+	auto p = vk::MemoryPropertyFlagBits::eDeviceLocal;
+
+
+	for (int i = 0; i < memProps.memoryTypeCount; i++) {
+		auto type = memProps.memoryTypes[i];
+		if ((reqBits >> i) && (type.propertyFlags & p) == p) {
+
+			memTypeIndex = i;
+			break;
+		}
+	}
+
+
+	auto memory = _ctx->getDevice().allocateMemory(
+		vk::MemoryAllocateInfo(req.size, memTypeIndex)
+	);
+
+	_ctx->getDevice().bindImageMemory(_image, memory, 0);
+
+}
+
 VulkanImage::VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format)
 	:_ctx(ctx),
 	_format(format),

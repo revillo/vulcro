@@ -4,6 +4,9 @@
 #include "VulkanImage.h"
 #include "VulkanSwapchain.h"
 
+#include "VulkanShader.h"
+#include "VulkanBuffer.h"
+
 class VulkanRenderer
 {
 public:
@@ -11,6 +14,7 @@ public:
 
 	void createDepthBuffer();
 	void createSurfaceRenderPass(VulkanSwapchainRef swapchain);
+	void createGraphicsPipeline();
 
 
 	~VulkanRenderer();
@@ -23,6 +27,7 @@ private:
 	VulkanContextRef _ctx;
 	VulkanImageRef _depthImage;
 	vk::RenderPass _renderPass;
+	vk::Pipeline _pipeline;
 };
 
 typedef shared_ptr<VulkanRenderer>  VulkanRendererRef;

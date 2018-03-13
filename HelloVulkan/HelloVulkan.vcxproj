@@ -157,6 +157,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="VulkanBuffer.cpp" />
     <ClCompile Include="VulkanContext.cpp" />
     <ClCompile Include="VulkanImage.cpp" />
     <ClCompile Include="VulkanRenderer.cpp" />
@@ -166,6 +167,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="General.h" />
+    <ClInclude Include="VulkanBuffer.h" />
     <ClInclude Include="VulkanContext.h" />
     <ClInclude Include="VulkanImage.h" />
     <ClInclude Include="VulkanRenderer.h" />
