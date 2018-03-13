@@ -1,8 +1,7 @@
 #pragma once
 
-#include "vulkan\vulkan.hpp"
 #include "VulkanContext.h"
-#include "General.h"
+#include "VulkanImage.h"
 
 class VulkanSwapchain
 {
@@ -13,15 +12,27 @@ public:
 
 	void init(vk::SurfaceKHR surface);
 
+	vk::Format getFormat() {
+		return _format;
+	}
+
+	uint32 numImages() {
+		return _images.size();
+	}
+
+
+	vector<VulkanImageRef> getImages() {
+		return _images;
+	}
 
 private:
 
 	VulkanContextRef _ctx;
-
+	vk::SurfaceKHR _surface;
 	vk::SwapchainKHR _swapchain;
-	vector<vk::ImageView> _imageViews;
-
-	bool swapchainPresent = false;
+	vector<VulkanImageRef> _images;
+	vk::Format _format;
+	bool swapchainInited = false;
 
 };
 

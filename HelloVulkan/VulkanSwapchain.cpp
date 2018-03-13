@@ -7,6 +7,7 @@ void VulkanSwapchain::init(vk::SurfaceKHR surface) {
 	auto surfCap = physicalDevice.getSurfaceCapabilitiesKHR(surface);
 	auto surfFormats = physicalDevice.getSurfaceFormatsKHR(surface);
 	auto presentModes = physicalDevice.getSurfacePresentModesKHR(surface);
+	_format = surfFormats[0].format;
 
 	auto presentMode = vk::PresentModeKHR::eImmediate;
 
@@ -26,7 +27,7 @@ void VulkanSwapchain::init(vk::SurfaceKHR surface) {
 			vk::SwapchainCreateFlagsKHR(),
 			surface,
 			surfCap.minImageCount,
-			surfFormats[0].format,
+			_format,
 			surfFormats[0].colorSpace,
 			surfCap.currentExtent,
 			1, // imageArrayLayers
@@ -38,47 +39,25 @@ void VulkanSwapchain::init(vk::SurfaceKHR surface) {
 			vk::CompositeAlphaFlagBitsKHR::eOpaque,
 			presentMode,
 			VK_TRUE, // Clipping
-			swapchainPresent ? _swapchain : NULL //TODO, pass in old swapchain
+			swapchainInited ? _swapchain : vk::SwapchainKHR()
 		)
 	);
 
 
 	auto swapImages = _ctx->getDevice().getSwapchainImagesKHR(_swapchain);
-	vk::ComponentMapping cmap;
-	cmap.r = vk::ComponentSwizzle::eR;
-	cmap.g = vk::ComponentSwizzle::eG;
-	cmap.b = vk::ComponentSwizzle::eB;
-	cmap.a = vk::ComponentSwizzle::eA;
-
-	vk::ImageSubresourceRange irange;
-	irange.baseMipLevel = 0;
-	irange.levelCount = 1;
-	irange.setBaseArrayLayer(0);
-	irange.layerCount = 1;
-
-	for (int i = 0; i < swapImages.size(); i++) {
-
-		_imageViews.push_back(_ctx->getDevice().createImageView(
-			vk::ImageViewCreateInfo(
-				vk::ImageViewCreateFlags(),
-				swapImages[i],
-				vk::ImageViewType::e2D,
-				surfFormats[0].format,
-				cmap,
-				irange
-			)
-		));
-
-
+	
+	for (auto swapImage : swapImages) {
+		auto vi = make_shared<VulkanImage>(_ctx, swapImage, ivec2(surfCap.currentExtent.width, surfCap.currentExtent.height), _format);
+		vi->createImageView(vk::ImageAspectFlagBits::eColor);
+		_images.push_back(vi);
 	}
 
-
-	swapchainPresent = true;
-
+	swapchainInited = true;
 }
 
 VulkanSwapchain::VulkanSwapchain(VulkanContextRef ctx, vk::SurfaceKHR surface) :
-	_ctx(ctx)
+	_ctx(ctx),
+	_surface(surface)
 {
 	init(surface);
 }
