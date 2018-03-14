@@ -11,6 +11,8 @@ class VulkanBuffer
 public:
 	VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, void* data);
 	~VulkanBuffer();
+	void bind(vk::CommandBuffer &cmd);
+
 private:
 
 	vk::DeviceMemory _memory;

@@ -6,20 +6,26 @@ VulkanRenderer::VulkanRenderer(VulkanContextRef ctx, ivec2 size) :
 	_ctx(ctx),
 	_size(size)
 {
-	createDepthBuffer();
+	//createDepthBuffer();
 }
 
 void VulkanRenderer::createDepthBuffer() {
-	auto imgRef = make_shared<VulkanImage>(_ctx, _size, vk::Format::eD16Unorm, vk::ImageUsageFlagBits::eDepthStencilAttachment);
+	
+	const vk::Rect2D rect = _swapchain->getRect();
+	
+	 _depthImage = make_shared<VulkanImage>(_ctx, glm::ivec2(rect.extent.width, rect.extent.height), vk::Format::eD16Unorm, vk::ImageUsageFlagBits::eDepthStencilAttachment);
 
-	imgRef->allocateDeviceMemory();
-	imgRef->createImageView(vk::ImageAspectFlagBits::eDepth);
+	_depthImage->allocateDeviceMemory();
+	_depthImage->createImageView(vk::ImageAspectFlagBits::eDepth);
 
-	_depthImage = imgRef;
+
 }
 
 void VulkanRenderer::createSurfaceRenderPass(VulkanSwapchainRef swapchain)
 {
+	_swapchain = swapchain;
+
+	createDepthBuffer();
 
 	vk::AttachmentDescription attachments[2] = {
 		vk::AttachmentDescription(
@@ -83,9 +89,156 @@ void VulkanRenderer::createSurfaceRenderPass(VulkanSwapchainRef swapchain)
 		)
 	);
 
-
-
 	createSurfaceFramebuffer(swapchain);
+}
+
+struct Vertex {
+	glm::vec4 position;
+	glm::vec4 color;
+};
+
+void VulkanRenderer::renderTriangle() {
+
+	Vertex vs[3] = {
+		Vertex({
+		glm::vec4(0, -0.5, 0.0, 1),
+		glm::vec4(1, 0, 0.5, 1)
+			}),
+
+		Vertex({
+		glm::vec4(0.5, 0.5, 0.0, 1),
+		glm::vec4(1, 0, 0, 1)
+			}),
+
+		Vertex({
+		glm::vec4(-0.5, 0.5, 0.0, 1),
+		glm::vec4(1, 1, 0, 1)
+			})
+	};
+
+
+	auto vbuffer = make_shared<VulkanBuffer>(
+		_ctx,
+		vk::BufferUsageFlagBits::eVertexBuffer,
+		sizeof(Vertex) * 3,
+		&vs[0]
+	);
+
+	vk::CommandBufferBeginInfo bgi;
+	_ctx->cmd().begin(&bgi);
+
+	const std::array<float, 4> clearColor = { 0.2f, 0.5f, 0.4f, 1.0f };
+
+
+	vk::ClearValue clears[2] = {
+		vk::ClearColorValue(clearColor),
+		vk::ClearDepthStencilValue(1.0f, 0)
+	};
+
+	const vk::Rect2D swapRect = _swapchain->getRect();
+
+	uint32 swapchainImageIndex = _swapchain->getNextIndex();
+
+	_ctx->cmd().beginRenderPass(
+		vk::RenderPassBeginInfo(
+			_renderPass,
+			_framebuffers[swapchainImageIndex],
+			swapRect,
+			2,
+			clears
+		), 
+
+		vk::SubpassContents::eInline
+	);
+
+	_ctx->cmd().bindPipeline(
+		vk::PipelineBindPoint::eGraphics,
+		_pipeline
+	);
+
+	/*
+	_ctx->cmd().bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics,
+		_pipelineLayout,
+		0,
+		0,
+		nullptr,
+		0,
+		nullptr);
+	*/
+
+
+	vbuffer->bind(_ctx->cmd());
+
+	auto viewport = vk::Viewport(
+		0.0f,
+		0.0f,
+		(float)swapRect.extent.width,
+		(float)swapRect.extent.height,
+		0.0,
+		1.0
+	);
+
+	_ctx->cmd().setViewport(
+		0,
+		1,
+		&viewport
+	);
+
+
+	_ctx->cmd().setScissor(
+		0, 1, &swapRect
+	);
+
+	_ctx->cmd().draw(3, 1, 0, 0);
+
+	_ctx->cmd().endRenderPass();
+	
+
+	_ctx->cmd().end();
+
+	vk::PipelineStageFlags wait_flags = vk::PipelineStageFlagBits::eBottomOfPipe;
+
+	auto submit = vk::SubmitInfo(
+		1,
+		&_swapchain->getSempahore(),
+		&wait_flags,
+		1,
+		&_ctx->cmd(),
+		0,
+		nullptr
+	);
+
+	auto drawfence = _ctx->getDevice().createFence(
+		vk::FenceCreateInfo()
+	);
+
+	_ctx->getQueue().submit(
+		1,
+		&submit,
+		drawfence
+	);
+
+
+	vk::Result res;
+	
+	do {
+		res = _ctx->getDevice().waitForFences(1, &drawfence, VK_TRUE, 100000000);
+	} while (res == vk::Result::eTimeout);
+	
+
+	_ctx->getQueue().presentKHR(
+		vk::PresentInfoKHR(
+			0,
+			nullptr,
+			1,
+			&_swapchain->getSwapchain(),
+			&swapchainImageIndex,
+			nullptr
+		)
+	);
+
+
 }
 
 void VulkanRenderer::createGraphicsPipeline() {
@@ -93,42 +246,10 @@ void VulkanRenderer::createGraphicsPipeline() {
 
 	auto shader = make_shared<VulkanShader>(
 			_ctx,
-		"red",
 		"shaders/redv.spv",
 		"shaders/redf.spv"
-		);
-
-
-	struct Vertex {
-		glm::vec4 position;
-		glm::vec4 color;
-	};
-
-	
-	Vertex vs[3] = {
-		Vertex({
-			glm::vec4(0, 0, 0, 1), 
-			glm::vec4(1, 0, 0, 1)
-		}),
-
-		Vertex({
-			glm::vec4(1, 1, 0, 1),
-			glm::vec4(1, 0, 1, 1)
-		}),
-
-		Vertex({
-			glm::vec4(-1, 1, 0, 1),
-			glm::vec4(1, 1, 0, 1)
-		})
-	};
-
-
-	auto vbuffer = make_shared<VulkanBuffer>(
-		_ctx, 
-		vk::BufferUsageFlagBits::eVertexBuffer, 
-		sizeof(Vertex) * 3, 
-		&vs[0]
 	);
+
 
 	auto vi_binding = vk::VertexInputBindingDescription(
 		0,
@@ -165,17 +286,17 @@ void VulkanRenderer::createGraphicsPipeline() {
 
 	
 	//Dynamic States?
-	vk::DynamicState dynamicStateEnables[4];
+	vk::DynamicState dynamicStateEnables[2];
 	memset(dynamicStateEnables, 0, sizeof dynamicStateEnables);
 
 	auto dynamicState = vk::PipelineDynamicStateCreateInfo(
 		vk::PipelineDynamicStateCreateFlags(),
-		0,
+		2,
 		dynamicStateEnables
 	);
 
 
-	auto vas = vk::PipelineInputAssemblyStateCreateInfo(
+	auto ias = vk::PipelineInputAssemblyStateCreateInfo(
 		vk::PipelineInputAssemblyStateCreateFlags(),
 		vk::PrimitiveTopology::eTriangleList,
 		VK_FALSE // RESTART
@@ -184,7 +305,7 @@ void VulkanRenderer::createGraphicsPipeline() {
 
 	auto rs = vk::PipelineRasterizationStateCreateInfo(
 		vk::PipelineRasterizationStateCreateFlags(),
-		VK_TRUE, // DEPTH CLAMP
+		VK_FALSE, // DEPTH CLAMP
 		VK_FALSE, // DISCARD
 		vk::PolygonMode::eFill,
 		vk::CullModeFlagBits::eNone,
@@ -231,7 +352,18 @@ void VulkanRenderer::createGraphicsPipeline() {
 	);
 
 
-	auto cbas = vk::PipelineColorBlendAttachmentState();
+	auto cbas = vk::PipelineColorBlendAttachmentState(
+		VK_FALSE, //Color Blend
+			vk::BlendFactor::eZero, //src blend factor
+			vk::BlendFactor::eZero, //dst blend factor
+			vk::BlendOp::eAdd,
+			vk::BlendFactor::eZero, //src alpha
+			vk::BlendFactor::eZero, //dest alpha
+			vk::BlendOp::eAdd,
+			vk::ColorComponentFlags()
+		);
+
+	const std::array<float, 4> blendConstants = { 1.0, 1.0, 1.0, 1.0 };
 
 	auto cbs = vk::PipelineColorBlendStateCreateInfo(
 		vk::PipelineColorBlendStateCreateFlags(),
@@ -239,22 +371,14 @@ void VulkanRenderer::createGraphicsPipeline() {
 		vk::LogicOp::eNoOp,
 		1,
 		&cbas,
-		{1,1,1,1}
+		blendConstants
 	);
 
 	dynamicStateEnables[0] = vk::DynamicState::eViewport;
 	dynamicStateEnables[1] = vk::DynamicState::eScissor;
 
-	/*
-	, pDynamicState(pDynamicState_)
-		, layout(layout_)
-		, renderPass(renderPass_)
-		, subpass(subpass_)
-		, basePipelineHandle(basePipelineHandle_)
-		, basePipelineIndex(basePipelineIndex_)
-		*/
 
-	vk::PipelineLayout layout = _ctx->getDevice().createPipelineLayout(
+	_pipelineLayout = _ctx->getDevice().createPipelineLayout(
 		vk::PipelineLayoutCreateInfo(
 			vk::PipelineLayoutCreateFlags(),
 			0,
@@ -265,13 +389,13 @@ void VulkanRenderer::createGraphicsPipeline() {
 	);
 
 	 _pipeline =  _ctx->getDevice().createGraphicsPipeline(
-		vk::PipelineCache(),
+		nullptr,
 		vk::GraphicsPipelineCreateInfo(
 			vk::PipelineCreateFlags(),
 			2,
 			&shader->getStages()[0],
 			&vis,
-			&vas,
+			&ias,
 			nullptr, //Tesselation State
 			&vps,
 			&rs,
@@ -279,13 +403,13 @@ void VulkanRenderer::createGraphicsPipeline() {
 			&dss,
 			&cbs,
 			&dynamicState,
-			layout,
+			_pipelineLayout,
 			_renderPass,
 			0, //Subpass
-			VK_NULL_HANDLE, //base pipeline handle
+			nullptr, //base pipeline handle
 			0 //base pipeline index
 		)
-	);
+	 );
 
 
 }
@@ -306,16 +430,22 @@ void VulkanRenderer::createSurfaceFramebuffer(VulkanSwapchainRef swapchain)
 			_depthImage->getImageView()
 		};
 
-		_ctx->getDevice().createFramebuffer(
-			vk::FramebufferCreateInfo(
-				vk::FramebufferCreateFlags(),
-				_renderPass,
-				2,
-				fbAttachments,
-				img->getSize().x,
-				img->getSize().y,
-				1
+
+
+		_framebuffers.push_back(
+
+			_ctx->getDevice().createFramebuffer(
+				vk::FramebufferCreateInfo(
+					vk::FramebufferCreateFlags(),
+					_renderPass,
+					2,
+					fbAttachments,
+					img->getSize().x,
+					img->getSize().y,
+					1
+				)
 			)
+
 		);
 	}
 }

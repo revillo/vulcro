@@ -34,8 +34,12 @@ public:
 
 	void run();
 
-	std::shared_ptr<VulkanContext> getContext() {
+	VulkanContextRef getContext() {
 		return _vulkanContext;
+	}
+
+	vk::SurfaceKHR &getSurface() {
+		return _surfaceKHR;
 	}
 
 	~VulkanWindow();
@@ -46,8 +50,6 @@ private:
 	SDL_Window* _window = nullptr;
 	
 	VulkanContextRef _vulkanContext = nullptr;
-	VulkanSwapchainRef _vulkanSwapchain = nullptr;
-	VulkanRendererRef _vulkanRenderer = nullptr;
 
 	int initWindow();
 

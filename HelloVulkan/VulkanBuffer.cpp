@@ -25,13 +25,14 @@ VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uin
 
 	uint32 memTypeIndex = 1000;
 	auto reqBits = memReqs.memoryTypeBits;
-	auto p = vk::MemoryPropertyFlagBits::eDeviceLocal;
 	auto memProps = _ctx->getPhysicalDevice().getMemoryProperties();
-
-
-	for (int i = 0; i < memProps.memoryTypeCount; i++) {
+	
+	vk::MemoryPropertyFlags propMask = vk::MemoryPropertyFlagBits::eHostVisible;
+	propMask |= vk::MemoryPropertyFlagBits::eHostCoherent;
+	
+	for (uint32 i = 0; i < memProps.memoryTypeCount; i++) {
 		auto type = memProps.memoryTypes[i];
-		if ((reqBits >> i) && (type.propertyFlags & p) == p) {
+		if ((reqBits & (1 << i)) && (type.propertyFlags & propMask) == propMask) {
 
 			memTypeIndex = i;
 			break;
@@ -46,17 +47,17 @@ VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uin
 	);
 
 
-	uint8 * pDevData;
+	uint8 * pData;
 
 	_ctx->getDevice().mapMemory(
 		_memory,
 		0,
 		memReqs.size,
 		vk::MemoryMapFlags(),
-		(void **)&pDevData
+		(void **)&pData
 	);
 
-	memcpy(pDevData, data, size);
+	memcpy(pData, data, size);
 
 	_ctx->getDevice().unmapMemory(
 		_memory
@@ -73,4 +74,16 @@ VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uin
 
 VulkanBuffer::~VulkanBuffer()
 {
+}
+
+void VulkanBuffer::bind(vk::CommandBuffer &cmd)
+{
+	vk::DeviceSize offsets[1] = { 0 };
+
+	cmd.bindVertexBuffers(
+		0,
+		1,
+		&_buffer,
+		offsets
+	);
 }

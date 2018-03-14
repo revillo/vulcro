@@ -1,13 +1,24 @@
 #include "VulkanSwapchain.h"
 
+VulkanSwapchain::VulkanSwapchain(VulkanContextRef ctx, vk::SurfaceKHR surface) :
+	_ctx(ctx),
+	_surface(surface)
+{
+	init(surface);
+	createSemaphore();
+}
 
 void VulkanSwapchain::init(vk::SurfaceKHR surface) {
 	
 	auto &physicalDevice = _ctx->getPhysicalDevice();
+	
+	bool supported = physicalDevice.getSurfaceSupportKHR(0, surface);
+
 	auto surfCap = physicalDevice.getSurfaceCapabilitiesKHR(surface);
 	auto surfFormats = physicalDevice.getSurfaceFormatsKHR(surface);
 	auto presentModes = physicalDevice.getSurfacePresentModesKHR(surface);
 	_format = surfFormats[0].format;
+	_extent = surfCap.currentExtent;
 
 	auto presentMode = vk::PresentModeKHR::eImmediate;
 
@@ -53,14 +64,43 @@ void VulkanSwapchain::init(vk::SurfaceKHR surface) {
 	}
 
 	swapchainInited = true;
+
+	_fence = _ctx->getDevice().createFence(
+		vk::FenceCreateInfo()
+	);
+
+	
 }
 
-VulkanSwapchain::VulkanSwapchain(VulkanContextRef ctx, vk::SurfaceKHR surface) :
-	_ctx(ctx),
-	_surface(surface)
+void VulkanSwapchain::createSemaphore()
 {
-	init(surface);
+	_semaphore = _ctx->getDevice().createSemaphore(
+		vk::SemaphoreCreateInfo()
+	);
 }
+
+uint32 VulkanSwapchain::getNextIndex()
+{
+
+	auto ret = _ctx->getDevice().acquireNextImageKHR(
+		_swapchain,
+		UINT64_MAX,
+		_semaphore,
+		_fence
+	);
+
+	return ret.value;
+}
+
+vk::Rect2D VulkanSwapchain::getRect()
+{
+	return vk::Rect2D(
+		vk::Offset2D(0, 0),
+		_extent
+	);
+}
+
+
 
 VulkanSwapchain::~VulkanSwapchain()
 {

@@ -4,7 +4,7 @@
 class VulkanShader
 {
 public:
-	VulkanShader(VulkanContextRef ctx, const char * name, const char * vertPath, const char * fragPath);
+	VulkanShader(VulkanContextRef ctx, const char * vertPath, const char * fragPath);
 	~VulkanShader();
 
 	vector<vk::PipelineShaderStageCreateInfo> getStages() {

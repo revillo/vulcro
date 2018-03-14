@@ -21,14 +21,18 @@
 Vulkan C++ Windowed Project Template
 Create and destroy a Vulkan surface on an SDL window.
 */
-
 #include "VulkanWindow.h"
 
 int main()
 {
 	auto window = VulkanWindow(0, 0, 400, 400);
 	
-	auto ctx = window.getContext();
+	auto renderer = make_shared<VulkanRenderer>(window.getContext(), ivec2(0, 0));
+	auto swapchain = make_shared<VulkanSwapchain>(window.getContext(), window.getSurface());
+
+	renderer->createSurfaceRenderPass(swapchain);
+	renderer->createGraphicsPipeline();
+	renderer->renderTriangle();
 
 	window.run();
 

@@ -4,24 +4,26 @@
 
 void readFile(const char * filepath, uint64 &size, uint32 ** data) {
 
-	ifstream file(filepath, ios::out | ios::app | ios::binary);
+	ifstream file(filepath, ios::in | ios::binary);
 	char * memblock;
 
 	if (file.is_open()) {
+		// get length of file:
+		file.seekg(0, file.end);
 		size = file.tellg();
+		file.seekg(0, file.beg);
+
 		memblock = new char[size];
-		file.seekg(0, ios::beg);
 		file.read(memblock, size);
 		file.close();
 		*data = (uint32*)memblock;
 	}
 
-	file.close();
 
 }
 
 
-VulkanShader::VulkanShader(VulkanContextRef ctx, const char * name, const char * vertPath, const char * fragPath) :
+VulkanShader::VulkanShader(VulkanContextRef ctx, const char * vertPath, const char * fragPath) :
 	_ctx(ctx)
 { 
 
@@ -57,7 +59,7 @@ VulkanShader::VulkanShader(VulkanContextRef ctx, const char * name, const char *
 			vk::PipelineShaderStageCreateFlags(),
 			vk::ShaderStageFlagBits::eVertex,
 			_vertModule,
-			name,
+			"main",
 			nullptr
 		)
 	);
@@ -67,8 +69,8 @@ VulkanShader::VulkanShader(VulkanContextRef ctx, const char * name, const char *
 		vk::PipelineShaderStageCreateInfo(
 			vk::PipelineShaderStageCreateFlags(),
 			vk::ShaderStageFlagBits::eFragment,
-			_vertModule,
-			name,
+			_fragModule,
+			"main",
 			nullptr
 		)
 	);

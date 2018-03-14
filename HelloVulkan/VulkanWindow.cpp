@@ -82,13 +82,11 @@ int VulkanWindow::initWindow() {
 	// This is where most initialization for a program should be performed	
 
 	_vulkanContext = make_shared<VulkanContext>(_vkInstance);
-
-	_vulkanSwapchain = make_shared<VulkanSwapchain>(_vulkanContext, _surfaceKHR);
-
-	_vulkanRenderer = make_shared<VulkanRenderer>(_vulkanContext, ivec2(_width, _height));
 	
 	//_vulkanContext->createDepthImage(glm::ivec2(_width, _height));
 
+
+	return 0;
 }
 
 void VulkanWindow::run() {

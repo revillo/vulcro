@@ -15,7 +15,7 @@ public:
 	void createDepthBuffer();
 	void createSurfaceRenderPass(VulkanSwapchainRef swapchain);
 	void createGraphicsPipeline();
-
+	void renderTriangle();
 
 	~VulkanRenderer();
 
@@ -26,8 +26,12 @@ private:
 	ivec2 _size;
 	VulkanContextRef _ctx;
 	VulkanImageRef _depthImage;
+	VulkanSwapchainRef _swapchain;
+	
+	vector<vk::Framebuffer> _framebuffers;
 	vk::RenderPass _renderPass;
 	vk::Pipeline _pipeline;
+	vk::PipelineLayout _pipelineLayout;
 };
 
 typedef shared_ptr<VulkanRenderer>  VulkanRendererRef;

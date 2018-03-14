@@ -23,23 +23,31 @@ VulkanContext::VulkanContext(vk::Instance instance)
 	std::vector<const char*> extensions;
 
 	extensions.push_back("VK_KHR_swapchain");
+	
+	float qpriors[1] = { 0.0f };
 
-
-	auto devQ = vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), familyIndex, 1, { 0 });
+	auto devQ = vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), familyIndex, 1, qpriors);
 
 	_device = _physicalDevices[0].createDevice(
-		vk::DeviceCreateInfo(vk::DeviceCreateFlags(), 1, &devQ)
+		vk::DeviceCreateInfo(
+			vk::DeviceCreateFlags(),
+			1,
+			&devQ, 0, nullptr, 1, &extensions[0])
 	);
 
+
+	_queue = _device.getQueue(familyIndex, 0);
 
 	auto commandPool = _device.createCommandPool(
 		vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlags(), familyIndex)
 	);
 	
-	auto commandBuffer = _device.allocateCommandBuffers(
+	_cmd = _device.allocateCommandBuffers(
 		vk::CommandBufferAllocateInfo(commandPool, vk::CommandBufferLevel::ePrimary, 1)
-	);
+	)[0];
 }
+
+
 
 
 

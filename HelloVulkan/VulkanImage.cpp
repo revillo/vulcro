@@ -33,10 +33,9 @@ void VulkanImage::allocateDeviceMemory()
 	auto reqBits = req.memoryTypeBits;
 	auto p = vk::MemoryPropertyFlagBits::eDeviceLocal;
 
-
-	for (int i = 0; i < memProps.memoryTypeCount; i++) {
+	for (uint32 i = 0; i < memProps.memoryTypeCount; i++) {
 		auto type = memProps.memoryTypes[i];
-		if ((reqBits >> i) && (type.propertyFlags & p) == p) {
+		if ((reqBits && (1 << i)) && (type.propertyFlags & p) == p) {
 
 			memTypeIndex = i;
 			break;
