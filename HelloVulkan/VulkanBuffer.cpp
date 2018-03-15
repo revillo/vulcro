@@ -4,7 +4,7 @@
 
 
 
-VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, void * data) :
+VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint32 size, void * data) :
 	_ctx(ctx)
 {
 
@@ -61,7 +61,7 @@ VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uin
 		_memory
 	);
 
-	
+
 	_ctx->getDevice().bindBufferMemory(
 		_buffer,
 		_memory,
@@ -72,6 +72,8 @@ VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uin
 
 VulkanBuffer::~VulkanBuffer()
 {
+	_ctx->getDevice().destroyBuffer(_buffer);
+	_ctx->getDevice().freeMemory(_memory);
 }
 
 void VulkanBuffer::bindVertex(vk::CommandBuffer &cmd)

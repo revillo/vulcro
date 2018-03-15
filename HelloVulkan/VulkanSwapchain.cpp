@@ -6,10 +6,6 @@ VulkanSwapchain::VulkanSwapchain(VulkanContextRef ctx, vk::SurfaceKHR surface) :
 {
 	init(surface);
 	createSemaphore();
-	_fence = _ctx->getDevice().createFence(
-		vk::FenceCreateInfo()
-	);
-
 
 }
 
@@ -80,17 +76,35 @@ void VulkanSwapchain::createSemaphore()
 	);
 }
 
-uint32 VulkanSwapchain::getNextIndex()
+void VulkanSwapchain::present() {
+	_ctx->getQueue().presentKHR(
+		vk::PresentInfoKHR(
+			0,
+			nullptr,
+			1,
+			&_swapchain,
+			&_renderingIndex,
+			nullptr
+		)
+	);
+}
+
+void VulkanSwapchain::nextFrame()
 {
 
 	auto ret = _ctx->getDevice().acquireNextImageKHR(
 		_swapchain,
 		UINT64_MAX,
 		_semaphore,
-		_fence
+		vk::Fence()
 	);
 
-	return ret.value;
+	/*
+	_ctx->getDevice().resetFences(
+		1,
+		&_fence
+	);*/
+	_renderingIndex = ret.value;
 }
 
 vk::Rect2D VulkanSwapchain::getRect()

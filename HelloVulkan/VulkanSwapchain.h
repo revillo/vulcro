@@ -14,7 +14,9 @@ public:
 
 	void createSemaphore();
 
-	uint32 getNextIndex();
+	void nextFrame();
+
+	void present();
 
 	vk::Format getFormat() {
 		return _format;
@@ -32,20 +34,22 @@ public:
 		return _images;
 	}
 
-	vk::Semaphore &getSempahore() {
+	vk::Semaphore &getSemaphore() {
 		return _semaphore;
+	}
+
+	const uint32 getRenderingIndex() {
+		return _renderingIndex;
 	}
 
 	vk::Rect2D getRect();
 
-	vk::Fence &getFence() {
-		return _fence;
-	}
-
 private:
 
+
+	uint32 _renderingIndex;
+
 	VulkanContextRef _ctx;
-	vk::Fence _fence;
 	vk::Semaphore _semaphore;
 	vk::SurfaceKHR _surface;
 	vk::SwapchainKHR _swapchain;

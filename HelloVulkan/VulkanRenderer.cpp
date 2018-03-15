@@ -1,16 +1,24 @@
 #include "VulkanRenderer.h"
 
 
+struct Vertex {
+	glm::vec4 position;
+	glm::vec4 color;
+};
 
-VulkanRenderer::VulkanRenderer(VulkanContextRef ctx, ivec2 size) :
-	_ctx(ctx),
-	_size(size)
+VulkanRenderer::VulkanRenderer(VulkanContextRef ctx) :
+	_ctx(ctx)
 {
 	//createDepthBuffer();
 
+	/*
 	_drawFence = _ctx->getDevice().createFence(
 		vk::FenceCreateInfo()
-	);
+	);*/
+
+
+
+
 }
 
 void VulkanRenderer::createDepthBuffer() {
@@ -25,7 +33,7 @@ void VulkanRenderer::createDepthBuffer() {
 
 }
 
-void VulkanRenderer::createSurfaceRenderPass(VulkanSwapchainRef swapchain)
+void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain)
 {
 	_swapchain = swapchain;
 
@@ -96,57 +104,65 @@ void VulkanRenderer::createSurfaceRenderPass(VulkanSwapchainRef swapchain)
 	createSurfaceFramebuffer(swapchain);
 }
 
-struct Vertex {
-	glm::vec4 position;
-	glm::vec4 color;
-};
 
-void VulkanRenderer::renderTriangle() {
-	
+
+float rand1() {
+	return (float)rand() / RAND_MAX;
+}
+
+void VulkanRenderer::createTriangle()
+{
 	int numVerts = 3;
 
 	Vertex vs[3] = {
 		Vertex({
-		glm::vec4(0, -0.5, 0.0, 1),
-		glm::vec4(1,1, 0, 1)
+		glm::vec4(0, -rand1(), 0.0, 1),
+		glm::vec4(rand1(),rand1(), rand1(), 1)
 			}),
 
 		Vertex({
-		glm::vec4(0.5, 0.5, 0.0, 1),
-		glm::vec4(0, 1, 1, 1)
+		glm::vec4(rand1(), rand1(), 0.0, 1),
+		glm::vec4(rand1(), rand1(), rand1(), 1)
 			}),
 
 		Vertex({
-		glm::vec4(-0.5, 0.5, 0.0, 1),
-		glm::vec4(1, 0, 1, 1)
+		glm::vec4(-rand1(), rand1(), 0.0, 1),
+		glm::vec4(1, rand1(), rand1(), rand1())
 			}),
 
-	
+
 	};
 
 
-	auto vbuffer = make_shared<VulkanBuffer>(
+	_vbuffer = make_shared<VulkanBuffer>(
 		_ctx,
 		vk::BufferUsageFlagBits::eVertexBuffer,
 		sizeof(Vertex) * numVerts,
 		&vs[0]
-	);
+		);
 
 	uint16_t iData[3] = {
 		0, 1, 2
 	};
 
-	auto ibuffer = make_shared<VulkanBuffer>(
+	_ibuffer = make_shared<VulkanBuffer>(
 		_ctx,
 		vk::BufferUsageFlagBits::eIndexBuffer,
 		sizeof(uint16_t) * numVerts,
 		iData
 	);
+}
 
-	uint32 swapchainImageIndex = _swapchain->getNextIndex();
+void VulkanRenderer::renderTriangle(VulkanTaskRef task) {
+	
+	uint32 swapchainImageIndex = _swapchain->getRenderingIndex();
 
-	vk::CommandBufferBeginInfo bgi;
-	_ctx->cmd().begin(&bgi);
+	//vk::CommandBufferBeginInfo bgi;
+	//bgi.flags = vk::CommandBufferUsageFlagBits::eSimultaneousUse;
+
+	//_ctx->cmd().begin(&bgi);
+
+	auto cmd = task->cmdb();
 
 	const std::array<float, 4> clearColor = { 0.3f, 0.3f, 0.3f, 1.0f };
 
@@ -159,7 +175,7 @@ void VulkanRenderer::renderTriangle() {
 	const vk::Rect2D swapRect = _swapchain->getRect();
 
 
-	_ctx->cmd().beginRenderPass(
+	cmd.beginRenderPass(
 		vk::RenderPassBeginInfo(
 			_renderPass,
 			_framebuffers[swapchainImageIndex],
@@ -171,7 +187,7 @@ void VulkanRenderer::renderTriangle() {
 		vk::SubpassContents::eInline
 	);
 
-	_ctx->cmd().bindPipeline(
+	cmd.bindPipeline(
 		vk::PipelineBindPoint::eGraphics,
 		_pipeline
 	);
@@ -188,9 +204,9 @@ void VulkanRenderer::renderTriangle() {
 	*/
 
 
-	vbuffer->bindVertex(_ctx->cmd());
+	_vbuffer->bindVertex(cmd);
 
-	ibuffer->bindIndex(_ctx->cmd());
+	_ibuffer->bindIndex(cmd);
 
 	auto viewport = vk::Viewport(
 		0.0f,
@@ -201,57 +217,20 @@ void VulkanRenderer::renderTriangle() {
 		1.0
 	);
 
-	_ctx->cmd().setViewport(
+	cmd.setViewport(
 		0,
 		1,
 		&viewport
 	);
 
 
-	_ctx->cmd().setScissor(
+	cmd.setScissor(
 		0, 1, &swapRect
 	);
 
-	_ctx->cmd().drawIndexed(numVerts, 1, 0, 0, 0);
+	cmd.drawIndexed(3, 1, 0, 0, 0);
 
-	_ctx->cmd().endRenderPass();
-	
-	_ctx->cmd().end();
-
-	vk::PipelineStageFlags wait_flags = vk::PipelineStageFlagBits::eBottomOfPipe;
-
-	auto submit = vk::SubmitInfo(
-		1,
-		&_swapchain->getSempahore(),
-		&wait_flags,
-		1,
-		&_ctx->cmd(),
-		0,
-		nullptr
-	);
-	vk::Result res;
-
-	res = _ctx->getQueue().submit(
-		1,
-		&submit,
-		_drawFence
-	);
-	
-	do {
-		res = _ctx->getDevice().waitForFences(1, &_drawFence, VK_TRUE, 100000000);
-	} while (res == vk::Result::eTimeout);
-	
-	_ctx->getQueue().presentKHR(
-		vk::PresentInfoKHR(
-			0,
-			nullptr,
-			1,
-			&_swapchain->getSwapchain(),
-			&swapchainImageIndex,
-			nullptr
-		)
-	);
-
+	cmd.endRenderPass();
 
 }
 

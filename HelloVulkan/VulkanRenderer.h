@@ -6,16 +6,19 @@
 
 #include "VulkanShader.h"
 #include "VulkanBuffer.h"
+#include "VulkanTask.h"
 
 class VulkanRenderer
 {
 public:
-	VulkanRenderer(VulkanContextRef context, glm::ivec2 size);
+	VulkanRenderer(VulkanContextRef context);
 
 	void createDepthBuffer();
-	void createSurfaceRenderPass(VulkanSwapchainRef swapchain);
+	void targetSwapcahin(VulkanSwapchainRef swapchain);
 	void createGraphicsPipeline();
-	void renderTriangle();
+
+	void createTriangle();
+	void renderTriangle(VulkanTaskRef task);
 
 	~VulkanRenderer();
 
@@ -34,6 +37,9 @@ private:
 	vk::RenderPass _renderPass;
 	vk::Pipeline _pipeline;
 	vk::PipelineLayout _pipelineLayout;
+	vk::Semaphore _semaphore;
+
+	VulkanBufferRef _vbuffer, _ibuffer;
 };
 
 typedef shared_ptr<VulkanRenderer>  VulkanRendererRef;

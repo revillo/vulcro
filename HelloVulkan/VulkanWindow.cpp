@@ -88,7 +88,7 @@ int VulkanWindow::initWindow() {
 	return 0;
 }
 
-void VulkanWindow::run() {
+void VulkanWindow::run(std::function<void()> update) {
 	// Poll for user input.
 	bool stillRunning = true;
 	while (stillRunning) {
@@ -106,9 +106,9 @@ void VulkanWindow::run() {
 				// Do nothing.
 				break;
 			}
-		}
 
-		SDL_Delay(10);
+		}
+		update();
 	}
 }
 

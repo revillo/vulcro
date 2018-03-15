@@ -20,10 +20,9 @@
 
 #include <iostream>
 #include <vector>
+#include <functional>
 
 #include "VulkanContext.h"
-#include "VulkanSwapchain.h"
-#include "VulkanRenderer.h"
 
 class VulkanWindow
 {
@@ -32,7 +31,7 @@ public:
 	VulkanWindow();
 	VulkanWindow(int x, int y, int width, int height);
 
-	void run();
+	void run(std::function<void()> update);
 
 	VulkanContextRef getContext() {
 		return _vulkanContext;

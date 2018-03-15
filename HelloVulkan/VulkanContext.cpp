@@ -11,7 +11,7 @@ VulkanContext::VulkanContext(vk::Instance instance)
 	
 	int familyIndex = -1;
 
-	for (int i = 0; i < qfps.size(); i++) {
+	for (uint32 i = 0; i < qfps.size(); i++) {
 		if (qfps[i].queueFlags & vk::QueueFlagBits::eGraphics) {
 			
 			familyIndex = i;
@@ -39,18 +39,28 @@ VulkanContext::VulkanContext(vk::Instance instance)
 
 	_queue = _device.getQueue(familyIndex, 0);
 
-	auto commandPool = _device.createCommandPool(
+	_commandPool = _device.createCommandPool(
 		vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlags(), familyIndex)
 	);
-	
-	_cmd = _device.allocateCommandBuffers(
-		vk::CommandBufferAllocateInfo(commandPool, vk::CommandBufferLevel::ePrimary, 1)
-	)[0];
 }
 
 
 
+/*
 
+VulkanTaskRef VulkanContext::getTask(std::string taskName)
+{
+	if (_taskMap.count(taskName) == 0) {
+		auto cmdb = _device.allocateCommandBuffers(
+			vk::CommandBufferAllocateInfo(_commandPool, vk::CommandBufferLevel::ePrimary, 1)
+		)[0];
+
+		_taskMap[taskName] = make_shared<VulkanTask>(cmdb);
+	}
+
+	return _taskMap[taskName];
+}
+*/
 
 VulkanContext::~VulkanContext()
 {

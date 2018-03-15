@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 
-void readFile(const char * filepath, uint64 &size, uint32 ** data) {
+void readFile(const char * filepath, uint32 &size, uint32 ** data) {
 
 	ifstream file(filepath, ios::in | ios::binary);
 	char * memblock;
@@ -10,7 +10,7 @@ void readFile(const char * filepath, uint64 &size, uint32 ** data) {
 	if (file.is_open()) {
 		// get length of file:
 		file.seekg(0, file.end);
-		size = file.tellg();
+		size = static_cast<uint32>(file.tellg());
 		file.seekg(0, file.beg);
 
 		memblock = new char[size];
@@ -27,7 +27,7 @@ VulkanShader::VulkanShader(VulkanContextRef ctx, const char * vertPath, const ch
 	_ctx(ctx)
 { 
 
-	uint64 vsize;
+	uint32 vsize;
 	uint32 *vdata;
 	readFile(vertPath, vsize, &vdata);
 
@@ -40,7 +40,7 @@ VulkanShader::VulkanShader(VulkanContextRef ctx, const char * vertPath, const ch
 	);
 
 
-	uint64 fsize;
+	uint32 fsize;
 	uint32 *fdata;
 	readFile(fragPath, fsize, &fdata);
 

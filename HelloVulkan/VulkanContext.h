@@ -11,27 +11,36 @@ public:
 	vk::PhysicalDevice &getPhysicalDevice() { return _physicalDevices[0]; }
 	//vector<vk::PhysicalDevice> getPhysicalDevices() { return _instance.enumeratePhysicalDevices(); }
 
-	vk::CommandBuffer &cmd() {
-		return _cmd;
-	}
+
 
 	vk::Queue &getQueue() {
 		return _queue;
 	}
 
+	vk::CommandPool &getCommandPool() {
+		return _commandPool;
+	}
 
+	void resetTasks() {
+
+		_device.resetCommandPool(
+			_commandPool,
+			vk::CommandPoolResetFlags()
+		);
+
+	}
 
 	~VulkanContext();
 
 private:
 
-	//vk::SwapchainKHR _swapchain;
-
 	vk::Instance _instance;
 	vector<vk::PhysicalDevice> _physicalDevices;
 	vk::Device _device;
+	vk::CommandPool _commandPool;
 	vk::CommandBuffer _cmd;
 	vk::Queue _queue;
+
 };
 
 typedef shared_ptr<VulkanContext> VulkanContextRef;

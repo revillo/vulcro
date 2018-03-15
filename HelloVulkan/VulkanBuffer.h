@@ -9,7 +9,7 @@
 class VulkanBuffer
 {
 public:
-	VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, void* data);
+	VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint32 size, void* data);
 	~VulkanBuffer();
 	void bindVertex(vk::CommandBuffer &cmd);
 	void bindIndex(vk::CommandBuffer &cmd);
@@ -20,8 +20,9 @@ public:
 	void *getData();
 private:
 
-	vk::DeviceMemory _memory;
 	VulkanContextRef _ctx;
+
+	vk::DeviceMemory _memory;
 	vk::Buffer _buffer;
 };
 

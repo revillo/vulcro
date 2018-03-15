@@ -1,40 +1,46 @@
-/*
- * Vulkan Windowed Program
- *
- * Copyright (C) 2016, 2018 Valve Corporation
- * Copyright (C) 2016, 2018 LunarG, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
-Vulkan C++ Windowed Project Template
-Create and destroy a Vulkan surface on an SDL window.
-*/
 #include "VulkanWindow.h"
+#include "VulkanRenderer.h"
 
 int main()
 {
 	auto window = VulkanWindow(0, 0, 400, 400);
-	
-	auto renderer = make_shared<VulkanRenderer>(window.getContext(), ivec2(0, 0));
-	auto swapchain = make_shared<VulkanSwapchain>(window.getContext(), window.getSurface());
 
-	renderer->createSurfaceRenderPass(swapchain);
+	auto vkCtx = window.getContext();
+
+	auto renderer = make_shared<VulkanRenderer>(vkCtx);
+	auto swapchain = make_shared<VulkanSwapchain>(vkCtx, window.getSurface());
+
+	renderer->targetSwapcahin(swapchain);
 	renderer->createGraphicsPipeline();
-	renderer->renderTriangle();
 
-	window.run();
+	auto triangleTask = make_shared<VulkanTask>(vkCtx);
+
+	window.run([=]() {
+
+		//Create a random triangle
+		renderer->createTriangle();
+
+		//Wait for next available frame
+		swapchain->nextFrame();
+
+		//Record to command buffer
+		triangleTask->begin();
+
+		renderer->renderTriangle(triangleTask);
+
+		triangleTask->end();
+
+		//Submit command buffer
+		triangleTask->execute(swapchain->getSemaphore());
+
+		//Present current frame to screen
+		swapchain->present();
+
+		//Reset command buffers
+		vkCtx->resetTasks();
+
+		SDL_Delay(30);
+	});
 
     return 0;
 }
