@@ -39,6 +39,11 @@ private:
 
 	vk::Format _format;
 	vk::ImageView _imageView;
+	vk::DeviceMemory _memory;
+
+	bool _imageCreated = false;
+	bool _memoryAllocated = false;
+	bool _viewCreated = false;
 
 	vk::Image _image;
 	glm::ivec2 _size;

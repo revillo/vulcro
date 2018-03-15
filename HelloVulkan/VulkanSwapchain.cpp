@@ -119,4 +119,6 @@ vk::Rect2D VulkanSwapchain::getRect()
 
 VulkanSwapchain::~VulkanSwapchain()
 {
+	_ctx->getDevice().destroySwapchainKHR(_swapchain);
+	_ctx->getDevice().destroySemaphore(_semaphore);
 }

@@ -20,6 +20,8 @@ VulkanImage::VulkanImage(VulkanContextRef ctx, glm::ivec2 size, vk::Format forma
 			vk::ImageLayout::eUndefined)
 	);
 
+	_imageCreated = true;
+
 }
 
 void VulkanImage::allocateDeviceMemory()
@@ -43,12 +45,14 @@ void VulkanImage::allocateDeviceMemory()
 	}
 
 
-	auto memory = _ctx->getDevice().allocateMemory(
+	_memory = _ctx->getDevice().allocateMemory(
 		vk::MemoryAllocateInfo(req.size, memTypeIndex)
 	);
 
-	_ctx->getDevice().bindImageMemory(_image, memory, 0);
+	_ctx->getDevice().bindImageMemory(_image, _memory, 0);
 
+
+	_memoryAllocated = true;
 }
 
 VulkanImage::VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format)
@@ -85,8 +89,15 @@ void VulkanImage::createImageView(vk::ImageAspectFlags aspectFlags) {
 		)
 	);
 
+	_viewCreated = true;
+
 }
 
 VulkanImage::~VulkanImage()
 {
+
+	if (_viewCreated) _ctx->getDevice().destroyImageView(_imageView);
+	if (_imageCreated) _ctx->getDevice().destroyImage(_image);
+	if (_memoryAllocated) _ctx->getDevice().freeMemory(_memory);
+
 }

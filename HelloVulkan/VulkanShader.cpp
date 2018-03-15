@@ -80,4 +80,6 @@ VulkanShader::VulkanShader(VulkanContextRef ctx, const char * vertPath, const ch
 
 VulkanShader::~VulkanShader()
 {
+	_ctx->getDevice().destroyShaderModule(_vertModule);
+	_ctx->getDevice().destroyShaderModule(_fragModule);
 }

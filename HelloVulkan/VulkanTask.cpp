@@ -62,4 +62,15 @@ void VulkanTask::execute(vk::Semaphore &semaphore)
 
 VulkanTask::~VulkanTask()
 {
+
+	_ctx->getDevice().freeCommandBuffers(
+		_ctx->getCommandPool(),
+		1,
+		&_commandBuffer
+	);
+
+
+	_ctx->getDevice().destroyFence(
+		_fence
+	);
 }

@@ -9,15 +9,6 @@ struct Vertex {
 VulkanRenderer::VulkanRenderer(VulkanContextRef ctx) :
 	_ctx(ctx)
 {
-	//createDepthBuffer();
-
-	/*
-	_drawFence = _ctx->getDevice().createFence(
-		vk::FenceCreateInfo()
-	);*/
-
-
-
 
 }
 
@@ -100,6 +91,8 @@ void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain)
 			nullptr
 		)
 	);
+
+	_renderPassCreated = true;
 
 	createSurfaceFramebuffer(swapchain);
 }
@@ -380,6 +373,8 @@ void VulkanRenderer::createGraphicsPipeline() {
 		)
 	);
 
+	_layoutCreated = true;
+
 	 _pipeline =  _ctx->getDevice().createGraphicsPipeline(
 		nullptr,
 		vk::GraphicsPipelineCreateInfo(
@@ -404,11 +399,33 @@ void VulkanRenderer::createGraphicsPipeline() {
 	 );
 
 
+	 _pipelineCreated = true;
+
+
 }
 
 
 VulkanRenderer::~VulkanRenderer()
 {
+
+	for (auto &fb : _framebuffers) {
+		_ctx->getDevice().destroyFramebuffer(fb);
+	}
+
+	if (_renderPassCreated) {
+		_ctx->getDevice().destroyRenderPass(_renderPass);
+	}
+
+	if (_pipelineCreated) {
+		_ctx->getDevice().destroyPipeline(_pipeline);
+	}
+
+	if (_layoutCreated) {
+		_ctx->getDevice().destroyPipelineLayout(_pipelineLayout);
+	}
+
+
+
 }
 
 void VulkanRenderer::createSurfaceFramebuffer(VulkanSwapchainRef swapchain)

@@ -12,7 +12,6 @@ public:
 
 	void init(vk::SurfaceKHR surface);
 
-	void createSemaphore();
 
 	void nextFrame();
 
@@ -46,6 +45,7 @@ public:
 
 private:
 
+	void createSemaphore();
 
 	uint32 _renderingIndex;
 

@@ -115,6 +115,8 @@ void VulkanWindow::run(std::function<void()> update) {
 VulkanWindow::~VulkanWindow()
 {
 	// Clean up.
+	_vulkanContext = nullptr;
+
 	_vkInstance.destroySurfaceKHR(_surfaceKHR);
 	SDL_DestroyWindow(_window);
 	SDL_Quit();

@@ -64,4 +64,9 @@ VulkanTaskRef VulkanContext::getTask(std::string taskName)
 
 VulkanContext::~VulkanContext()
 {
+	
+	_device.destroyCommandPool(_commandPool);
+
+	_device.destroy();
+
 }
