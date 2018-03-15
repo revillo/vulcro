@@ -6,6 +6,11 @@ VulkanSwapchain::VulkanSwapchain(VulkanContextRef ctx, vk::SurfaceKHR surface) :
 {
 	init(surface);
 	createSemaphore();
+	_fence = _ctx->getDevice().createFence(
+		vk::FenceCreateInfo()
+	);
+
+
 }
 
 void VulkanSwapchain::init(vk::SurfaceKHR surface) {
@@ -42,7 +47,7 @@ void VulkanSwapchain::init(vk::SurfaceKHR surface) {
 			surfFormats[0].colorSpace,
 			surfCap.currentExtent,
 			1, // imageArrayLayers
-			vk::ImageUsageFlags(vk::ImageUsageFlagBits::eColorAttachment),
+			vk::ImageUsageFlagBits::eColorAttachment,
 			vk::SharingMode::eExclusive,
 			0, // Queue Family Index Count
 			(const uint32_t*)NULL, //Indices
@@ -57,7 +62,7 @@ void VulkanSwapchain::init(vk::SurfaceKHR surface) {
 
 	auto swapImages = _ctx->getDevice().getSwapchainImagesKHR(_swapchain);
 	
-	for (auto swapImage : swapImages) {
+	for (auto &swapImage : swapImages) {
 		auto vi = make_shared<VulkanImage>(_ctx, swapImage, ivec2(surfCap.currentExtent.width, surfCap.currentExtent.height), _format);
 		vi->createImageView(vk::ImageAspectFlagBits::eColor);
 		_images.push_back(vi);
@@ -65,11 +70,7 @@ void VulkanSwapchain::init(vk::SurfaceKHR surface) {
 
 	swapchainInited = true;
 
-	_fence = _ctx->getDevice().createFence(
-		vk::FenceCreateInfo()
-	);
 
-	
 }
 
 void VulkanSwapchain::createSemaphore()

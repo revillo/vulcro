@@ -23,6 +23,7 @@ VulkanContext::VulkanContext(vk::Instance instance)
 	std::vector<const char*> extensions;
 
 	extensions.push_back("VK_KHR_swapchain");
+	//extensions.push_back("VK_KHR_win32_surface");
 	
 	float qpriors[1] = { 0.0f };
 
@@ -32,7 +33,7 @@ VulkanContext::VulkanContext(vk::Instance instance)
 		vk::DeviceCreateInfo(
 			vk::DeviceCreateFlags(),
 			1,
-			&devQ, 0, nullptr, 1, &extensions[0])
+			&devQ, 0, nullptr, extensions.size(), &extensions[0], nullptr)
 	);
 
 

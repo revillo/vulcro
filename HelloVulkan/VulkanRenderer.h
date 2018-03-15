@@ -23,6 +23,8 @@ private:
 	
 	void createSurfaceFramebuffer(VulkanSwapchainRef swapchain);
 
+	vk::Fence _drawFence;
+
 	ivec2 _size;
 	VulkanContextRef _ctx;
 	VulkanImageRef _depthImage;

@@ -47,14 +47,12 @@ VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uin
 	);
 
 
-	uint8 * pData;
+	void * pData;
 
-	_ctx->getDevice().mapMemory(
+	pData = _ctx->getDevice().mapMemory(
 		_memory,
 		0,
-		memReqs.size,
-		vk::MemoryMapFlags(),
-		(void **)&pData
+		size
 	);
 
 	memcpy(pData, data, size);
@@ -76,7 +74,7 @@ VulkanBuffer::~VulkanBuffer()
 {
 }
 
-void VulkanBuffer::bind(vk::CommandBuffer &cmd)
+void VulkanBuffer::bindVertex(vk::CommandBuffer &cmd)
 {
 	vk::DeviceSize offsets[1] = { 0 };
 
@@ -86,4 +84,25 @@ void VulkanBuffer::bind(vk::CommandBuffer &cmd)
 		&_buffer,
 		offsets
 	);
+}
+
+void VulkanBuffer::bindIndex(vk::CommandBuffer & cmd)
+{
+	cmd.bindIndexBuffer(
+		_buffer, 0, vk::IndexType::eUint16
+	);
+
+}
+
+void * VulkanBuffer::getData()
+{
+
+	void * pData = _ctx->getDevice().mapMemory(
+		_memory,
+		0,
+		96,
+		vk::MemoryMapFlags()
+	);
+
+	return pData;
 }

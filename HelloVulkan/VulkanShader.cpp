@@ -39,6 +39,7 @@ VulkanShader::VulkanShader(VulkanContextRef ctx, const char * vertPath, const ch
 		)
 	);
 
+
 	uint64 fsize;
 	uint32 *fdata;
 	readFile(fragPath, fsize, &fdata);

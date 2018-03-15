@@ -7,6 +7,10 @@ VulkanRenderer::VulkanRenderer(VulkanContextRef ctx, ivec2 size) :
 	_size(size)
 {
 	//createDepthBuffer();
+
+	_drawFence = _ctx->getDevice().createFence(
+		vk::FenceCreateInfo()
+	);
 }
 
 void VulkanRenderer::createDepthBuffer() {
@@ -98,36 +102,53 @@ struct Vertex {
 };
 
 void VulkanRenderer::renderTriangle() {
+	
+	int numVerts = 3;
 
 	Vertex vs[3] = {
 		Vertex({
 		glm::vec4(0, -0.5, 0.0, 1),
-		glm::vec4(1, 0, 0.5, 1)
+		glm::vec4(1,1, 0, 1)
 			}),
 
 		Vertex({
 		glm::vec4(0.5, 0.5, 0.0, 1),
-		glm::vec4(1, 0, 0, 1)
+		glm::vec4(0, 1, 1, 1)
 			}),
 
 		Vertex({
 		glm::vec4(-0.5, 0.5, 0.0, 1),
-		glm::vec4(1, 1, 0, 1)
-			})
+		glm::vec4(1, 0, 1, 1)
+			}),
+
+	
 	};
 
 
 	auto vbuffer = make_shared<VulkanBuffer>(
 		_ctx,
 		vk::BufferUsageFlagBits::eVertexBuffer,
-		sizeof(Vertex) * 3,
+		sizeof(Vertex) * numVerts,
 		&vs[0]
 	);
+
+	uint16_t iData[3] = {
+		0, 1, 2
+	};
+
+	auto ibuffer = make_shared<VulkanBuffer>(
+		_ctx,
+		vk::BufferUsageFlagBits::eIndexBuffer,
+		sizeof(uint16_t) * numVerts,
+		iData
+	);
+
+	uint32 swapchainImageIndex = _swapchain->getNextIndex();
 
 	vk::CommandBufferBeginInfo bgi;
 	_ctx->cmd().begin(&bgi);
 
-	const std::array<float, 4> clearColor = { 0.2f, 0.5f, 0.4f, 1.0f };
+	const std::array<float, 4> clearColor = { 0.3f, 0.3f, 0.3f, 1.0f };
 
 
 	vk::ClearValue clears[2] = {
@@ -137,7 +158,6 @@ void VulkanRenderer::renderTriangle() {
 
 	const vk::Rect2D swapRect = _swapchain->getRect();
 
-	uint32 swapchainImageIndex = _swapchain->getNextIndex();
 
 	_ctx->cmd().beginRenderPass(
 		vk::RenderPassBeginInfo(
@@ -168,7 +188,9 @@ void VulkanRenderer::renderTriangle() {
 	*/
 
 
-	vbuffer->bind(_ctx->cmd());
+	vbuffer->bindVertex(_ctx->cmd());
+
+	ibuffer->bindIndex(_ctx->cmd());
 
 	auto viewport = vk::Viewport(
 		0.0f,
@@ -190,11 +212,10 @@ void VulkanRenderer::renderTriangle() {
 		0, 1, &swapRect
 	);
 
-	_ctx->cmd().draw(3, 1, 0, 0);
+	_ctx->cmd().drawIndexed(numVerts, 1, 0, 0, 0);
 
 	_ctx->cmd().endRenderPass();
 	
-
 	_ctx->cmd().end();
 
 	vk::PipelineStageFlags wait_flags = vk::PipelineStageFlagBits::eBottomOfPipe;
@@ -208,25 +229,18 @@ void VulkanRenderer::renderTriangle() {
 		0,
 		nullptr
 	);
+	vk::Result res;
 
-	auto drawfence = _ctx->getDevice().createFence(
-		vk::FenceCreateInfo()
-	);
-
-	_ctx->getQueue().submit(
+	res = _ctx->getQueue().submit(
 		1,
 		&submit,
-		drawfence
+		_drawFence
 	);
-
-
-	vk::Result res;
 	
 	do {
-		res = _ctx->getDevice().waitForFences(1, &drawfence, VK_TRUE, 100000000);
+		res = _ctx->getDevice().waitForFences(1, &_drawFence, VK_TRUE, 100000000);
 	} while (res == vk::Result::eTimeout);
 	
-
 	_ctx->getQueue().presentKHR(
 		vk::PresentInfoKHR(
 			0,
@@ -246,8 +260,8 @@ void VulkanRenderer::createGraphicsPipeline() {
 
 	auto shader = make_shared<VulkanShader>(
 			_ctx,
-		"shaders/redv.spv",
-		"shaders/redf.spv"
+		"shaders/pos_color_vert.spv",
+		"shaders/pos_color_frag.spv"
 	);
 
 
@@ -263,7 +277,7 @@ void VulkanRenderer::createGraphicsPipeline() {
 			0, //Location
 			0, //Binding 
 			vk::Format::eR32G32B32A32Sfloat,
-			0 //Offset
+			offsetof(Vertex, position) //Offset
 		),
 
 		//Color
@@ -271,7 +285,7 @@ void VulkanRenderer::createGraphicsPipeline() {
 			1,
 			0,
 			vk::Format::eR32G32B32A32Sfloat,
-			sizeof(glm::vec4)
+			offsetof(Vertex, color)
 		),
 	};
 
@@ -283,11 +297,9 @@ void VulkanRenderer::createGraphicsPipeline() {
 		vi_attribs
 	);
 
-
-	
-	//Dynamic States?
 	vk::DynamicState dynamicStateEnables[2];
-	memset(dynamicStateEnables, 0, sizeof dynamicStateEnables);
+	dynamicStateEnables[0] = vk::DynamicState::eViewport;
+	dynamicStateEnables[1] = vk::DynamicState::eScissor;
 
 	auto dynamicState = vk::PipelineDynamicStateCreateInfo(
 		vk::PipelineDynamicStateCreateFlags(),
@@ -340,9 +352,9 @@ void VulkanRenderer::createGraphicsPipeline() {
 
 	auto dss = vk::PipelineDepthStencilStateCreateInfo(
 		vk::PipelineDepthStencilStateCreateFlags(),
-		VK_TRUE, //DEPTH TEST
-		VK_TRUE, //DEPTH WRITE
-		vk::CompareOp::eAlways,
+		VK_FALSE, //DEPTH TEST
+		VK_FALSE, //DEPTH WRITE
+		vk::CompareOp::eLessOrEqual,
 		VK_FALSE, //Bounds test
 		VK_FALSE, //Stencil Test
 		sopstate,
@@ -353,15 +365,18 @@ void VulkanRenderer::createGraphicsPipeline() {
 
 
 	auto cbas = vk::PipelineColorBlendAttachmentState(
-		VK_FALSE, //Color Blend
-			vk::BlendFactor::eZero, //src blend factor
-			vk::BlendFactor::eZero, //dst blend factor
-			vk::BlendOp::eAdd,
-			vk::BlendFactor::eZero, //src alpha
-			vk::BlendFactor::eZero, //dest alpha
-			vk::BlendOp::eAdd,
-			vk::ColorComponentFlags()
-		);
+		VK_TRUE, //Color Blend
+		vk::BlendFactor::eOne, //src blend factor
+		vk::BlendFactor::eZero, //dst blend factor
+		vk::BlendOp::eAdd,
+		vk::BlendFactor::eOne, //src alpha
+		vk::BlendFactor::eZero, //dest alpha
+		vk::BlendOp::eAdd, // alpha op
+		vk::ColorComponentFlagBits::eR |
+		vk::ColorComponentFlagBits::eG |
+		vk::ColorComponentFlagBits::eB |
+		vk::ColorComponentFlagBits::eA
+	);
 
 	const std::array<float, 4> blendConstants = { 1.0, 1.0, 1.0, 1.0 };
 
@@ -374,8 +389,6 @@ void VulkanRenderer::createGraphicsPipeline() {
 		blendConstants
 	);
 
-	dynamicStateEnables[0] = vk::DynamicState::eViewport;
-	dynamicStateEnables[1] = vk::DynamicState::eScissor;
 
 
 	_pipelineLayout = _ctx->getDevice().createPipelineLayout(
