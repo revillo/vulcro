@@ -42,6 +42,9 @@
     <ClCompile Include="VulkanTask.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VulkanUniformLayout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VulkanWindow.h">
@@ -69,6 +72,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VulkanTask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VulkanUniformLayout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

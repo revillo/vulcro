@@ -99,11 +99,6 @@ void VulkanSwapchain::nextFrame()
 		vk::Fence()
 	);
 
-	/*
-	_ctx->getDevice().resetFences(
-		1,
-		&_fence
-	);*/
 	_renderingIndex = ret.value;
 }
 

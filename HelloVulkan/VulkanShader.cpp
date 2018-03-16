@@ -23,8 +23,9 @@ void readFile(const char * filepath, uint32 &size, uint32 ** data) {
 }
 
 
-VulkanShader::VulkanShader(VulkanContextRef ctx, const char * vertPath, const char * fragPath) :
-	_ctx(ctx)
+VulkanShader::VulkanShader(VulkanContextRef ctx, const char * vertPath, const char * fragPath, vector<VulkanUniformLayoutRef> layouts) :
+	_ctx(ctx),
+	_layouts(layouts)
 { 
 
 	uint32 vsize;
@@ -52,7 +53,8 @@ VulkanShader::VulkanShader(VulkanContextRef ctx, const char * vertPath, const ch
 		)
 	);
 
-	//delete data?
+	delete vdata;
+	delete fdata;
 	
 
 	_stages.push_back(
@@ -75,6 +77,12 @@ VulkanShader::VulkanShader(VulkanContextRef ctx, const char * vertPath, const ch
 			nullptr
 		)
 	);
+
+	for (auto &layout : layouts) {
+		_descriptorSetLayouts.push_back(layout->getDescriptorLayout());
+	}
+
+	//createDescriptors();
 	
 }
 
@@ -82,4 +90,62 @@ VulkanShader::~VulkanShader()
 {
 	_ctx->getDevice().destroyShaderModule(_vertModule);
 	_ctx->getDevice().destroyShaderModule(_fragModule);
+
+	/*
+	if (layoutCreated) {
+		_ctx->getDevice().destroyDescriptorSetLayout(_descriptorLayout);
+
+		for (int i = 0; i < _uniformSets.size(); i++) {
+			_ctx->getDevice().freeDescriptorSets(
+				_ctx->getDescriptorPool(_uniformSets[i].type, _uniformSets[i].descriptorCount),
+				1,
+				&_descriptorSets[i]
+			);
+		}
+	}*/
 }
+
+/*
+void VulkanShader::createDescriptors()
+{
+
+	if (_uniformSets.size() == 0) {
+		return;
+	}
+
+	vector <vk::DescriptorSetLayoutBinding> bindings;
+
+	for (auto &set : _uniformSets) {
+
+		bindings.push_back(vk::DescriptorSetLayoutBinding(
+			bindings.size(),
+			set.type,
+			set.descriptorCount,
+			vk::ShaderStageFlagBits::eAllGraphics,
+			set.samplers
+		));
+	}
+
+	_descriptorLayout = _ctx->getDevice().createDescriptorSetLayout(
+		vk::DescriptorSetLayoutCreateInfo(
+			vk::DescriptorSetLayoutCreateFlags(),
+			bindings.size(),
+			&bindings[0]
+		)
+	);
+
+
+	for (auto &set : _uniformSets) {
+		_descriptorSets.push_back(_ctx->getDevice().allocateDescriptorSets(
+			vk::DescriptorSetAllocateInfo(
+				_ctx->getDescriptorPool(set.type, set.descriptorCount),
+					set.descriptorCount,
+					&_descriptorLayout
+				)
+			)[0]
+		);
+	}
+
+	layoutCreated = true;
+}
+*/

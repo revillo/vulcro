@@ -34,15 +34,19 @@ private:
 	VulkanSwapchainRef _swapchain;
 	
 	vector<vk::Framebuffer> _framebuffers;
+
 	vk::RenderPass _renderPass;
 	vk::Pipeline _pipeline;
 	vk::PipelineLayout _pipelineLayout;
 
-	VulkanBufferRef _vbuffer, _ibuffer;
 
 	bool _renderPassCreated = false;
 	bool _pipelineCreated = false;
 	bool _layoutCreated = false;
+
+	//Triangle
+	VulkanBufferRef _vbuffer, _ibuffer, _ubuffer;
+	VulkanUniformLayoutRef _uniformLayout;
 };
 
 typedef shared_ptr<VulkanRenderer>  VulkanRendererRef;

@@ -164,6 +164,7 @@
     <ClCompile Include="VulkanShader.cpp" />
     <ClCompile Include="VulkanSwapchain.cpp" />
     <ClCompile Include="VulkanTask.cpp" />
+    <ClCompile Include="VulkanUniformLayout.cpp" />
     <ClCompile Include="VulkanWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -175,6 +176,7 @@
     <ClInclude Include="VulkanShader.h" />
     <ClInclude Include="VulkanSwapchain.h" />
     <ClInclude Include="VulkanTask.h" />
+    <ClInclude Include="VulkanUniformLayout.h" />
     <ClInclude Include="VulkanWindow.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

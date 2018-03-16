@@ -6,6 +6,10 @@ struct Vertex {
 	glm::vec4 color;
 };
 
+struct ExampleUniform {
+	glm::vec4 color;
+};
+
 VulkanRenderer::VulkanRenderer(VulkanContextRef ctx) :
 	_ctx(ctx)
 {
@@ -144,6 +148,23 @@ void VulkanRenderer::createTriangle()
 		sizeof(uint16_t) * numVerts,
 		iData
 	);
+
+
+	ExampleUniform us[1] = {
+		{
+			glm::vec4(0.0, 1.0, 0.0, 1.0)
+		}
+	};
+
+	_ubuffer = make_shared<VulkanBuffer>(
+		_ctx,
+		vk::BufferUsageFlagBits::eUniformBuffer,
+		sizeof(ExampleUniform),
+		us
+	);
+
+
+
 }
 
 void VulkanRenderer::renderTriangle(VulkanTaskRef task) {
@@ -361,13 +382,13 @@ void VulkanRenderer::createGraphicsPipeline() {
 		blendConstants
 	);
 
-
+	auto uniLayouts = shader->getDescriptorSetLayouts();
 
 	_pipelineLayout = _ctx->getDevice().createPipelineLayout(
 		vk::PipelineLayoutCreateInfo(
 			vk::PipelineLayoutCreateFlags(),
-			0,
-			nullptr, //Set layouts todo
+			uniLayouts.size(),
+			uniLayouts.size() ? &uniLayouts[0] : nullptr,
 			0,
 			nullptr //Push constant Ranges
 		)

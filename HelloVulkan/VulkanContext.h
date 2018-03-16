@@ -9,9 +9,6 @@ public:
 	VulkanContext(vk::Instance instance);
 	vk::Device &getDevice() { return _device; }
 	vk::PhysicalDevice &getPhysicalDevice() { return _physicalDevices[0]; }
-	//vector<vk::PhysicalDevice> getPhysicalDevices() { return _instance.enumeratePhysicalDevices(); }
-
-
 
 	vk::Queue &getQueue() {
 		return _queue;
@@ -30,6 +27,8 @@ public:
 
 	}
 
+	vk::DescriptorPool getDescriptorPool();
+
 	~VulkanContext();
 
 private:
@@ -41,6 +40,7 @@ private:
 	vk::CommandBuffer _cmd;
 	vk::Queue _queue;
 
+	vk::DescriptorPool _descriptorPool;
 };
 
 typedef shared_ptr<VulkanContext> VulkanContextRef;
