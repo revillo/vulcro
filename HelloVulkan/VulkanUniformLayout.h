@@ -23,9 +23,14 @@ public:
 		return _descriptorLayout;
 	}
 
+	vk::DescriptorSet allocateSet();
+
 private:
 
 	vk::DescriptorSetLayout _descriptorLayout;
+	vk::DescriptorPool _pool;
+
+
 	VulkanContextRef _ctx;
 	vector<Binding> _bindings;
 

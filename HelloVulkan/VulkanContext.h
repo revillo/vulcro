@@ -26,9 +26,6 @@ public:
 		);
 
 	}
-
-	vk::DescriptorPool getDescriptorPool();
-
 	~VulkanContext();
 
 private:
@@ -39,8 +36,6 @@ private:
 	vk::CommandPool _commandPool;
 	vk::CommandBuffer _cmd;
 	vk::Queue _queue;
-
-	vk::DescriptorPool _descriptorPool;
 };
 
 typedef shared_ptr<VulkanContext> VulkanContextRef;

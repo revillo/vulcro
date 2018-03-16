@@ -4,8 +4,9 @@
 
 
 
-VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint32 size, void * data) :
-	_ctx(ctx)
+VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, void * data) :
+	_ctx(ctx),
+	_size(size)
 {
 
 	_buffer = _ctx->getDevice().createBuffer(
@@ -94,6 +95,15 @@ void VulkanBuffer::bindIndex(vk::CommandBuffer & cmd)
 		_buffer, 0, vk::IndexType::eUint16
 	);
 
+}
+
+vk::DescriptorBufferInfo VulkanBuffer::createDBI(uint32 offset, int64 size)
+{
+	return vk::DescriptorBufferInfo(
+		_buffer,
+		offset,
+		size == -1 ? _size : static_cast<uint64>(size)
+	);
 }
 
 void * VulkanBuffer::getData()
