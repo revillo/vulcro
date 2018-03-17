@@ -34,7 +34,7 @@ public:
 	void run(std::function<void()> update);
 
 	VulkanContextRef getContext() {
-		return _vulkanContext;
+		return _vulkanContext.get();
 	}
 
 	vk::SurfaceKHR &getSurface() {
@@ -48,7 +48,7 @@ private:
 	vk::Instance _vkInstance;
 	SDL_Window* _window = nullptr;
 	
-	VulkanContextRef _vulkanContext = nullptr;
+	shared_ptr<VulkanContext> _vulkanContext = nullptr;
 
 	int initWindow();
 

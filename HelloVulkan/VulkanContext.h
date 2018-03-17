@@ -3,6 +3,26 @@
 #include <vulkan/vulkan.hpp>
 #include "General.h"
 
+struct VulkanUniformLayoutBinding {
+
+	VulkanUniformLayoutBinding(vk::DescriptorType _type = vk::DescriptorType::eUniformBuffer, uint32 _arrayCount = 1, vk::Sampler * _samplers = nullptr) :
+		type(_type), 
+		arrayCount(_arrayCount),
+		samplers(_samplers)
+	{
+
+	}
+
+	vk::DescriptorType type = vk::DescriptorType::eUniformBuffer;
+	uint32 arrayCount = 1;
+	vk::Sampler * samplers = nullptr;
+};
+
+typedef VulkanUniformLayoutBinding VULB;
+
+class VulkanUniformLayout;
+class VulkanUniformSet;
+
 class VulkanContext
 {
 public:
@@ -26,6 +46,9 @@ public:
 		);
 
 	}
+
+	shared_ptr<VulkanUniformLayout> makeUniformLayout(vector<VulkanUniformLayoutBinding> bindings);
+
 	~VulkanContext();
 
 private:
@@ -36,6 +59,8 @@ private:
 	vk::CommandPool _commandPool;
 	vk::CommandBuffer _cmd;
 	vk::Queue _queue;
+
+
 };
 
-typedef shared_ptr<VulkanContext> VulkanContextRef;
+typedef VulkanContext * VulkanContextRef;

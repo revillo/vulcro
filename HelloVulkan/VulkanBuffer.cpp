@@ -97,7 +97,7 @@ void VulkanBuffer::bindIndex(vk::CommandBuffer & cmd)
 
 }
 
-vk::DescriptorBufferInfo VulkanBuffer::createDBI(uint32 offset, int64 size)
+vk::DescriptorBufferInfo VulkanBuffer::getDBI(uint32 offset, int64 size)
 {
 	return vk::DescriptorBufferInfo(
 		_buffer,

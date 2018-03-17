@@ -47,6 +47,7 @@ private:
 	//Triangle
 	VulkanBufferRef _vbuffer, _ibuffer, _ubuffer;
 	VulkanUniformLayoutRef _uniformLayout;
+	VulkanUniformSetRef _uniformSet;
 };
 
 typedef shared_ptr<VulkanRenderer>  VulkanRendererRef;

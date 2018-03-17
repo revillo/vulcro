@@ -22,7 +22,7 @@ VulkanUniformLayout::VulkanUniformLayout(VulkanContextRef ctx, vector<Binding> b
 		poolSizes.push_back(
 			vk::DescriptorPoolSize(
 				binding.type,
-				binding.arrayCount
+				10
 			)
 		);
 	}
@@ -36,9 +36,10 @@ VulkanUniformLayout::VulkanUniformLayout(VulkanContextRef ctx, vector<Binding> b
 		)
 	);
 
+
 	_pool = _ctx->getDevice().createDescriptorPool(
 		vk::DescriptorPoolCreateInfo(
-			vk::DescriptorPoolCreateFlags(),
+			vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
 			10, // todo
 			poolSizes.size(),
 			&poolSizes[0]
@@ -47,15 +48,31 @@ VulkanUniformLayout::VulkanUniformLayout(VulkanContextRef ctx, vector<Binding> b
 
 }
 
-vk::DescriptorSet VulkanUniformLayout::allocateSet() {
+VulkanUniformSetRef VulkanUniformLayout::createSet() {
 
-	return _ctx->getDevice().allocateDescriptorSets(
+	return make_shared<VulkanUniformSet>(_ctx, this);
+
+}
+
+vk::DescriptorSet VulkanUniformLayout::allocateDescriptorSet() {
+
+	auto set = _ctx->getDevice().allocateDescriptorSets(
 		vk::DescriptorSetAllocateInfo(
 			_pool,
 			1,
 			&_descriptorLayout
 		)
 	)[0];
+
+	return set;
+}
+
+void VulkanUniformLayout::freeDescriptorSet(vk::DescriptorSet set)
+{
+	_ctx->getDevice().freeDescriptorSets(
+		_pool,
+		{ set }
+	);
 
 }
 

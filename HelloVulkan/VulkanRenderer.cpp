@@ -163,7 +163,11 @@ void VulkanRenderer::createTriangle()
 		us
 	);
 
+	_uniformSet = _uniformLayout->createSet();
 
+	_uniformSet->bindBuffer(0, _ubuffer->getDBI());
+
+	_uniformSet->update();
 
 }
 
@@ -222,6 +226,8 @@ void VulkanRenderer::renderTriangle(VulkanTaskRef task) {
 
 	_ibuffer->bindIndex(cmd);
 
+	_uniformSet->bind(cmd, _pipelineLayout);
+
 	auto viewport = vk::Viewport(
 		0.0f,
 		0.0f,
@@ -250,11 +256,30 @@ void VulkanRenderer::renderTriangle(VulkanTaskRef task) {
 
 void VulkanRenderer::createGraphicsPipeline() {
 
-
+	/*
 	auto shader = make_shared<VulkanShader>(
 			_ctx,
 		"shaders/pos_color_vert.spv",
 		"shaders/pos_color_frag.spv"
+	);*/
+
+
+	_uniformLayout = _ctx->makeUniformLayout(
+		{
+			VULB()
+		}
+	);
+
+
+	std::vector<VulkanUniformLayoutRef> ulrs = {
+		_uniformLayout
+	};
+
+	auto shader = make_shared<VulkanShader>(
+		_ctx,
+		"shaders/pos_color_vert.spv",
+		"shaders/uniform_color_frag.spv",
+		ulrs
 	);
 
 

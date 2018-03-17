@@ -1,19 +1,15 @@
 #pragma once
 
 #include "VulkanContext.h"
+#include "VulkanUniformSet.h"
+
+
 
 class VulkanUniformLayout
 {
-
+	typedef VulkanUniformLayoutBinding Binding;
 
 public:
-
-	struct Binding {
-		vk::DescriptorType type = vk::DescriptorType::eUniformBuffer;
-		uint32 arrayCount = 1;
-		vk::Sampler * samplers = nullptr;
-	};
-
 
 	VulkanUniformLayout(VulkanContextRef ctx, vector<Binding> bindings);
 
@@ -23,13 +19,17 @@ public:
 		return _descriptorLayout;
 	}
 
-	vk::DescriptorSet allocateSet();
+	VulkanUniformSetRef createSet();
+
+
+	vk::DescriptorSet allocateDescriptorSet();
+
+	void freeDescriptorSet(vk::DescriptorSet set);
 
 private:
 
 	vk::DescriptorSetLayout _descriptorLayout;
 	vk::DescriptorPool _pool;
-
 
 	VulkanContextRef _ctx;
 	vector<Binding> _bindings;

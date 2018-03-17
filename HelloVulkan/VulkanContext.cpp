@@ -44,6 +44,8 @@ VulkanContext::VulkanContext(vk::Instance instance)
 	);
 }
 
+
+
 VulkanContext::~VulkanContext()
 {
 	
@@ -51,4 +53,16 @@ VulkanContext::~VulkanContext()
 
 	_device.destroy();
 
+}
+
+
+/// Helpers
+
+
+#include "VulkanUniformLayout.h"
+
+
+shared_ptr<VulkanUniformLayout> VulkanContext::makeUniformLayout(vector<VulkanUniformLayoutBinding> bindings)
+{
+	return make_shared<VulkanUniformLayout>(this, bindings);
 }

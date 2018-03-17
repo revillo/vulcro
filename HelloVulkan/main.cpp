@@ -40,7 +40,7 @@ int main()
 			//Reset command buffers
 			vkCtx->resetTasks();
 
-			SDL_Delay(30);
+			SDL_Delay(1000);
 		});
 	}
 

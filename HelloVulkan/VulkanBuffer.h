@@ -19,7 +19,7 @@ public:
 	/*
 	* Set size to -1 for full buffer
 	*/
-	vk::DescriptorBufferInfo createDBI(uint32 offset = 0, int64 size = -1);
+	vk::DescriptorBufferInfo getDBI(uint32 offset = 0, int64 size = -1);
 
 
 	vk::Buffer &getBuffer() {
