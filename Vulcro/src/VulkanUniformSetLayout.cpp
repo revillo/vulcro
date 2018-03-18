@@ -1,7 +1,7 @@
-#include "VulkanUniformLayout.h"
+#include "VulkanUniformSetLayout.h"
 
 
-VulkanUniformLayout::VulkanUniformLayout(VulkanContextRef ctx, vector<Binding> bindings) :
+VulkanUniformSetLayout::VulkanUniformSetLayout(VulkanContextRef ctx, vector<Binding> bindings) :
 	_ctx(ctx),
 	_bindings(bindings)
 {
@@ -47,7 +47,7 @@ VulkanUniformLayout::VulkanUniformLayout(VulkanContextRef ctx, vector<Binding> b
 
 }
 
-vk::DescriptorSet VulkanUniformLayout::allocateDescriptorSet() {
+vk::DescriptorSet VulkanUniformSetLayout::allocateDescriptorSet() {
 
 	auto set = _ctx->getDevice().allocateDescriptorSets(
 		vk::DescriptorSetAllocateInfo(
@@ -60,7 +60,7 @@ vk::DescriptorSet VulkanUniformLayout::allocateDescriptorSet() {
 	return set;
 }
 
-void VulkanUniformLayout::freeDescriptorSet(vk::DescriptorSet set)
+void VulkanUniformSetLayout::freeDescriptorSet(vk::DescriptorSet set)
 {
 	_ctx->getDevice().freeDescriptorSets(
 		_pool,
@@ -69,7 +69,7 @@ void VulkanUniformLayout::freeDescriptorSet(vk::DescriptorSet set)
 
 }
 
-VulkanUniformLayout::~VulkanUniformLayout()
+VulkanUniformSetLayout::~VulkanUniformSetLayout()
 {
 	_ctx->getDevice().destroyDescriptorPool(_pool);
 }

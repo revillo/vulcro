@@ -18,12 +18,12 @@ public:
 	void targetSwapcahin(VulkanSwapchainRef swapchain);
 
 
-	void record(vk::CommandBuffer cmd, function<void()> commands);
+	void record(vk::CommandBuffer * cmd, function<void()> commands);
 
-	void begin(vk::CommandBuffer cmd);
+	void begin(vk::CommandBuffer * cmd);
 
 
-	void end(vk::CommandBuffer cmd);
+	void end(vk::CommandBuffer * cmd);
 
 	vk::RenderPass getRenderPass() {
 		return _renderPass;
@@ -34,9 +34,6 @@ private:
 	
 	void createSurfaceFramebuffer(VulkanSwapchainRef swapchain);
 
-	vk::Fence _drawFence;
-
-	ivec2 _size;
 	VulkanContextRef _ctx;
 	VulkanImageRef _depthImage;
 	VulkanSwapchainRef _swapchain;
@@ -46,9 +43,4 @@ private:
 	vk::RenderPass _renderPass;
 
 	bool _renderPassCreated = false;
-
-	//Triangle
-	VulkanBufferRef _vbuffer, _ibuffer, _ubuffer;
-	VulkanUniformLayoutRef _uniformLayout;
-	VulkanUniformSetRef _uniformSet;
 };

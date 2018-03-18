@@ -28,7 +28,7 @@ VulkanShader::VulkanShader(
 	const char * vertPath, 
 	const char * fragPath, 
 	vector<VulkanVertexLayoutRef> vertexLayouts,
-	vector<VulkanUniformLayoutRef> uniformLayouts) 
+	vector<VulkanUniformSetLayoutRef> uniformLayouts) 
 	
 	:
 	_ctx(ctx),

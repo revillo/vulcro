@@ -137,6 +137,15 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 	);
 }
 
+void VulkanPipeline::bind(vk::CommandBuffer * cmd)
+{
+	cmd->bindPipeline(
+		vk::PipelineBindPoint::eGraphics,
+		getPipeline()
+	);
+
+}
+
 VulkanPipeline::~VulkanPipeline() {
 
 	_ctx->getDevice().destroyPipeline(_pipeline);

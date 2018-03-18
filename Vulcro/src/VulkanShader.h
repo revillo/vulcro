@@ -1,6 +1,6 @@
 #pragma once
 #include "VulkanContext.h"
-#include "VulkanUniformLayout.h"
+#include "VulkanUniformSetLayout.h"
 #include "VulkanVertexLayout.h"
 
 class VulkanShader
@@ -13,7 +13,7 @@ public:
 		const char * vertPath,
 		const char * fragPath,
 		vector<VulkanVertexLayoutRef> vertexLayouts = {},
-		vector<VulkanUniformLayoutRef> uniformLayouts = {}
+		vector<VulkanUniformSetLayoutRef> uniformLayouts = {}
 	);
 		
 	~VulkanShader();
@@ -26,7 +26,7 @@ public:
 		return _vis;
 	}
 
-	vector<VulkanUniformLayoutRef> &getUniformLayouts() {
+	vector<VulkanUniformSetLayoutRef> &getUniformLayouts() {
 		return _uniformLayouts;
 	}
 
@@ -36,7 +36,7 @@ public:
 
 private:
 
-	vector<VulkanUniformLayoutRef> _uniformLayouts;
+	vector<VulkanUniformSetLayoutRef> _uniformLayouts;
 	vector<VulkanVertexLayoutRef> _vertexLayouts;
 
 	vk::PipelineVertexInputStateCreateInfo _vis;

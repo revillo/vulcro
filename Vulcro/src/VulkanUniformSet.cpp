@@ -1,8 +1,8 @@
 #include "VulkanUniformSet.h"
 
-#include "VulkanUniformLayout.h"
+#include "VulkanUniformSetLayout.h"
 
-VulkanUniformSet::VulkanUniformSet(VulkanContextRef ctx, VulkanUniformLayoutRef layout) :
+VulkanUniformSet::VulkanUniformSet(VulkanContextRef ctx, VulkanUniformSetLayoutRef layout) :
 	_ctx(ctx),
 	_layout(layout)
 {
@@ -51,9 +51,9 @@ void VulkanUniformSet::update() {
 
 }
 
-void VulkanUniformSet::bind(vk::CommandBuffer &cmd, vk::PipelineLayout &pipelineLayout)
+void VulkanUniformSet::bind(vk::CommandBuffer * cmd, vk::PipelineLayout &pipelineLayout)
 {
-	cmd.bindDescriptorSets(
+	cmd->bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics,
 		pipelineLayout,
 		0,

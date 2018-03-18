@@ -163,7 +163,7 @@
     <ClCompile Include="..\Vulcro\src\VulkanShader.cpp" />
     <ClCompile Include="..\Vulcro\src\VulkanSwapchain.cpp" />
     <ClCompile Include="..\Vulcro\src\VulkanTask.cpp" />
-    <ClCompile Include="..\Vulcro\src\VulkanUniformLayout.cpp" />
+    <ClCompile Include="..\Vulcro\src\VulkanUniformSetLayout.cpp" />
     <ClCompile Include="..\Vulcro\src\VulkanUniformSet.cpp" />
     <ClCompile Include="..\Vulcro\src\VulkanVertexLayout.cpp" />
     <ClCompile Include="..\Vulcro\src\VulkanWindow.cpp" />
@@ -179,7 +179,7 @@
     <ClInclude Include="..\Vulcro\src\VulkanShader.h" />
     <ClInclude Include="..\Vulcro\src\VulkanSwapchain.h" />
     <ClInclude Include="..\Vulcro\src\VulkanTask.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanUniformLayout.h" />
+    <ClInclude Include="..\Vulcro\src\VulkanUniformSetLayout.h" />
     <ClInclude Include="..\Vulcro\src\VulkanUniformSet.h" />
     <ClInclude Include="..\Vulcro\src\VulkanVertexLayout.h" />
     <ClInclude Include="..\Vulcro\src\VulkanWindow.h" />

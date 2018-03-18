@@ -11,7 +11,7 @@ public:
 	~VulkanTask();
 
 
-	void record(function<void(vk::CommandBuffer)> commands);
+	void record(function<void(vk::CommandBuffer*)> commands);
 
 	void begin();
 	void end();

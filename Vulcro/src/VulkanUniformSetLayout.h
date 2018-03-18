@@ -3,15 +3,15 @@
 #include "VulkanContext.h"
 
 
-class VulkanUniformLayout
+class VulkanUniformSetLayout
 {
 	typedef VulkanUniformLayoutBinding Binding;
 
 public:
 
-	VulkanUniformLayout(VulkanContextRef ctx, vector<Binding> bindings);
+	VulkanUniformSetLayout(VulkanContextRef ctx, vector<Binding> bindings);
 
-	~VulkanUniformLayout();
+	~VulkanUniformSetLayout();
 
 	vk::DescriptorSetLayout getDescriptorLayout() {
 		return _descriptorLayout;

@@ -46,6 +46,13 @@ VulkanContext::VulkanContext(vk::Instance instance)
 
 
 
+shared_ptr<ibo> VulkanContext::makeIBO(vector<uint16_t> indices)
+{
+	
+	return make_shared<ibo>(this, indices);
+	
+}
+
 VulkanContext::~VulkanContext()
 {
 	
@@ -59,10 +66,10 @@ VulkanContext::~VulkanContext()
 /// Helpers
 
 
-#include "VulkanUniformLayout.h"
-shared_ptr<VulkanUniformLayout> VulkanContext::makeUniformLayout(vector<VulkanUniformLayoutBinding> bindings)
+#include "VulkanUniformSetLayout.h"
+shared_ptr<VulkanUniformSetLayout> VulkanContext::makeUniformSetLayout(vector<VulkanUniformLayoutBinding> bindings)
 {
-	return make_shared<VulkanUniformLayout>(this, bindings);
+	return make_shared<VulkanUniformSetLayout>(this, bindings);
 }
 
 #include "VulkanVertexLayout.h"
@@ -90,7 +97,7 @@ VulkanSwapchainRef VulkanContext::makeSwapchain(vk::SurfaceKHR surface)
 }
 
 #include "VulkanShader.h"
-VulkanShaderRef VulkanContext::makeShader(const char * vertPath, const char * fragPath, vector<VulkanVertexLayoutRef> vertexLayouts, vector<VulkanUniformLayoutRef> uniformLayouts)
+VulkanShaderRef VulkanContext::makeShader(const char * vertPath, const char * fragPath, vector<VulkanVertexLayoutRef> vertexLayouts, vector<VulkanUniformSetLayoutRef> uniformLayouts)
 {
 	return make_shared<VulkanShader>(this, vertPath, fragPath, vertexLayouts, uniformLayouts);
 }
@@ -100,8 +107,9 @@ VulkanBufferRef VulkanContext::makeBuffer(vk::BufferUsageFlags usage, uint64 siz
 	return make_shared<VulkanBuffer>(this, usage, size, data);
 }
 
+
 #include "VulkanUniformSet.h"
-VulkanUniformSetRef VulkanContext::makeUniformSet(VulkanUniformLayoutRef layout)
+VulkanUniformSetRef VulkanContext::makeUniformSet(VulkanUniformSetLayoutRef layout)
 {
 	return make_shared<VulkanUniformSet>(this, layout);
 }

@@ -36,9 +36,6 @@
     <ClCompile Include="..\Vulcro\src\VulkanTask.cpp">
       <Filter>Vulcro</Filter>
     </ClCompile>
-    <ClCompile Include="..\Vulcro\src\VulkanUniformLayout.cpp">
-      <Filter>Vulcro</Filter>
-    </ClCompile>
     <ClCompile Include="..\Vulcro\src\VulkanUniformSet.cpp">
       <Filter>Vulcro</Filter>
     </ClCompile>
@@ -57,6 +54,9 @@
     <ClCompile Include="..\Vulcro\src\VulkanImage.cpp">
       <Filter>Vulcro</Filter>
     </ClCompile>
+    <ClCompile Include="..\Vulcro\src\VulkanUniformSetLayout.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Vulcro\src\VulkanPipeline.h">
@@ -72,9 +72,6 @@
       <Filter>Vulcro</Filter>
     </ClInclude>
     <ClInclude Include="..\Vulcro\src\VulkanTask.h">
-      <Filter>Vulcro</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Vulcro\src\VulkanUniformLayout.h">
       <Filter>Vulcro</Filter>
     </ClInclude>
     <ClInclude Include="..\Vulcro\src\VulkanUniformSet.h">
@@ -99,6 +96,9 @@
       <Filter>Vulcro</Filter>
     </ClInclude>
     <ClInclude Include="..\Vulcro\src\Vulcro.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Vulcro\src\VulkanUniformSetLayout.h">
       <Filter>Vulcro</Filter>
     </ClInclude>
   </ItemGroup>

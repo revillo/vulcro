@@ -15,6 +15,8 @@ public:
 		return _pipelineLayout;
 	}
 
+	void bind(vk::CommandBuffer * cmd);
+
 	~VulkanPipeline();
 
 private:

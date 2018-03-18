@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.hpp>
 #include "General.h"
 
+
 struct VulkanUniformLayoutBinding {
 
 	VulkanUniformLayoutBinding(uint32 _arrayCount = 1, vk::DescriptorType _type = vk::DescriptorType::eUniformBuffer, vk::Sampler * _samplers = nullptr) :
@@ -18,9 +19,9 @@ struct VulkanUniformLayoutBinding {
 	vk::Sampler * samplers = nullptr;
 };
 
-typedef VulkanUniformLayoutBinding VULB;
+typedef VulkanUniformLayoutBinding ULB;
 
-class VulkanUniformLayout;
+class VulkanUniformSetLayout;
 class VulkanUniformSet;
 class VulkanVertexLayout;
 class VulkanRenderer;
@@ -32,16 +33,27 @@ class VulkanUniformSet;
 class VulkanTask;
 class VulkanImage;
 
+template <class T>
+class ubo;
+
+template <class T>
+class vbo;
+
+class ibo;
+
 typedef shared_ptr<VulkanShader> VulkanShaderRef;
 typedef shared_ptr<VulkanRenderer> VulkanRendererRef;
 typedef shared_ptr<VulkanPipeline> VulkanPipelineRef;
-typedef shared_ptr<VulkanUniformLayout> VulkanUniformLayoutRef;
+typedef shared_ptr<VulkanUniformSetLayout> VulkanUniformSetLayoutRef;
 typedef shared_ptr<VulkanVertexLayout> VulkanVertexLayoutRef;
 typedef shared_ptr<VulkanSwapchain> VulkanSwapchainRef;
 typedef shared_ptr<VulkanBuffer> VulkanBufferRef;
 typedef shared_ptr<VulkanUniformSet> VulkanUniformSetRef;
 typedef shared_ptr<VulkanTask> VulkanTaskRef;
 typedef shared_ptr<VulkanImage> VulkanImageRef;
+
+
+
 
 class VulkanContext
 {
@@ -67,7 +79,7 @@ public:
 
 	}
 
-	VulkanUniformLayoutRef makeUniformLayout(vector<VulkanUniformLayoutBinding> bindings);
+	VulkanUniformSetLayoutRef makeUniformSetLayout(vector<VulkanUniformLayoutBinding> bindings);
 	VulkanVertexLayoutRef makeVertexLayout(vector<vk::Format> fields);
 	VulkanRendererRef makeRenderer();
 	VulkanPipelineRef makePipeline(VulkanShaderRef shader, VulkanRendererRef renderer);
@@ -76,7 +88,7 @@ public:
 	VulkanShaderRef makeShader(const char * vertPath,
 		const char * fragPath,
 		vector<VulkanVertexLayoutRef> vertexLayouts,
-		vector<VulkanUniformLayoutRef> uniformLayouts = {});
+		vector<VulkanUniformSetLayoutRef> uniformLayouts = {});
 
 	VulkanBufferRef makeBuffer(
 		vk::BufferUsageFlags usage,
@@ -85,13 +97,26 @@ public:
 	);
 
 	VulkanUniformSetRef makeUniformSet(
-		VulkanUniformLayoutRef layout
+		VulkanUniformSetLayoutRef layout
 	);
 
 	VulkanTaskRef makeTask();
 
 	VulkanImageRef makeImage(vk::ImageUsageFlagBits usage, glm::ivec2 size, vk::Format format);
 	VulkanImageRef makeImage(vk::Image image, glm::ivec2 size, vk::Format format);
+	
+
+	template <class T>
+	shared_ptr<ubo<T>> makeUBO(uint32 arrayCount) {
+		return make_shared<ubo<T>>(this, arrayCount);
+	}
+
+	template <class T>
+	shared_ptr<vbo<T>> makeVBO(vector<vk::Format> fieldFormats, uint32 arrayCount) {
+		return make_shared<vbo<T>>(this, fieldFormats, arrayCount);
+	}
+
+	shared_ptr<ibo> makeIBO(vector<uint16_t> indices);
 
 	~VulkanContext();
 
@@ -108,3 +133,4 @@ private:
 };
 
 typedef VulkanContext * VulkanContextRef;
+

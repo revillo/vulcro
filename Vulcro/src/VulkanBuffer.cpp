@@ -63,11 +63,11 @@ VulkanBuffer::~VulkanBuffer()
 	_ctx->getDevice().freeMemory(_memory);
 }
 
-void VulkanBuffer::bindVertex(vk::CommandBuffer &cmd)
+void VulkanBuffer::bindVertex(vk::CommandBuffer * cmd)
 {
 	vk::DeviceSize offsets[1] = { 0 };
 
-	cmd.bindVertexBuffers(
+	cmd->bindVertexBuffers(
 		0,
 		1,
 		&_buffer,
@@ -75,9 +75,9 @@ void VulkanBuffer::bindVertex(vk::CommandBuffer &cmd)
 	);
 }
 
-void VulkanBuffer::bindIndex(vk::CommandBuffer & cmd)
+void VulkanBuffer::bindIndex(vk::CommandBuffer * cmd)
 {
-	cmd.bindIndexBuffer(
+	cmd->bindIndexBuffer(
 		_buffer, 0, vk::IndexType::eUint16
 	);
 
@@ -121,3 +121,4 @@ void * VulkanBuffer::getData()
 
 	return pData;
 }
+

@@ -18,119 +18,92 @@ int main()
 	{
 		auto window = VulkanWindow(0, 0, 400, 400);
 
-		auto vkCtx = window.getContext();
+		auto vctx = window.getContext();
 
-		auto renderer = vkCtx->makeRenderer();
-		auto swapchain = vkCtx->makeSwapchain(window.getSurface());
+		auto renderer = vctx->makeRenderer();
+		auto swapchain = vctx->makeSwapchain(window.getSurface());
 		renderer->targetSwapcahin(swapchain);
+		
+		//Make a uniform buffer with one ExampleUniform to hold color
+		auto ubuf = vctx->makeUBO<ExampleUniform>(1);
 
-		//Shaders take an array of uniform layouts and vertex attribute layouts
+		//Make the tree triangle vertices, and specify the format of each field
+		int numVerts = 3;
 
-		auto uniformLayout = vkCtx->makeUniformLayout({
-			//Just one struct in our layout
-			VULB(1, vk::DescriptorType::eUniformBuffer)
-		});
-
-		vector<VulkanUniformLayoutRef> ulrs = {
-			uniformLayout
-		};
-
-		vector<VulkanVertexLayoutRef> vlrs = {
-			vkCtx->makeVertexLayout({
+		auto vbuf = vctx->makeVBO<Vertex>(
+			{
 				//Position
 				vk::Format::eR32G32B32A32Sfloat,
 				//Color
 				vk::Format::eR32G32B32A32Sfloat
-			})
-		};
+			}
+		, numVerts);
 
-		auto shader = vkCtx->makeShader(
+		//Index buffer is straightforward
+		auto ibuf = vctx->makeIBO({
+			0, 1, 2
+		});
+
+		//Multiple uniform buffers can be bound to a uniform set at different binding points,
+		//so provide an array of layouts.
+		auto uniformSetLayout = vctx->makeUniformSetLayout({
+			ubuf->getLayout()
+		});
+
+		//Shaders take an array of vertex layouts and an array of uniform set layouts 
+		auto shader = vctx->makeShader(
 			"shaders/pos_color_vert.spv",
 			"shaders/uniform_color_frag.spv",
-			vlrs,
-			ulrs
+			{
+				vbuf->getLayout()
+			},
+			{
+				uniformSetLayout
+			}
 		);
 
-		auto pipeline = vkCtx->makePipeline(
+		auto pipeline = vctx->makePipeline(
 			shader,
 			renderer
 		);
 
 		//A uniform set is like an instance of a layout. Uniform buffers can bind to it.
-		auto uniformSet = vkCtx->makeUniformSet(uniformLayout);
+		auto uniformSet = vctx->makeUniformSet(uniformSetLayout);
 
-		int numVerts = 3;
+		//Bind ubo at binding point 0
+		uniformSet->bindBuffer(0, ubuf->getDBI());
 
-		VulkanBufferRef vbuffer = nullptr, ubuffer = nullptr;
+		//Must call update after all binding points are set
+		uniformSet->update();
 
-		auto randomizeTriangle = [=, &vbuffer, &ubuffer]() {
+		//Lambda to randomize our triangle buffers
+		auto randomizeTriangle = [=]() {
 
-			Vertex vs[3] = {
-				Vertex({
+			vbuf->at(0) = Vertex({
 				glm::vec4(0, -rand1(), 0.0, 1),
 				glm::vec4(rand1(),rand1(), rand1(), 1)
-					}),
+			});
 
-				Vertex({
+			vbuf->at(1) = Vertex({
 				glm::vec4(rand1(), rand1(), 0.0, 1),
 				glm::vec4(rand1(), rand1(), rand1(), 1)
-					}),
+			});
 
-				Vertex({
+			vbuf->at(2) = Vertex({
 				glm::vec4(-rand1(), rand1(), 0.0, 1),
 				glm::vec4(1, rand1(), rand1(), rand1())
-					}),
-			};
+			});
+			
+			vbuf->sync();
 
-
-			if (vbuffer == nullptr) {
-				vbuffer = vkCtx->makeBuffer(
-					vk::BufferUsageFlagBits::eVertexBuffer,
-					sizeof(Vertex) * numVerts,
-					&vs[0]
-				);
-			}
-			else {
-				vbuffer->upload(sizeof(Vertex) * numVerts, vs);
-			}
-
-			ExampleUniform us[1] = {
-				{
-					glm::vec4(rand1(), rand1(), rand1(), 1.0)
-				}
-			};
-
-			if (ubuffer == nullptr) {
-				ubuffer = vkCtx->makeBuffer(
-					vk::BufferUsageFlagBits::eUniformBuffer,
-					sizeof(ExampleUniform),
-					us
-				);
-				
-				//Bind ubo at binding point 0
-				uniformSet->bindBuffer(0, ubuffer->getDBI());
-
-				//Must call update after all binding points are set
-				uniformSet->update();
-			}
-			else {
-				ubuffer->upload(sizeof(ExampleUniform), us);
-			}
-
+			ubuf->at().color = vec4(rand1(), rand1(), rand1(), 1.0);
+			ubuf->sync();
 		};
 
 		randomizeTriangle();
 
-		uint16_t iData[3] = {
-			0, 1, 2
-		};
 
-		auto ibuffer = vkCtx->makeBuffer(
-			vk::BufferUsageFlagBits::eIndexBuffer,
-			sizeof(uint16_t) * numVerts,
-			iData
-		);
-
+	
 		const vk::Rect2D viewRect = swapchain->getRect();
 
 		auto viewport = vk::Viewport(
@@ -142,7 +115,7 @@ int main()
 			1.0
 		);
 
-		auto triangleTask = vkCtx->makeTask();
+		auto triangleTask = vctx->makeTask();
 
 		//Main Loop
 		window.run([=]() {
@@ -154,26 +127,23 @@ int main()
 			swapchain->nextFrame();
 
 			//Record to command buffer
-			triangleTask->record([=](vk::CommandBuffer cmd) {
+			triangleTask->record([=](vk::CommandBuffer * cmd) {
 			
-				renderer->record(cmd, [=, &cmd]() {
+				renderer->record(cmd, [=]() {
 
-					cmd.bindPipeline(
-						vk::PipelineBindPoint::eGraphics,
-						pipeline->getPipeline()
-					);
+					pipeline->bind(cmd);
 
-					cmd.setViewport(0, 1, &viewport);
+					cmd->setViewport(0, 1, &viewport);
 
-					cmd.setScissor(0, 1, &viewRect);
+					cmd->setScissor(0, 1, &viewRect);
 
-					vbuffer->bindVertex(cmd);
+					vbuf->bind(cmd);
 
-					ibuffer->bindIndex(cmd);
+					ibuf->bind(cmd);
 
 					uniformSet->bind(cmd, pipeline->getLayout());
 
-					cmd.drawIndexed(3, 1, 0, 0, 0);
+					cmd->drawIndexed(3, 1, 0, 0, 0);
 				
 				});
 
@@ -187,7 +157,7 @@ int main()
 			swapchain->present();
 
 			//Reset command buffers
-			vkCtx->resetTasks();
+			vctx->resetTasks();
 
 			SDL_Delay(1000);
 		});
