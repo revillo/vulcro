@@ -17,10 +17,13 @@ public:
 	void createDepthBuffer();
 	void targetSwapcahin(VulkanSwapchainRef swapchain);
 
-	void begin(VulkanTaskRef task);
+
+	void record(vk::CommandBuffer cmd, function<void()> commands);
+
+	void begin(vk::CommandBuffer cmd);
 
 
-	void end(VulkanTaskRef task);
+	void end(vk::CommandBuffer cmd);
 
 	vk::RenderPass getRenderPass() {
 		return _renderPass;

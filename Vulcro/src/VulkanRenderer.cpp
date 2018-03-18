@@ -93,10 +93,17 @@ void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain)
 }
 
 
-void VulkanRenderer::begin(VulkanTaskRef task) {
-	uint32 swapchainImageIndex = _swapchain->getRenderingIndex();
+void VulkanRenderer::record(vk::CommandBuffer cmd, function<void()> commands)
+{
+	begin(cmd);
 
-	auto cmd = task->cmdb();
+	commands();
+
+	end(cmd);
+}
+
+void VulkanRenderer::begin(vk::CommandBuffer cmd) {
+	uint32 swapchainImageIndex = _swapchain->getRenderingIndex();
 
 	const std::array<float, 4> clearColor = { 0.3f, 0.3f, 0.3f, 1.0f };
 
@@ -121,8 +128,8 @@ void VulkanRenderer::begin(VulkanTaskRef task) {
 	);
 }
 
-void VulkanRenderer::end(VulkanTaskRef task) {
-	task->cmdb().endRenderPass();
+void VulkanRenderer::end(vk::CommandBuffer cmd) {
+	cmd.endRenderPass();
 }
 
 void VulkanRenderer::createSurfaceFramebuffer(VulkanSwapchainRef swapchain)

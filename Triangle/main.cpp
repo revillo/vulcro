@@ -53,31 +53,55 @@ int main()
 			renderer
 		);
 
+		auto uniformSet = vkCtx->makeUniformSet(uniformLayout);
+
+
 		int numVerts = 3;
 
-		Vertex vs[3] = {
-			Vertex({
-			glm::vec4(0, -rand1(), 0.0, 1),
-			glm::vec4(rand1(),rand1(), rand1(), 1)
-				}),
+		VulkanBufferRef vbuffer, ubuffer;
 
-			Vertex({
-			glm::vec4(rand1(), rand1(), 0.0, 1),
-			glm::vec4(rand1(), rand1(), rand1(), 1)
-				}),
+		auto randomizeTriangle = [=, &vbuffer, &ubuffer]() {
 
-			Vertex({
-			glm::vec4(-rand1(), rand1(), 0.0, 1),
-			glm::vec4(1, rand1(), rand1(), rand1())
-				}),
+			Vertex vs[3] = {
+				Vertex({
+				glm::vec4(0, -rand1(), 0.0, 1),
+				glm::vec4(rand1(),rand1(), rand1(), 1)
+					}),
+
+				Vertex({
+				glm::vec4(rand1(), rand1(), 0.0, 1),
+				glm::vec4(rand1(), rand1(), rand1(), 1)
+					}),
+
+				Vertex({
+				glm::vec4(-rand1(), rand1(), 0.0, 1),
+				glm::vec4(1, rand1(), rand1(), rand1())
+					}),
+			};
+
+
+			vbuffer = vkCtx->makeBuffer(
+				vk::BufferUsageFlagBits::eVertexBuffer,
+				sizeof(Vertex) * numVerts,
+				&vs[0]
+			);
+
+			ExampleUniform us[1] = {
+				{
+					glm::vec4(rand1(), rand1(), rand1(), 1.0)
+				}
+			};
+
+			ubuffer = vkCtx->makeBuffer(
+				vk::BufferUsageFlagBits::eUniformBuffer,
+				sizeof(ExampleUniform),
+				us
+			);
+
+			uniformSet->bindBuffer(0, ubuffer->getDBI());
+			uniformSet->update();
 		};
 
-
-		auto vbuffer = vkCtx->makeBuffer(
-			vk::BufferUsageFlagBits::eVertexBuffer,
-			sizeof(Vertex) * numVerts,
-			&vs[0]
-		);
 
 		uint16_t iData[3] = {
 			0, 1, 2
@@ -89,86 +113,55 @@ int main()
 			iData
 		);
 
+		const vk::Rect2D swapRect = swapchain->getRect();
 
-		ExampleUniform us[1] = {
-			{
-				glm::vec4(0.0, 1.0, 0.0, 1.0)
-			}
-		};
-
-		auto ubuffer = vkCtx->makeBuffer(
-			vk::BufferUsageFlagBits::eUniformBuffer,
-			sizeof(ExampleUniform),
-			us
+		auto viewport = vk::Viewport(
+			0.0f,
+			0.0f,
+			(float)swapRect.extent.width,
+			(float)swapRect.extent.height,
+			0.0,
+			1.0
 		);
-
-		auto uniformSet = vkCtx->makeUniformSet(uniformLayout);
-
-		uniformSet->bindBuffer(0, ubuffer->getDBI());
-
-		uniformSet->update();
 
 
 		auto triangleTask = vkCtx->makeTask();
 
-		window.run([=]() {
+		//Main Loop
+		window.run([=, &vbuffer, &ubuffer]() {
+
+			//Randomize Triangle Buffers
+			randomizeTriangle();
 
 			//Wait for next available frame
 			swapchain->nextFrame();
 
 			//Record to command buffer
-			triangleTask->begin();
+			triangleTask->record([=](vk::CommandBuffer cmd) {
+			
+				renderer->record(cmd, [=, &cmd]() {
 
+					cmd.bindPipeline(
+						vk::PipelineBindPoint::eGraphics,
+						pipeline->getPipeline()
+					);
 
-			renderer->begin(triangleTask);
+					vbuffer->bindVertex(cmd);
 
+					ibuffer->bindIndex(cmd);
 
-			auto cmd = triangleTask->cmdb();
+					uniformSet->bind(cmd, pipeline->getLayout());
 
+					cmd.setViewport(0, 1, &viewport );
 
-			cmd.bindPipeline(
-				vk::PipelineBindPoint::eGraphics,
-				pipeline->getPipeline()
-			);
+					cmd.setScissor(0, 1, &swapRect);
 
-			vbuffer->bindVertex(cmd);
+					cmd.drawIndexed(3, 1, 0, 0, 0);
+				
+				});
 
-			ibuffer->bindIndex(cmd);
+			});
 
-			uniformSet->bind(cmd, pipeline->getLayout());
-
-			const vk::Rect2D swapRect = swapchain->getRect();
-
-
-			auto viewport = vk::Viewport(
-				0.0f,
-				0.0f,
-				(float)swapRect.extent.width,
-				(float)swapRect.extent.height,
-				0.0,
-				1.0
-			);
-
-			cmd.setViewport(
-				0,
-				1,
-				&viewport
-			);
-
-
-			cmd.setScissor(
-				0, 1, &swapRect
-			);
-
-			cmd.drawIndexed(3, 1, 0, 0, 0);
-
-
-
-
-			renderer->end(triangleTask);
-
-
-			triangleTask->end();
 
 			//Submit command buffer
 			triangleTask->execute(swapchain->getSemaphore());

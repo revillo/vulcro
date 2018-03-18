@@ -15,6 +15,13 @@ VulkanTask::VulkanTask(VulkanContextRef ctx) :
 }
 
 
+void VulkanTask::record(function<void(vk::CommandBuffer)> commands)
+{
+	begin();
+	commands(_commandBuffer);
+	end();
+}
+
 void VulkanTask::begin() {
 
 	vk::CommandBufferBeginInfo bgi;

@@ -10,8 +10,10 @@ public:
 	VulkanTask(VulkanContextRef ctx);
 	~VulkanTask();
 
-	void begin();
 
+	void record(function<void(vk::CommandBuffer)> commands);
+
+	void begin();
 	void end();
 
 	void execute(vk::Semaphore &semaphore);
