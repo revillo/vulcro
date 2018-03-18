@@ -21,39 +21,34 @@ int main()
 
 		auto vkCtx = window.getContext();
 
-		auto renderer = make_shared<VulkanRenderer>(vkCtx);
-		auto swapchain = make_shared<VulkanSwapchain>(vkCtx, window.getSurface());
+		auto renderer = vkCtx->makeRenderer();
+		auto swapchain = vkCtx->makeSwapchain(window.getSurface());
 
 		renderer->targetSwapcahin(swapchain);
 
-		auto uniformLayout = vkCtx->makeUniformLayout(
-			{
-				VULB()
-			}
-		);
-
+		auto uniformLayout = vkCtx->makeUniformLayout({
+			VULB()
+		});
 
 		std::vector<VulkanUniformLayoutRef> ulrs = {
 			uniformLayout
 		};
 
 		std::vector<VulkanVertexLayoutRef> vlrs = {
-			make_shared<VulkanVertexLayout>(vector<vk::Format>({
+			vkCtx->makeVertexLayout({
 				vk::Format::eR32G32B32A32Sfloat,
 				vk::Format::eR32G32B32A32Sfloat
-			}))
+			})
 		};
 
-		auto shader = make_shared<VulkanShader>(
-			vkCtx,
+		auto shader = vkCtx->makeShader(
 			"shaders/pos_color_vert.spv",
 			"shaders/uniform_color_frag.spv",
 			vlrs,
 			ulrs
 		);
 
-		auto pipeline = make_shared<VulkanPipeline>(
-			vkCtx,
+		auto pipeline = vkCtx->makePipeline(
 			shader,
 			renderer
 		);
@@ -78,8 +73,7 @@ int main()
 		};
 
 
-		auto vbuffer = make_shared<VulkanBuffer>(
-			vkCtx,
+		auto vbuffer = vkCtx->makeBuffer(
 			vk::BufferUsageFlagBits::eVertexBuffer,
 			sizeof(Vertex) * numVerts,
 			&vs[0]
@@ -89,8 +83,7 @@ int main()
 			0, 1, 2
 		};
 
-		auto ibuffer = make_shared<VulkanBuffer>(
-			vkCtx,
+		auto ibuffer = vkCtx->makeBuffer(
 			vk::BufferUsageFlagBits::eIndexBuffer,
 			sizeof(uint16_t) * numVerts,
 			iData
@@ -103,23 +96,20 @@ int main()
 			}
 		};
 
-		auto ubuffer = make_shared<VulkanBuffer>(
-			vkCtx,
+		auto ubuffer = vkCtx->makeBuffer(
 			vk::BufferUsageFlagBits::eUniformBuffer,
 			sizeof(ExampleUniform),
 			us
 		);
 
-		auto uniformSet = make_shared<VulkanUniformSet>(vkCtx, uniformLayout);
+		auto uniformSet = vkCtx->makeUniformSet(uniformLayout);
 
 		uniformSet->bindBuffer(0, ubuffer->getDBI());
 
 		uniformSet->update();
 
 
-
-
-		auto triangleTask = make_shared<VulkanTask>(vkCtx);
+		auto triangleTask = vkCtx->makeTask();
 
 		window.run([=]() {
 

@@ -27,5 +27,3 @@ private:
 
 	vk::DescriptorSet _descriptorSet;
 };
-
-typedef shared_ptr<VulkanUniformSet> VulkanUniformSetRef;

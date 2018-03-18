@@ -31,5 +31,4 @@ private:
 
 };
 
-typedef shared_ptr<VulkanUniformLayout> VulkanUniformLayoutRef;
 

@@ -10,9 +10,9 @@ VulkanRenderer::VulkanRenderer(VulkanContextRef ctx) :
 void VulkanRenderer::createDepthBuffer() {
 	
 	const vk::Rect2D rect = _swapchain->getRect();
-	
-	 _depthImage = make_shared<VulkanImage>(_ctx, glm::ivec2(rect.extent.width, rect.extent.height), vk::Format::eD16Unorm, vk::ImageUsageFlagBits::eDepthStencilAttachment);
 
+
+	_depthImage = _ctx->makeImage(vk::ImageUsageFlagBits::eDepthStencilAttachment, glm::ivec2(rect.extent.width, rect.extent.height), vk::Format::eD16Unorm);
 	_depthImage->allocateDeviceMemory();
 	_depthImage->createImageView(vk::ImageAspectFlagBits::eDepth);
 

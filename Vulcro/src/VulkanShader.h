@@ -52,4 +52,3 @@ private:
 	bool layoutCreated = false;
 };
 
-typedef shared_ptr<VulkanShader> VulkanShaderRef;

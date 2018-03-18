@@ -28,4 +28,3 @@ private:
 	VulkanRendererRef _renderer;
 };
 
-typedef shared_ptr<VulkanPipeline> VulkanPipelineRef;

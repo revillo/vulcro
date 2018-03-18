@@ -1,6 +1,6 @@
 #include "VulkanImage.h"
 
-VulkanImage::VulkanImage(VulkanContextRef ctx, glm::ivec2 size, vk::Format format, vk::ImageUsageFlagBits usage)
+VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlagBits usage, glm::ivec2 size, vk::Format format)
 	:_ctx(ctx),
 	_format(format),
 	_size(size)

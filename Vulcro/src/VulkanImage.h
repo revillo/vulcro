@@ -8,7 +8,7 @@
 class VulkanImage
 {
 public:
-	VulkanImage(VulkanContextRef ctx, glm::ivec2 size, vk::Format format, vk::ImageUsageFlagBits usage);
+	VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlagBits usage, glm::ivec2 size, vk::Format format);
 	VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format);
 
 	void createImageView(vk::ImageAspectFlags aspectFlags);
@@ -48,6 +48,3 @@ private:
 	vk::Image _image;
 	glm::ivec2 _size;
 };
-
-
-typedef shared_ptr<VulkanImage> VulkanImageRef;

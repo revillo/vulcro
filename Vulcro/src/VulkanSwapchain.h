@@ -61,5 +61,3 @@ private:
 
 	vk::Extent2D _extent;
 };
-
-typedef shared_ptr<VulkanSwapchain> VulkanSwapchainRef;

@@ -49,5 +49,3 @@ private:
 	VulkanUniformLayoutRef _uniformLayout;
 	VulkanUniformSetRef _uniformSet;
 };
-
-typedef shared_ptr<VulkanRenderer>  VulkanRendererRef;

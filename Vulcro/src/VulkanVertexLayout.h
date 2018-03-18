@@ -22,4 +22,3 @@ private:
 	vector<vk::Format> _fields;
 };
 
-typedef shared_ptr<VulkanVertexLayout> VulkanVertexLayoutRef;

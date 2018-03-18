@@ -27,5 +27,3 @@ private:
 	vk::Fence _fence;
 };
 
-typedef shared_ptr<VulkanTask> VulkanTaskRef;
-
