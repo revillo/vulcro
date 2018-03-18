@@ -27,7 +27,6 @@ VulkanUniformLayout::VulkanUniformLayout(VulkanContextRef ctx, vector<Binding> b
 		);
 	}
 
-
 	_descriptorLayout = _ctx->getDevice().createDescriptorSetLayout(
 		vk::DescriptorSetLayoutCreateInfo(
 			vk::DescriptorSetLayoutCreateFlags(),
@@ -45,12 +44,6 @@ VulkanUniformLayout::VulkanUniformLayout(VulkanContextRef ctx, vector<Binding> b
 			&poolSizes[0]
 		)
 	);
-
-}
-
-VulkanUniformSetRef VulkanUniformLayout::createSet() {
-
-	return make_shared<VulkanUniformSet>(_ctx, this);
 
 }
 

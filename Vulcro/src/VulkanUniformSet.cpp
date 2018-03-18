@@ -2,7 +2,7 @@
 
 #include "VulkanUniformLayout.h"
 
-VulkanUniformSet::VulkanUniformSet(VulkanContextRef ctx, VulkanUniformLayout * layout) :
+VulkanUniformSet::VulkanUniformSet(VulkanContextRef ctx, VulkanUniformLayoutRef layout) :
 	_ctx(ctx),
 	_layout(layout)
 {

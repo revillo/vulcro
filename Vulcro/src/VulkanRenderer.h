@@ -7,6 +7,7 @@
 #include "VulkanShader.h"
 #include "VulkanBuffer.h"
 #include "VulkanTask.h"
+#include "VulkanUniformSet.h"
 
 class VulkanRenderer
 {
@@ -15,11 +16,15 @@ public:
 
 	void createDepthBuffer();
 	void targetSwapcahin(VulkanSwapchainRef swapchain);
-	void createGraphicsPipeline();
 
-	void createTriangle();
-	void renderTriangle(VulkanTaskRef task);
+	void begin(VulkanTaskRef task);
 
+
+	void end(VulkanTaskRef task);
+
+	vk::RenderPass getRenderPass() {
+		return _renderPass;
+	}
 	~VulkanRenderer();
 
 private:
@@ -36,13 +41,8 @@ private:
 	vector<vk::Framebuffer> _framebuffers;
 
 	vk::RenderPass _renderPass;
-	vk::Pipeline _pipeline;
-	vk::PipelineLayout _pipelineLayout;
-
 
 	bool _renderPassCreated = false;
-	bool _pipelineCreated = false;
-	bool _layoutCreated = false;
 
 	//Triangle
 	VulkanBufferRef _vbuffer, _ibuffer, _ubuffer;

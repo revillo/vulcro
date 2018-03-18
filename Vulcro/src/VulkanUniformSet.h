@@ -1,14 +1,13 @@
 #pragma once
 
 #include "VulkanContext.h"
-
-class VulkanUniformLayout;
+#include "VulkanUniformLayout.h"
 
 class VulkanUniformSet
 {
 public:
 	
-	VulkanUniformSet(VulkanContextRef ctx, VulkanUniformLayout * layout);
+	VulkanUniformSet(VulkanContextRef ctx, VulkanUniformLayoutRef layout);
 
 	void bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi);
 
@@ -22,7 +21,7 @@ private:
 
 	VulkanContextRef _ctx;
 
-	VulkanUniformLayout * _layout;
+	VulkanUniformLayoutRef _layout;
 
 	vector<vk::WriteDescriptorSet> _writes;
 

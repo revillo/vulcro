@@ -1,8 +1,6 @@
 #pragma once
 
 #include "VulkanContext.h"
-#include "VulkanUniformSet.h"
-
 
 
 class VulkanUniformLayout
@@ -18,9 +16,6 @@ public:
 	vk::DescriptorSetLayout getDescriptorLayout() {
 		return _descriptorLayout;
 	}
-
-	VulkanUniformSetRef createSet();
-
 
 	vk::DescriptorSet allocateDescriptorSet();
 
