@@ -9,12 +9,14 @@
 class VulkanBuffer
 {
 public:
-	VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, void* data);
+	VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, void* data = nullptr);
 	~VulkanBuffer();
 	
 	void bindVertex(vk::CommandBuffer &cmd);
 	
 	void bindIndex(vk::CommandBuffer &cmd);
+
+	void upload(uint64 size, void* data, uint32 offset = 0);
 
 	/*
 	* Set size to -1 for full buffer

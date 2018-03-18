@@ -12,6 +12,17 @@ VulkanUniformSet::VulkanUniformSet(VulkanContextRef ctx, VulkanUniformLayoutRef 
 void VulkanUniformSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi)
 {
 
+	if (_dbis.size() < binding + 1) {
+		_dbis.resize(binding + 1);
+	}
+
+	if (_dbis[binding] == dbi) {
+		return;
+	}
+	else {
+		_dbis[binding] = dbi;
+	}
+
 	_writes.push_back(vk::WriteDescriptorSet(
 		_descriptorSet,
 		binding,
@@ -26,6 +37,8 @@ void VulkanUniformSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi)
 }
 
 void VulkanUniformSet::update() {
+
+	if (_writes.size() == 0) return;
 
 	_ctx->getDevice().updateDescriptorSets(
 		_writes.size(),

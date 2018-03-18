@@ -4,7 +4,6 @@ float rand1() {
 	return (float)rand() / RAND_MAX;
 }
 
-
 struct Vertex {
 	glm::vec4 position;
 	glm::vec4 color;
@@ -23,20 +22,24 @@ int main()
 
 		auto renderer = vkCtx->makeRenderer();
 		auto swapchain = vkCtx->makeSwapchain(window.getSurface());
-
 		renderer->targetSwapcahin(swapchain);
 
+		//Shaders take an array of uniform layouts and vertex attribute layouts
+
 		auto uniformLayout = vkCtx->makeUniformLayout({
-			VULB()
+			//Just one struct in our layout
+			VULB(1, vk::DescriptorType::eUniformBuffer)
 		});
 
-		std::vector<VulkanUniformLayoutRef> ulrs = {
+		vector<VulkanUniformLayoutRef> ulrs = {
 			uniformLayout
 		};
 
-		std::vector<VulkanVertexLayoutRef> vlrs = {
+		vector<VulkanVertexLayoutRef> vlrs = {
 			vkCtx->makeVertexLayout({
+				//Position
 				vk::Format::eR32G32B32A32Sfloat,
+				//Color
 				vk::Format::eR32G32B32A32Sfloat
 			})
 		};
@@ -53,12 +56,12 @@ int main()
 			renderer
 		);
 
+		//A uniform set is like an instance of a layout. Uniform buffers can bind to it.
 		auto uniformSet = vkCtx->makeUniformSet(uniformLayout);
-
 
 		int numVerts = 3;
 
-		VulkanBufferRef vbuffer, ubuffer;
+		VulkanBufferRef vbuffer = nullptr, ubuffer = nullptr;
 
 		auto randomizeTriangle = [=, &vbuffer, &ubuffer]() {
 
@@ -80,11 +83,16 @@ int main()
 			};
 
 
-			vbuffer = vkCtx->makeBuffer(
-				vk::BufferUsageFlagBits::eVertexBuffer,
-				sizeof(Vertex) * numVerts,
-				&vs[0]
-			);
+			if (vbuffer == nullptr) {
+				vbuffer = vkCtx->makeBuffer(
+					vk::BufferUsageFlagBits::eVertexBuffer,
+					sizeof(Vertex) * numVerts,
+					&vs[0]
+				);
+			}
+			else {
+				vbuffer->upload(sizeof(Vertex) * numVerts, vs);
+			}
 
 			ExampleUniform us[1] = {
 				{
@@ -92,16 +100,26 @@ int main()
 				}
 			};
 
-			ubuffer = vkCtx->makeBuffer(
-				vk::BufferUsageFlagBits::eUniformBuffer,
-				sizeof(ExampleUniform),
-				us
-			);
+			if (ubuffer == nullptr) {
+				ubuffer = vkCtx->makeBuffer(
+					vk::BufferUsageFlagBits::eUniformBuffer,
+					sizeof(ExampleUniform),
+					us
+				);
+				
+				//Bind ubo at binding point 0
+				uniformSet->bindBuffer(0, ubuffer->getDBI());
 
-			uniformSet->bindBuffer(0, ubuffer->getDBI());
-			uniformSet->update();
+				//Must call update after all binding points are set
+				uniformSet->update();
+			}
+			else {
+				ubuffer->upload(sizeof(ExampleUniform), us);
+			}
+
 		};
 
+		randomizeTriangle();
 
 		uint16_t iData[3] = {
 			0, 1, 2
@@ -113,22 +131,21 @@ int main()
 			iData
 		);
 
-		const vk::Rect2D swapRect = swapchain->getRect();
+		const vk::Rect2D viewRect = swapchain->getRect();
 
 		auto viewport = vk::Viewport(
 			0.0f,
 			0.0f,
-			(float)swapRect.extent.width,
-			(float)swapRect.extent.height,
+			(float)viewRect.extent.width,
+			(float)viewRect.extent.height,
 			0.0,
 			1.0
 		);
 
-
 		auto triangleTask = vkCtx->makeTask();
 
 		//Main Loop
-		window.run([=, &vbuffer, &ubuffer]() {
+		window.run([=]() {
 
 			//Randomize Triangle Buffers
 			randomizeTriangle();
@@ -146,15 +163,15 @@ int main()
 						pipeline->getPipeline()
 					);
 
+					cmd.setViewport(0, 1, &viewport);
+
+					cmd.setScissor(0, 1, &viewRect);
+
 					vbuffer->bindVertex(cmd);
 
 					ibuffer->bindIndex(cmd);
 
 					uniformSet->bind(cmd, pipeline->getLayout());
-
-					cmd.setViewport(0, 1, &viewport );
-
-					cmd.setScissor(0, 1, &swapRect);
 
 					cmd.drawIndexed(3, 1, 0, 0, 0);
 				
@@ -177,7 +194,7 @@ int main()
 	}
 
 	int i;
-	std::cin >> i;
+	cin >> i;
 
     return 0;
 }

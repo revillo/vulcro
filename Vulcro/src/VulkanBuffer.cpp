@@ -47,28 +47,14 @@ VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uin
 		)
 	);
 
-
-	void * pData;
-
-	pData = _ctx->getDevice().mapMemory(
-		_memory,
-		0,
-		size
-	);
-
-	memcpy(pData, data, size);
-
-	_ctx->getDevice().unmapMemory(
-		_memory
-	);
-
+	if (data != nullptr)
+		upload(size, data);
 
 	_ctx->getDevice().bindBufferMemory(
 		_buffer,
 		_memory,
 		0
 	);
-
 }
 
 VulkanBuffer::~VulkanBuffer()
@@ -95,6 +81,23 @@ void VulkanBuffer::bindIndex(vk::CommandBuffer & cmd)
 		_buffer, 0, vk::IndexType::eUint16
 	);
 
+}
+
+void VulkanBuffer::upload(uint64 size, void * data, uint32 offset)
+{
+	void * pData;
+
+	pData = _ctx->getDevice().mapMemory(
+		_memory,
+		offset,
+		size
+	);
+
+	memcpy(pData, data, size);
+
+	_ctx->getDevice().unmapMemory(
+		_memory
+	);
 }
 
 vk::DescriptorBufferInfo VulkanBuffer::getDBI(uint32 offset, int64 size)

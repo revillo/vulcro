@@ -5,7 +5,7 @@
 
 struct VulkanUniformLayoutBinding {
 
-	VulkanUniformLayoutBinding(vk::DescriptorType _type = vk::DescriptorType::eUniformBuffer, uint32 _arrayCount = 1, vk::Sampler * _samplers = nullptr) :
+	VulkanUniformLayoutBinding(uint32 _arrayCount = 1, vk::DescriptorType _type = vk::DescriptorType::eUniformBuffer, vk::Sampler * _samplers = nullptr) :
 		type(_type), 
 		arrayCount(_arrayCount),
 		samplers(_samplers)

@@ -19,6 +19,8 @@ public:
 
 private:
 
+	vector<vk::DescriptorBufferInfo> _dbis;
+
 	VulkanContextRef _ctx;
 
 	VulkanUniformLayoutRef _layout;
