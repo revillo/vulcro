@@ -101,8 +101,6 @@ int main()
 		};
 
 		randomizeTriangle();
-
-
 	
 		const vk::Rect2D viewRect = swapchain->getRect();
 
@@ -143,7 +141,7 @@ int main()
 
 					uniformSet->bind(cmd, pipeline->getLayout());
 
-					cmd->drawIndexed(3, 1, 0, 0, 0);
+					cmd->drawIndexed(vbuf->getCount(), 1, 0, 0, 0);
 				
 				});
 
@@ -159,7 +157,7 @@ int main()
 			//Reset command buffers
 			vctx->resetTasks();
 
-			SDL_Delay(1000);
+			SDL_Delay(100);
 		});
 	}
 

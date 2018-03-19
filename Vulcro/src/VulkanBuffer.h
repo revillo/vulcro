@@ -53,6 +53,18 @@ public:
 		return values[i];
 	}
 
+	void set(uint32 i, T value) {
+		values[i] = value;
+	}
+
+	void set(T value) {
+		values[0] = value;
+	}
+
+	void set(uint32 start, uint32 count, T * values) {
+		memcpy(&values[i], values, count * sizeof(T));
+	}
+
 	void sync() {
 		_vbr->upload(_size, values);
 	};
@@ -104,6 +116,18 @@ public:
 		return values[i];
 	}
 
+	void set(uint32 i, T value) {
+		values[i] = value;
+	}
+
+	void set(T value) {
+		values[0] = value;
+	}
+
+	void set(uint32 start, uint32 count, T * values) {
+		memcpy(&values[i], values, count * sizeof(T));
+	}
+
 	void sync() {
 		_vbr->upload(_size, values);
 	};
@@ -118,6 +142,10 @@ public:
 
 	VulkanVertexLayoutRef getLayout() {
 		return _layout;
+	}
+
+	uint32 getCount() {
+		return _arrayCount;
 	}
 
 	~vbo() {

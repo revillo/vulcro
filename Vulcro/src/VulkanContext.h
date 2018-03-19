@@ -102,7 +102,7 @@ public:
 
 	VulkanTaskRef makeTask();
 
-	VulkanImageRef makeImage(vk::ImageUsageFlagBits usage, glm::ivec2 size, vk::Format format);
+	VulkanImageRef makeImage(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
 	VulkanImageRef makeImage(vk::Image image, glm::ivec2 size, vk::Format format);
 	
 

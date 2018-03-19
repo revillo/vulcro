@@ -11,19 +11,21 @@ void VulkanRenderer::createDepthBuffer() {
 	
 	const vk::Rect2D rect = _swapchain->getRect();
 
-
 	_depthImage = _ctx->makeImage(vk::ImageUsageFlagBits::eDepthStencilAttachment, glm::ivec2(rect.extent.width, rect.extent.height), vk::Format::eD16Unorm);
 	_depthImage->allocateDeviceMemory();
 	_depthImage->createImageView(vk::ImageAspectFlagBits::eDepth);
 
-
 }
 
-void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain)
+void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain, bool useDepth)
 {
+	_useDepth = useDepth;
 	_swapchain = swapchain;
 
-	createDepthBuffer();
+	if (useDepth) createDepthBuffer();
+	else _depthImage = nullptr;
+
+	_fullRect = _swapchain->getRect();
 
 	vk::AttachmentDescription attachments[2] = {
 		vk::AttachmentDescription(
@@ -70,7 +72,7 @@ void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain)
 		1,
 		&colorRef,
 		nullptr, 
-		&depthRef, 
+		useDepth ? &depthRef : nullptr, 
 		0, 
 		nullptr
 	);
@@ -78,7 +80,7 @@ void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain)
 	_renderPass = _ctx->getDevice().createRenderPass(
 		vk::RenderPassCreateInfo(
 			vk::RenderPassCreateFlags(),
-			2,
+			useDepth ? 2 : 1,
 			attachments,
 			1,
 			&subpass,
@@ -89,7 +91,104 @@ void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain)
 
 	_renderPassCreated = true;
 
-	createSurfaceFramebuffer(swapchain);
+	createSwapchainFramebuffers(swapchain);
+}
+
+void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
+{
+	if (useDepth)
+		createDepthBuffer();
+	else
+		_depthImage = nullptr;
+
+	_swapchain = nullptr;
+	_images = images;
+
+	_fullRect.offset.x = 0;
+	_fullRect.offset.y = 0;
+	_fullRect.extent.width = images[0]->getSize().x;
+	_fullRect.extent.height = images[0]->getSize().y;
+	
+	vector<vk::AttachmentDescription> attachments;
+	attachments.reserve(images.size() + 1);
+
+	vector<vk::AttachmentReference> colorRefs;
+
+
+	uint32 attachment = 0;
+
+	for (auto &image : images) {
+		
+		attachments.push_back(
+			vk::AttachmentDescription(
+				vk::AttachmentDescriptionFlags(),
+				image->getFormat(),
+				vk::SampleCountFlagBits::e1,
+				vk::AttachmentLoadOp::eClear,
+				vk::AttachmentStoreOp::eStore,
+				vk::AttachmentLoadOp::eDontCare,
+				vk::AttachmentStoreOp::eDontCare,
+				vk::ImageLayout::eUndefined, //Initial
+				vk::ImageLayout::eColorAttachmentOptimal //Final
+			)
+		);
+
+		colorRefs.push_back(vk::AttachmentReference(
+			attachment++,
+			vk::ImageLayout::eColorAttachmentOptimal
+		));
+
+	}
+
+	if (_useDepth) {
+		attachments.push_back(vk::AttachmentDescription(
+			vk::AttachmentDescriptionFlags(),
+			_depthImage->getFormat(),
+			vk::SampleCountFlagBits::e1,
+			vk::AttachmentLoadOp::eClear,
+			vk::AttachmentStoreOp::eDontCare,
+			vk::AttachmentLoadOp::eDontCare,
+			vk::AttachmentStoreOp::eDontCare,
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eDepthStencilAttachmentOptimal)
+		);
+	}
+	
+
+	vk::AttachmentReference depthRef = vk::AttachmentReference(
+		1,
+		vk::ImageLayout::eDepthStencilAttachmentOptimal
+	);
+
+
+	vk::SubpassDescription subpass = vk::SubpassDescription(
+		vk::SubpassDescriptionFlags(),
+		vk::PipelineBindPoint::eGraphics,
+		0,
+		nullptr,
+		colorRefs.size(),
+		&colorRefs[0],
+		nullptr,
+		_useDepth ? &depthRef : nullptr,
+		0,
+		nullptr
+	);
+
+	_renderPass = _ctx->getDevice().createRenderPass(
+		vk::RenderPassCreateInfo(
+			vk::RenderPassCreateFlags(),
+			attachments.size(),
+			&attachments[0],
+			1,
+			&subpass,
+			0,
+			nullptr
+		)
+	);
+
+	_renderPassCreated = true;
+
+	createImagesFramebuffer();
 }
 
 
@@ -103,25 +202,34 @@ void VulkanRenderer::record(vk::CommandBuffer * cmd, function<void()> commands)
 }
 
 void VulkanRenderer::begin(vk::CommandBuffer * cmd) {
-	uint32 swapchainImageIndex = _swapchain->getRenderingIndex();
 
-	const std::array<float, 4> clearColor = { 0.3f, 0.3f, 0.3f, 1.0f };
+	uint32 framebufferIndex = 0;
+	const std::array<float, 4> clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+	std::vector<vk::ClearValue> clears;
 
+	if (_swapchain != nullptr) {
+		framebufferIndex = _swapchain->getRenderingIndex(); //todo
+		clears.push_back(vk::ClearColorValue(clearColor));
+	}
+	else {
+		for (auto &image : _images) {
+			clears.push_back(vk::ClearColorValue(clearColor));
+		}
+	}
 
-	vk::ClearValue clears[2] = {
-		vk::ClearColorValue(clearColor),
-		vk::ClearDepthStencilValue(1.0f, 0)
-	};
+	if (_useDepth) {
+		clears.push_back(vk::ClearDepthStencilValue(1.0, 0));
+	}
 
 	const vk::Rect2D swapRect = _swapchain->getRect();
 
 	cmd->beginRenderPass(
 		vk::RenderPassBeginInfo(
 			_renderPass,
-			_framebuffers[swapchainImageIndex],
+			_framebuffers[framebufferIndex],
 			swapRect,
-			2,
-			clears
+			clears.size(),
+			&clears[0]
 		),
 
 		vk::SubpassContents::eInline
@@ -132,7 +240,38 @@ void VulkanRenderer::end(vk::CommandBuffer * cmd) {
 	cmd->endRenderPass();
 }
 
-void VulkanRenderer::createSurfaceFramebuffer(VulkanSwapchainRef swapchain)
+void VulkanRenderer::createImagesFramebuffer() {
+	
+	vector<vk::ImageView> fbAttachments;
+
+	for (auto img : _images) {
+		fbAttachments.push_back(img->getImageView());
+	}
+
+	if (_useDepth) {
+		fbAttachments.push_back(_depthImage->getImageView());
+	}
+
+	_framebuffers.push_back(
+
+		_ctx->getDevice().createFramebuffer(
+			vk::FramebufferCreateInfo(
+				vk::FramebufferCreateFlags(),
+				_renderPass,
+				fbAttachments.size(),
+				&fbAttachments[0],
+				_fullRect.extent.width,
+				_fullRect.extent.height,
+				1
+			)
+		)
+	);
+
+}
+
+
+
+void VulkanRenderer::createSwapchainFramebuffers(VulkanSwapchainRef swapchain)
 {
 	vector<VulkanImageRef> swapImages = swapchain->getImages();
 
@@ -140,10 +279,8 @@ void VulkanRenderer::createSurfaceFramebuffer(VulkanSwapchainRef swapchain)
 
 		vk::ImageView fbAttachments[2] = {
 			img->getImageView(),
-			_depthImage->getImageView()
+			_useDepth ? _depthImage->getImageView() : vk::ImageView()
 		};
-
-
 
 		_framebuffers.push_back(
 
@@ -151,7 +288,7 @@ void VulkanRenderer::createSurfaceFramebuffer(VulkanSwapchainRef swapchain)
 				vk::FramebufferCreateInfo(
 					vk::FramebufferCreateFlags(),
 					_renderPass,
-					2,
+					_useDepth ? 2 : 1,
 					fbAttachments,
 					img->getSize().x,
 					img->getSize().y,

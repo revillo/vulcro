@@ -1,6 +1,6 @@
 #include "VulkanImage.h"
 
-VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlagBits usage, glm::ivec2 size, vk::Format format)
+VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format)
 	:_ctx(ctx),
 	_format(format),
 	_size(size)
@@ -93,11 +93,47 @@ void VulkanImage::createImageView(vk::ImageAspectFlags aspectFlags) {
 
 }
 
+void VulkanImage::createSampler()
+{
+	_sampler = _ctx->getDevice().createSampler(
+		vk::SamplerCreateInfo(
+			vk::SamplerCreateFlags(),
+			vk::Filter::eLinear, //Mag Filter
+			vk::Filter::eLinear, //Min Filter
+			vk::SamplerMipmapMode::eLinear,
+			vk::SamplerAddressMode::eRepeat, //U
+			vk::SamplerAddressMode::eRepeat,  //V
+			vk::SamplerAddressMode::eRepeat, //W
+			0.0, //mip lod bias
+			0, //Anisotropy Enable
+			1.0f,
+			0, //Compare Enable
+			vk::CompareOp::eAlways,
+			0.0f, //min lod
+			0.0f, //max lod
+			vk::BorderColor::eFloatOpaqueBlack,
+			0 //Unnormalized Coordinates
+
+		)
+	);
+}
+
+vk::DescriptorImageInfo VulkanImage::getDII()
+{
+	return vk::DescriptorImageInfo(
+		_sampler,
+		_imageView,
+		vk::ImageLayout::eShaderReadOnlyOptimal
+	);
+}
+
 VulkanImage::~VulkanImage()
 {
 
 	if (_viewCreated) _ctx->getDevice().destroyImageView(_imageView);
 	if (_imageCreated) _ctx->getDevice().destroyImage(_image);
 	if (_memoryAllocated) _ctx->getDevice().freeMemory(_memory);
+
+	if (_sampler) _ctx->getDevice().destroySampler(_sampler);
 
 }

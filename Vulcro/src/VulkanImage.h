@@ -8,10 +8,14 @@
 class VulkanImage
 {
 public:
-	VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlagBits usage, glm::ivec2 size, vk::Format format);
+	VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
 	VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format);
 
-	void createImageView(vk::ImageAspectFlags aspectFlags);
+	void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor);
+	void createSampler();
+
+	vk::DescriptorImageInfo getDII();
+
 	void allocateDeviceMemory();
 
 	vk::Format getFormat() {
@@ -22,6 +26,10 @@ public:
 
 	vk::Image deviceImage() {
 		return _image;
+	}
+
+	vk::Sampler getSampler() {
+		return _sampler;
 	}
 
 
@@ -38,8 +46,10 @@ private:
 	VulkanContextRef _ctx;
 
 	vk::Format _format;
-	vk::ImageView _imageView;
+	vk::ImageView _imageView = nullptr;
 	vk::DeviceMemory _memory;
+
+	vk::Sampler _sampler = nullptr;
 
 	bool _imageCreated = false;
 	bool _memoryAllocated = false;

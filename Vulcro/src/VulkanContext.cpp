@@ -121,7 +121,7 @@ VulkanTaskRef VulkanContext::makeTask()
 }
 
 #include "VulkanImage.h"
-VulkanImageRef VulkanContext::makeImage(vk::ImageUsageFlagBits usage, glm::ivec2 size, vk::Format format)
+VulkanImageRef VulkanContext::makeImage(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format)
 {
 	return make_shared<VulkanImage>(this, usage, size, format);
 }

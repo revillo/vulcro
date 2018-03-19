@@ -15,8 +15,8 @@ public:
 	VulkanRenderer(VulkanContextRef context);
 
 	void createDepthBuffer();
-	void targetSwapcahin(VulkanSwapchainRef swapchain);
-
+	void targetSwapcahin(VulkanSwapchainRef swapchain, bool useDepth = true);
+	void targetImages(vector<VulkanImageRef> images, bool useDepth = true);
 
 	void record(vk::CommandBuffer * cmd, function<void()> commands);
 
@@ -32,15 +32,22 @@ public:
 
 private:
 	
-	void createSurfaceFramebuffer(VulkanSwapchainRef swapchain);
+	void createSwapchainFramebuffers(VulkanSwapchainRef swapchain);
+	void createImagesFramebuffer();
 
 	VulkanContextRef _ctx;
 	VulkanImageRef _depthImage;
-	VulkanSwapchainRef _swapchain;
-	
+
+	VulkanSwapchainRef _swapchain = nullptr;
+	vector<VulkanImageRef> _images;
+
 	vector<vk::Framebuffer> _framebuffers;
 
 	vk::RenderPass _renderPass;
+
+	bool _useDepth = false;
+
+	vk::Rect2D _fullRect;
 
 	bool _renderPassCreated = false;
 };

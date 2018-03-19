@@ -71,5 +71,6 @@ void VulkanUniformSetLayout::freeDescriptorSet(vk::DescriptorSet set)
 
 VulkanUniformSetLayout::~VulkanUniformSetLayout()
 {
+	_ctx->getDevice().destroyDescriptorSetLayout(_descriptorLayout);
 	_ctx->getDevice().destroyDescriptorPool(_pool);
 }

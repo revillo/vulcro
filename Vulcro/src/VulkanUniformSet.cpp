@@ -11,7 +11,7 @@ VulkanUniformSet::VulkanUniformSet(VulkanContextRef ctx, VulkanUniformSetLayoutR
 
 void VulkanUniformSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi)
 {
-
+	/*
 	if (_dbis.size() < binding + 1) {
 		_dbis.resize(binding + 1);
 	}
@@ -20,6 +20,7 @@ void VulkanUniformSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi)
 		return;
 	}
 	else {
+		//TODO check writes for this dbi
 		_dbis[binding] = dbi;
 	}
 
@@ -30,10 +31,57 @@ void VulkanUniformSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi)
 		1,
 		vk::DescriptorType::eUniformBuffer,
 		nullptr,
-		&dbi,
+		&_dbis[binding],
 		nullptr
 
 	));
+	*/
+
+	auto write = vk::WriteDescriptorSet(
+		_descriptorSet,
+		binding,
+		0,
+		1,
+		vk::DescriptorType::eUniformBuffer,
+		nullptr,
+		&dbi,
+		nullptr
+
+	);
+
+
+	_ctx->getDevice().updateDescriptorSets(
+		1,
+		&write,
+		0,
+		nullptr
+	);
+}
+
+void VulkanUniformSet::bindImage(uint32 binding, VulkanImageRef image)
+{
+
+	auto dii = image->getDII();
+
+	auto write = vk::WriteDescriptorSet(
+		_descriptorSet,
+		binding,
+		0,
+		1,
+		vk::DescriptorType::eCombinedImageSampler,
+		&dii,
+		nullptr,
+		nullptr
+
+	);
+
+	_ctx->getDevice().updateDescriptorSets(
+		1,
+		&write,
+		0,
+		nullptr
+	);
+
 }
 
 void VulkanUniformSet::update() {
