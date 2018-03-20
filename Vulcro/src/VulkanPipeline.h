@@ -2,18 +2,17 @@
 #include "VulkanContext.h"
 #include "VulkanRenderer.h"
 
-struct PipelineConfig {
-    
-};
-
-struct ColorBlendConfig {
-
-};
 
 class VulkanPipeline {
 
 public:
-	VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, VulkanRendererRef renderer);
+	VulkanPipeline(
+		VulkanContextRef ctx, 
+		VulkanShaderRef shader, 
+		VulkanRendererRef renderer, 
+		PipelineConfig config = PipelineConfig(), 
+		vector<ColorBlendConfig> colorBlendConfigs = {}
+	);
 
 	vk::Pipeline getPipeline() {
 		return _pipeline;

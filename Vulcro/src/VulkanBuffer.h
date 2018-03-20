@@ -108,6 +108,11 @@ public:
 	{
 		values = new T[arrayCount];
 		_size = sizeof(T) * arrayCount;
+
+		if (data != nullptr) {
+			memcpy(values, data, _size);
+		}
+
 		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eVertexBuffer, _size, data);
 		_layout = ctx->makeVertexLayout(fieldFormats);
 	};

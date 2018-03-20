@@ -19,6 +19,15 @@ struct VulkanUniformLayoutBinding {
 	vk::Sampler * samplers = nullptr;
 };
 
+struct PipelineConfig {
+	vk::PrimitiveTopology topology = vk::PrimitiveTopology::eTriangleList;
+};
+
+struct ColorBlendConfig {
+
+};
+
+
 typedef VulkanUniformLayoutBinding ULB;
 
 class VulkanUniformSetLayout;
@@ -82,7 +91,11 @@ public:
 	VulkanUniformSetLayoutRef makeUniformSetLayout(vector<VulkanUniformLayoutBinding> bindings);
 	VulkanVertexLayoutRef makeVertexLayout(vector<vk::Format> fields);
 	VulkanRendererRef makeRenderer();
-	VulkanPipelineRef makePipeline(VulkanShaderRef shader, VulkanRendererRef renderer);
+
+	VulkanPipelineRef makePipeline(VulkanShaderRef shader, VulkanRendererRef renderer, PipelineConfig config = PipelineConfig(),
+		vector<ColorBlendConfig> colorBlendConfigs = {}
+	);
+
 	VulkanSwapchainRef makeSwapchain(vk::SurfaceKHR surface);
 
 	VulkanShaderRef makeShader(const char * vertPath,

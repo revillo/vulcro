@@ -10,7 +10,7 @@ VulkanRenderer::VulkanRenderer(VulkanContextRef ctx) :
 void VulkanRenderer::createDepthBuffer() {
 	
 	_depthImage = _ctx->makeImage(vk::ImageUsageFlagBits::eDepthStencilAttachment, 
-        glm::ivec2(_fullRect.extent.width, _fullRect.extent.height), vk::Format::eD16Unorm);
+        glm::ivec2(_fullRect.extent.width, _fullRect.extent.height), vk::Format::eD32Sfloat);
 	
     _depthImage->allocateDeviceMemory();
 	_depthImage->createImageView(vk::ImageAspectFlagBits::eDepth);
@@ -96,6 +96,7 @@ void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain, bool useDepth
 
 void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 {
+	_useDepth = useDepth;
 
     _fullRect.offset.x = 0;
     _fullRect.offset.y = 0;
@@ -103,7 +104,7 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
     _fullRect.extent.height = images[0]->getSize().y;
 
 
-	if (useDepth)
+	if (_useDepth)
 		createDepthBuffer();
 	else
 		_depthImage = nullptr;
@@ -158,7 +159,7 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 	
 
 	vk::AttachmentReference depthRef = vk::AttachmentReference(
-		1,
+		attachment++,
 		vk::ImageLayout::eDepthStencilAttachmentOptimal
 	);
 

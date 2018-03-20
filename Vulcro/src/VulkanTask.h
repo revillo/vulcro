@@ -17,6 +17,7 @@ public:
 	void end();
 
 	void execute(vk::Semaphore &semaphore);
+	void execute();
 
 	vk::CommandBuffer &cmdb() {
 		return _commandBuffer;

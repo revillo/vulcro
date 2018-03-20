@@ -1,6 +1,12 @@
 Debug
 HelloVulkan.VC.db
 HelloVulkan/Debug
+
+x64
+*/x64
+
+*.exe
+
 .vs
 
 *.log

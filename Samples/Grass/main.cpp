@@ -1,5 +1,7 @@
 #include "Vulcro.h"
 #include "glm/gtc/matrix_transform.inl"
+#include <chrono>
+#include <ctime>
 
 float rand1() {
 	return (float)rand() / RAND_MAX;
@@ -62,14 +64,34 @@ int main()
 		auto sceneUBO = vctx->makeUBO<uSceneGlobals>(1);
 		{
 			auto &usb = sceneUBO->at(0);
-			usb.perspective = vulcro::glProjFix * perspective(radians(60.0f), (float)windowSize.x / (float)windowSize.y, 0.1f, 100.0f);
+
+			usb.perspective = vulcro::glProjFixYZ * perspective(
+				radians(60.0f), 
+				(float)windowSize.x / (float)windowSize.y, 
+				1.0f, 80.0f);
 			
 			usb.view = lookAt(vec3(0.0, 3.0, -10.0), vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
 
 			sceneUBO->sync();
 		}
 		
+		auto startMS = chrono::system_clock::now();
+
+		auto rotateCam = [&sceneUBO, &startMS]() {
+
+			chrono::duration<double> nowS = chrono::system_clock::now() - startMS;
+			double now = nowS.count();
+
+			float rate = now * 0.1;
+
+			float radius = 25.0;
+			sceneUBO->at(0).view = lookAt(vec3(sin(rate) * radius, 20.0, -cos(rate) * radius), vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
+			sceneUBO->sync();
+
+		};
 		
+		rotateCam();
+
 		//uboScene->at(0).perspective = fixer * glm::perspectiveFovRH(PI / 3.0f, );
 		
 		auto uSceneLayout = vctx->makeUniformSetLayout({
@@ -81,21 +103,30 @@ int main()
 		uSceneSet->bindBuffer(0, sceneUBO->getDBI());
 		uSceneSet->update();
 
-		Vertex vs[3] = {
-			{ { -1.0, 0.0,  0.0,  1.0 } },
-			{ { 0.0,  1.0,  0.0,  1.0 } },
-			{ { 1.0,  0.0,  0.0,  1.0 } }
-		};
+
+		int grassLevels = 10;
+
 
 		auto grassVBO = vctx->makeVBO<Vertex>({
 			vk::Format::eR32G32B32A32Sfloat,
-			}, 3, vs);
+			}, grassLevels * 2);
 
+		for (int i = 0; i < grassLevels; i++) {
+			float h = i / (float) (grassLevels-1);
+			//float taper = 1.0 - h;
+			//taper = pow(taper, 0.5);
 
+			grassVBO->set(i * 2,     { {-0.5, h, 0.0, 1.0} });
+			grassVBO->set(i * 2 + 1, { {0.5, h, 0.0, 1.0} });
+		}
 
+		grassVBO->sync();
+
+		/*
 		auto grassIBO = vctx->makeIBO({
 			0, 1, 2
 			});
+			*/
 
 		auto grassShader = vctx->makeShader(
 			"shaders/grass_vert.spv",
@@ -108,10 +139,14 @@ int main()
 			}
 			);
 
+
+
 		auto grassPipeline = vctx->makePipeline(
 			grassShader,
-			sceneRenderer
+			sceneRenderer,
+			{ vk::PrimitiveTopology::eTriangleStrip }
 		);
+
 
 		VertexUV vuvs[4] = {
 			{ { -1.0, -1.0 },{ 0.0, 0.0 } },
@@ -157,9 +192,19 @@ int main()
 			finalRenderer
 		);
 
+		const vk::Rect2D viewRect = swapchain->getRect();
+
+		auto viewport = vk::Viewport(
+			0.0f,
+			0.0f,
+			(float)viewRect.extent.width,
+			(float)viewRect.extent.height,
+			0.0,
+			1.0
+		);
+
 		auto sceneTask = vctx->makeTask();
-
-
+		auto finalTask = vctx->makeTask();
 
 		//Main Loop
 		window.run([=]() {
@@ -167,18 +212,8 @@ int main()
 			//Wait for next available frame
 			swapchain->nextFrame();
 
-			const vk::Rect2D viewRect = swapchain->getRect();
+			auto tStart = chrono::system_clock::now();
 
-			auto viewport = vk::Viewport(
-				0.0f,
-				0.0f,
-				(float)viewRect.extent.width,
-				(float)viewRect.extent.height,
-				0.0,
-				1.0
-			);
-
-			//Record to command buffer
 			sceneTask->record([=](vk::CommandBuffer * cmd) {
 
 				cmd->setViewport(0, 1, &viewport);
@@ -191,13 +226,26 @@ int main()
 
 					grassVBO->bind(cmd);
 
-					grassIBO->bind(cmd);
+					//grassIBO->bind(cmd);
 
 					uSceneSet->bind(cmd, grassPipeline->getLayout());
 
-					cmd->drawIndexed(grassIBO->getCount(), 1, 0, 0, 0);
+					//cmd->drawIndexed(grassIBO->getCount(), 3, 0, 0, 0);
+
+					cmd->draw(grassLevels * 2, 40000, 0, 0);
 
 				});
+			});
+
+			sceneTask->execute();
+
+
+			//Record to command buffer
+			finalTask->record([=](vk::CommandBuffer * cmd) {
+
+				cmd->setViewport(0, 1, &viewport);
+
+				cmd->setScissor(0, 1, &viewRect);
 
 
 				finalRenderer->record(cmd, [=]() {
@@ -216,17 +264,25 @@ int main()
 
 			});
 
-
 			//Submit command buffer
-			sceneTask->execute(swapchain->getSemaphore());
+			finalTask->execute(swapchain->getSemaphore());
 
 			//Present current frame to screen
 			swapchain->present();
 
+			auto tStop = chrono::system_clock::now();
+
+			chrono::duration<double> dt = tStop - tStart;
+
+			cout << "FPS: " << 1.0 / dt.count() << endl;
+
 			//Reset command buffers
 			vctx->resetTasks();
 
-			SDL_Delay(100);
+			rotateCam();
+
+
+			SDL_Delay(10);
 		});
 
 

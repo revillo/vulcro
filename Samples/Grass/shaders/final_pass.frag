@@ -12,6 +12,7 @@ layout (set = 0, binding = 1) uniform sampler2D emissiveSampler;
 
 void main() {
     
-    OutColor = texture(emissiveSampler, uv).rgba;
-    //OutColor = vec4(uv, 0.0, 1.0);
+    OutColor = texture(colorSampler, uv);
+    OutColor.a = 1.0;
+
 }

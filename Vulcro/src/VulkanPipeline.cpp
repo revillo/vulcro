@@ -1,6 +1,9 @@
 #include "VulkanPipeline.h"
 
-VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, VulkanRendererRef renderer) :
+VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, VulkanRendererRef renderer,
+	PipelineConfig config,
+	vector<ColorBlendConfig> colorBlendConfigs
+) :
 	_shader(shader),
 	_ctx(ctx),
 	_renderer(renderer)
@@ -20,7 +23,7 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 
 	auto ias = vk::PipelineInputAssemblyStateCreateInfo(
 		vk::PipelineInputAssemblyStateCreateFlags(),
-		vk::PrimitiveTopology::eTriangleList,
+		config.topology,
 		VK_FALSE // RESTART
 	);
 
@@ -158,7 +161,7 @@ vector<vk::PipelineColorBlendAttachmentState> VulkanPipeline::configureBlending(
 vk::PipelineDepthStencilStateCreateInfo VulkanPipeline::configureDepthTest()
 {
 
-    auto sopstate = vk::StencilOpState();
+	auto sopstate = vk::StencilOpState();
 
     bool hasDepth = _renderer->hasDepth();
 
@@ -166,12 +169,12 @@ vk::PipelineDepthStencilStateCreateInfo VulkanPipeline::configureDepthTest()
         vk::PipelineDepthStencilStateCreateFlags(),
         hasDepth, //DEPTH TEST
         hasDepth, //DEPTH WRITE
-        vk::CompareOp::eLessOrEqual,
+        vk::CompareOp::eLess,
         VK_FALSE, //Bounds test
         VK_FALSE, //Stencil Test
         sopstate,
         sopstate,
         0, //Min Depth Bounds
-        0 //Max Depth Bounds
+        1.0 //Max Depth Bounds
     );
 }
