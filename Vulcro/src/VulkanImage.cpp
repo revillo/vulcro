@@ -17,7 +17,8 @@ VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::i
 			vk::SharingMode::eExclusive,
 			0,
 			nullptr,
-			vk::ImageLayout::eUndefined)
+			vk::ImageLayout::eUndefined
+        )
 	);
 
 	_imageCreated = true;
@@ -123,7 +124,7 @@ vk::DescriptorImageInfo VulkanImage::getDII()
 	return vk::DescriptorImageInfo(
 		_sampler,
 		_imageView,
-		vk::ImageLayout::eShaderReadOnlyOptimal
+		vk::ImageLayout::eColorAttachmentOptimal
 	);
 }
 

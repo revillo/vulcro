@@ -2,6 +2,14 @@
 #include "VulkanContext.h"
 #include "VulkanRenderer.h"
 
+struct PipelineConfig {
+    
+};
+
+struct ColorBlendConfig {
+
+};
+
 class VulkanPipeline {
 
 public:
@@ -20,6 +28,10 @@ public:
 	~VulkanPipeline();
 
 private:
+
+    vector<vk::PipelineColorBlendAttachmentState> configureBlending();
+    vk::PipelineDepthStencilStateCreateInfo configureDepthTest();
+
 
 	vk::Pipeline _pipeline;
 	vk::PipelineLayout _pipelineLayout;

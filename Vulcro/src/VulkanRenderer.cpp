@@ -9,10 +9,10 @@ VulkanRenderer::VulkanRenderer(VulkanContextRef ctx) :
 
 void VulkanRenderer::createDepthBuffer() {
 	
-	const vk::Rect2D rect = _swapchain->getRect();
-
-	_depthImage = _ctx->makeImage(vk::ImageUsageFlagBits::eDepthStencilAttachment, glm::ivec2(rect.extent.width, rect.extent.height), vk::Format::eD16Unorm);
-	_depthImage->allocateDeviceMemory();
+	_depthImage = _ctx->makeImage(vk::ImageUsageFlagBits::eDepthStencilAttachment, 
+        glm::ivec2(_fullRect.extent.width, _fullRect.extent.height), vk::Format::eD16Unorm);
+	
+    _depthImage->allocateDeviceMemory();
 	_depthImage->createImageView(vk::ImageAspectFlagBits::eDepth);
 
 }
@@ -21,28 +21,28 @@ void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain, bool useDepth
 {
 	_useDepth = useDepth;
 	_swapchain = swapchain;
+    _fullRect = _swapchain->getRect();
 
 	if (useDepth) createDepthBuffer();
 	else _depthImage = nullptr;
 
-	_fullRect = _swapchain->getRect();
 
-	vk::AttachmentDescription attachments[2] = {
-		vk::AttachmentDescription(
-			vk::AttachmentDescriptionFlags(),
-			swapchain->getFormat(),
-			vk::SampleCountFlagBits::e1,
-			vk::AttachmentLoadOp::eClear,
-			vk::AttachmentStoreOp::eStore,
-			vk::AttachmentLoadOp::eDontCare,
-			vk::AttachmentStoreOp::eDontCare,
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::ePresentSrcKHR
-		),
+    vk::AttachmentDescription attachments[2] = {
+        vk::AttachmentDescription(
+            vk::AttachmentDescriptionFlags(),
+            swapchain->getFormat(),
+            vk::SampleCountFlagBits::e1,
+            vk::AttachmentLoadOp::eClear,
+            vk::AttachmentStoreOp::eStore,
+            vk::AttachmentLoadOp::eDontCare,
+            vk::AttachmentStoreOp::eDontCare,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::ePresentSrcKHR
+        ),
 
-		vk::AttachmentDescription(
-			vk::AttachmentDescriptionFlags(),
-			_depthImage->getFormat(),
+        vk::AttachmentDescription(
+            vk::AttachmentDescriptionFlags(),
+            _useDepth ? _depthImage->getFormat() : vk::Format::eD16Unorm,
 			vk::SampleCountFlagBits::e1,
 			vk::AttachmentLoadOp::eClear,
 			vk::AttachmentStoreOp::eDontCare,
@@ -96,6 +96,13 @@ void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain, bool useDepth
 
 void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 {
+
+    _fullRect.offset.x = 0;
+    _fullRect.offset.y = 0;
+    _fullRect.extent.width = images[0]->getSize().x;
+    _fullRect.extent.height = images[0]->getSize().y;
+
+
 	if (useDepth)
 		createDepthBuffer();
 	else
@@ -104,11 +111,6 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 	_swapchain = nullptr;
 	_images = images;
 
-	_fullRect.offset.x = 0;
-	_fullRect.offset.y = 0;
-	_fullRect.extent.width = images[0]->getSize().x;
-	_fullRect.extent.height = images[0]->getSize().y;
-	
 	vector<vk::AttachmentDescription> attachments;
 	attachments.reserve(images.size() + 1);
 
@@ -221,13 +223,11 @@ void VulkanRenderer::begin(vk::CommandBuffer * cmd) {
 		clears.push_back(vk::ClearDepthStencilValue(1.0, 0));
 	}
 
-	const vk::Rect2D swapRect = _swapchain->getRect();
-
 	cmd->beginRenderPass(
 		vk::RenderPassBeginInfo(
 			_renderPass,
 			_framebuffers[framebufferIndex],
-			swapRect,
+			_fullRect,
 			clears.size(),
 			&clears[0]
 		),
@@ -266,10 +266,7 @@ void VulkanRenderer::createImagesFramebuffer() {
 			)
 		)
 	);
-
 }
-
-
 
 void VulkanRenderer::createSwapchainFramebuffers(VulkanSwapchainRef swapchain)
 {

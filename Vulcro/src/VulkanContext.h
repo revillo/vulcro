@@ -107,13 +107,13 @@ public:
 	
 
 	template <class T>
-	shared_ptr<ubo<T>> makeUBO(uint32 arrayCount) {
-		return make_shared<ubo<T>>(this, arrayCount);
+	shared_ptr<ubo<T>> makeUBO(uint32 arrayCount, T * data = nullptr) {
+		return make_shared<ubo<T>>(this, arrayCount, data);
 	}
 
 	template <class T>
-	shared_ptr<vbo<T>> makeVBO(vector<vk::Format> fieldFormats, uint32 arrayCount) {
-		return make_shared<vbo<T>>(this, fieldFormats, arrayCount);
+	shared_ptr<vbo<T>> makeVBO(vector<vk::Format> fieldFormats, uint32 arrayCount, T * data = nullptr) {
+		return make_shared<vbo<T>>(this, fieldFormats, arrayCount, data);
 	}
 
 	shared_ptr<ibo> makeIBO(vector<uint16_t> indices);

@@ -1,18 +1,17 @@
 #include "Vulcro.h"
 #include "glm/gtc/matrix_transform.inl"
 
-const float PI = 3.14159f;
-
 float rand1() {
 	return (float)rand() / RAND_MAX;
 }
 
 struct Vertex {
-	glm::vec3 position;
+	glm::vec4 position;
 };
 
-struct ExampleUniform {
-	glm::vec4 color;
+struct VertexUV {
+	glm::vec2 position;
+	glm::vec2 uv;
 };
 
 struct uSceneGlobals {
@@ -32,87 +31,110 @@ int main()
 
 		auto finalRenderer = vctx->makeRenderer();
 		auto swapchain = vctx->makeSwapchain(window.getSurface());
-		finalRenderer->targetSwapcahin(swapchain);
+		finalRenderer->targetSwapcahin(swapchain, false);
 
 		auto sceneRenderer = vctx->makeRenderer();
-		
+
 		VulkanImageRef colorTarget, emissiveTarget;
 
 
 		auto resize = [&vctx, &colorTarget, &emissiveTarget, &sceneRenderer, &windowSize](glm::ivec2 size) {
 			colorTarget = vctx->makeImage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, size, vk::Format::eR8G8B8A8Unorm);
+			colorTarget->allocateDeviceMemory();
 			colorTarget->createImageView();
 			colorTarget->createSampler();
-			
+
 			emissiveTarget = vctx->makeImage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, size, vk::Format::eR8G8B8A8Unorm);
+			emissiveTarget->allocateDeviceMemory();
 			emissiveTarget->createImageView();
 			emissiveTarget->createSampler();
 
-
-
-
 			sceneRenderer->targetImages({
 				colorTarget,
-				emissiveTarget 
-			});
+				emissiveTarget
+				}, true);
 
 			windowSize = size;
 		};
 
 		resize(ivec2(500, 500));
 
+		auto sceneUBO = vctx->makeUBO<uSceneGlobals>(1);
+		{
+			auto &usb = sceneUBO->at(0);
+			usb.perspective = vulcro::glProjFix * perspective(radians(60.0f), (float)windowSize.x / (float)windowSize.y, 0.1f, 100.0f);
+			
+			usb.view = lookAt(vec3(0.0, 3.0, -10.0), vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
 
-		auto uboScene = vctx->makeUBO<uSceneGlobals>(1);
-
-		uboScene->at(0).perspective = glm::perspectiveFovRH(PI / 3.0f, (float)windowSize.x, (float)windowSize.y, 0.1f, 100.0f);
-		uboScene->at(1).view = glm::mat4(1.0);
-
+			sceneUBO->sync();
+		}
+		
+		
+		//uboScene->at(0).perspective = fixer * glm::perspectiveFovRH(PI / 3.0f, );
+		
 		auto uSceneLayout = vctx->makeUniformSetLayout({
-			uboScene->getLayout()
-		});
+			sceneUBO->getLayout()
+			});
 
 		auto uSceneSet = vctx->makeUniformSet(uSceneLayout);
 
-		uSceneSet->bindBuffer(0, uboScene->getDBI());
+		uSceneSet->bindBuffer(0, sceneUBO->getDBI());
 		uSceneSet->update();
 
+		Vertex vs[3] = {
+			{ { -1.0, 0.0,  0.0,  1.0 } },
+			{ { 0.0,  1.0,  0.0,  1.0 } },
+			{ { 1.0,  0.0,  0.0,  1.0 } }
+		};
+
 		auto grassVBO = vctx->makeVBO<Vertex>({
-			vk::Format::eR32G32B32Sfloat,
-		}, 3);
+			vk::Format::eR32G32B32A32Sfloat,
+			}, 3, vs);
+
+
 
 		auto grassIBO = vctx->makeIBO({
 			0, 1, 2
-		});
+			});
 
 		auto grassShader = vctx->makeShader(
 			"shaders/grass_vert.spv",
 			"shaders/grass_frag.spv",
 			{
 				grassVBO->getLayout()
-			}, 
+			},
 			{
 				uSceneLayout
 			}
-		);
+			);
 
 		auto grassPipeline = vctx->makePipeline(
 			grassShader,
 			sceneRenderer
 		);
 
+		VertexUV vuvs[4] = {
+			{ { -1.0, -1.0 },{ 0.0, 0.0 } },
+			{ { -1.0, 1.0 }, { 0.0, 1.0 } },
+			{ { 1.0, -1.0 }, { 1.0, 0.0 } },
+			{ { 1.0, 1.0 },  { 1.0, 1.0 } }
+		};
 
-		auto blitVBO = vctx->makeVBO<Vertex>({
-			vk::Format::eR32G32B32Sfloat,
-		}, 4);
+
+		auto blitVBO = vctx->makeVBO<VertexUV>({
+			vk::Format::eR32G32Sfloat,
+			vk::Format::eR32G32Sfloat
+			}, 4, vuvs);
+
 
 		auto blitIBO = vctx->makeIBO({
-			0, 1, 2, 0, 2, 3
-		});
-		
+			0, 1, 2, 1, 3, 2
+			});
+
 		auto blitUniformLayout = vctx->makeUniformSetLayout({
 			ULB(1, vk::DescriptorType::eCombinedImageSampler, &colorTarget->getSampler()),
 			ULB(1, vk::DescriptorType::eCombinedImageSampler, &emissiveTarget->getSampler())
-		});
+			});
 
 		auto blitUniformSet = vctx->makeUniformSet(blitUniformLayout);
 
@@ -120,12 +142,15 @@ int main()
 		blitUniformSet->bindImage(1, emissiveTarget);
 
 		auto blitShader = vctx->makeShader(
-			"shader/final_pass_vert.spv",
-			"shader/final_pass_frag.spv",
+			"shaders/final_pass_vert.spv",
+			"shaders/final_pass_frag.spv",
 			{
 				blitVBO->getLayout()
+			},
+			{
+				blitUniformLayout
 			}
-		);
+			);
 
 		auto blitPipeline = vctx->makePipeline(
 			blitShader,
@@ -133,6 +158,8 @@ int main()
 		);
 
 		auto sceneTask = vctx->makeTask();
+
+
 
 		//Main Loop
 		window.run([=]() {
@@ -168,7 +195,7 @@ int main()
 
 					uSceneSet->bind(cmd, grassPipeline->getLayout());
 
-					cmd->drawIndexed(grassVBO->getCount(), 1, 0, 0, 0);
+					cmd->drawIndexed(grassIBO->getCount(), 1, 0, 0, 0);
 
 				});
 
@@ -181,7 +208,9 @@ int main()
 
 					blitIBO->bind(cmd);
 
-					cmd->drawIndexed(blitVBO->getCount(), 1, 0, 0, 0);
+					blitUniformSet->bind(cmd, blitPipeline->getLayout());
+
+					cmd->drawIndexed(blitIBO->getCount(), 1, 0, 0, 0);
 
 				});
 
@@ -200,7 +229,7 @@ int main()
 			SDL_Delay(100);
 		});
 
-	
+
 	}
 
 	int i;

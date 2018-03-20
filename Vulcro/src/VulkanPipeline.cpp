@@ -58,35 +58,10 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 	);
 
 
-	auto sopstate = vk::StencilOpState();
 
-	auto dss = vk::PipelineDepthStencilStateCreateInfo(
-		vk::PipelineDepthStencilStateCreateFlags(),
-		VK_FALSE, //DEPTH TEST
-		VK_FALSE, //DEPTH WRITE
-		vk::CompareOp::eLessOrEqual,
-		VK_FALSE, //Bounds test
-		VK_FALSE, //Stencil Test
-		sopstate,
-		sopstate,
-		0, //Min Depth Bounds
-		0 //Max Depth Bounds
-	);
+    auto dss = configureDepthTest();
 
-
-	auto cbas = vk::PipelineColorBlendAttachmentState(
-		VK_TRUE, //Color Blend
-		vk::BlendFactor::eOne, //src blend factor
-		vk::BlendFactor::eZero, //dst blend factor
-		vk::BlendOp::eAdd,
-		vk::BlendFactor::eOne, //src alpha
-		vk::BlendFactor::eZero, //dest alpha
-		vk::BlendOp::eAdd, // alpha op
-		vk::ColorComponentFlagBits::eR |
-		vk::ColorComponentFlagBits::eG |
-		vk::ColorComponentFlagBits::eB |
-		vk::ColorComponentFlagBits::eA
-	);
+    auto cbas = configureBlending();
 
 	const std::array<float, 4> blendConstants = { 1.0, 1.0, 1.0, 1.0 };
 
@@ -94,8 +69,8 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 		vk::PipelineColorBlendStateCreateFlags(),
 		VK_FALSE, //Logic Op
 		vk::LogicOp::eNoOp,
-		1,
-		&cbas,
+		cbas.size(),
+		&cbas[0],
 		blendConstants
 	);
 
@@ -105,7 +80,7 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 		vk::PipelineLayoutCreateInfo(
 			vk::PipelineLayoutCreateFlags(),
 			uniLayouts.size(),
-			uniLayouts.size() ? &uniLayouts[0] : nullptr,
+			uniLayouts.size() > 0 ? &uniLayouts[0] : nullptr,
 			0,
 			nullptr //Push constant Ranges
 		)
@@ -152,4 +127,51 @@ VulkanPipeline::~VulkanPipeline() {
 	
 	_ctx->getDevice().destroyPipelineLayout(_pipelineLayout);
 	
+}
+
+vector<vk::PipelineColorBlendAttachmentState> VulkanPipeline::configureBlending()
+{
+    int numTargets = _renderer->getNumTargets();
+    vector<vk::PipelineColorBlendAttachmentState> pcbas;
+
+    for (int i = 0; i < numTargets; i++) {
+
+        pcbas.push_back(vk::PipelineColorBlendAttachmentState(
+            VK_FALSE, //Color Blend
+            vk::BlendFactor::eOne, //src blend factor
+            vk::BlendFactor::eZero, //dst blend factor
+            vk::BlendOp::eAdd,
+            vk::BlendFactor::eOne, //src alpha
+            vk::BlendFactor::eZero, //dest alpha
+            vk::BlendOp::eAdd, // alpha op
+            vk::ColorComponentFlagBits::eR |
+            vk::ColorComponentFlagBits::eG |
+            vk::ColorComponentFlagBits::eB |
+            vk::ColorComponentFlagBits::eA
+        ));
+        
+    }
+
+    return pcbas;
+}
+
+vk::PipelineDepthStencilStateCreateInfo VulkanPipeline::configureDepthTest()
+{
+
+    auto sopstate = vk::StencilOpState();
+
+    bool hasDepth = _renderer->hasDepth();
+
+    return vk::PipelineDepthStencilStateCreateInfo(
+        vk::PipelineDepthStencilStateCreateFlags(),
+        hasDepth, //DEPTH TEST
+        hasDepth, //DEPTH WRITE
+        vk::CompareOp::eLessOrEqual,
+        VK_FALSE, //Bounds test
+        VK_FALSE, //Stencil Test
+        sopstate,
+        sopstate,
+        0, //Min Depth Bounds
+        0 //Max Depth Bounds
+    );
 }

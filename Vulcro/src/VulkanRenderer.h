@@ -22,6 +22,18 @@ public:
 
 	void begin(vk::CommandBuffer * cmd);
 
+    bool hasDepth() {
+        return _useDepth;
+    }
+
+    uint32 getNumTargets() {
+        if (_swapchain != nullptr) {
+            return 1;
+        }
+        else {
+            return _images.size();
+        }
+    }
 
 	void end(vk::CommandBuffer * cmd);
 

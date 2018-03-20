@@ -42,11 +42,11 @@ template <class T>
 class ubo {
 public:
 
-	ubo(VulkanContext * ctx, uint32 arrayCount = 1) : _arrayCount(arrayCount)
+	ubo(VulkanContext * ctx, uint32 arrayCount = 1, T * data = nullptr) : _arrayCount(arrayCount)
 	{
 		values = new T[arrayCount];
 		_size = sizeof(T) * arrayCount;
-		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eUniformBuffer, _size, values);
+		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eUniformBuffer, _size, data);
 	};
 
 	T & at(uint32 i = 0) {
@@ -103,12 +103,12 @@ template <class T>
 class vbo {
 public:
 
-	vbo(VulkanContext * ctx, vector<vk::Format> fieldFormats, uint32 arrayCount = 1) 
+	vbo(VulkanContext * ctx, vector<vk::Format> fieldFormats, uint32 arrayCount = 1, void * data = nullptr) 
 		: _arrayCount(arrayCount)
 	{
 		values = new T[arrayCount];
 		_size = sizeof(T) * arrayCount;
-		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eVertexBuffer, _size, values);
+		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eVertexBuffer, _size, data);
 		_layout = ctx->makeVertexLayout(fieldFormats);
 	};
 
@@ -124,8 +124,8 @@ public:
 		values[0] = value;
 	}
 
-	void set(uint32 start, uint32 count, T * values) {
-		memcpy(&values[i], values, count * sizeof(T));
+	void set(uint32 start, uint32 count, T * newValues) {
+		memcpy(&values[0], newValues, count * sizeof(T));
 	}
 
 	void sync() {
@@ -172,14 +172,21 @@ public:
 			sizeof(uint16_t) * indices.size(),
 			&indices[0]
 		);
+
+        _count = indices.size();
 	}
 
 	void bind(vk::CommandBuffer * cmd) {
 		_vbr->bindIndex(cmd);
 	}
 
+    uint32 getCount() {
+        return _count;
+    }
+
 private:
 
+    uint32 _count = 0;
 	VulkanBufferRef _vbr;
 
 };
