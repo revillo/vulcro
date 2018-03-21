@@ -7,7 +7,7 @@
 class VulkanTask
 {
 public:
-	VulkanTask(VulkanContextRef ctx);
+	VulkanTask(VulkanContextRef ctx, vk::CommandPool pool);
 	~VulkanTask();
 
 
@@ -28,5 +28,6 @@ private:
 	VulkanContextRef _ctx;
 	vk::CommandBuffer _commandBuffer;
 	vk::Fence _fence;
+	vk::CommandPool _pool;
 };
 

@@ -8,24 +8,27 @@ float rand1() {
 }
 
 struct Vertex {
-	glm::vec4 position;
+	vec4 position;
 };
 
 struct VertexUV {
-	glm::vec2 position;
-	glm::vec2 uv;
+	vec2 position;
+	vec2 uv;
 };
 
 struct uSceneGlobals {
-	glm::mat4 perspective;
-	glm::mat4 view;
+	mat4 perspective;
+	mat4 view;
+	vec4 viewPos;
+	vec4 sunDirWorld;
+	vec4 time;
 };
 
 
 int main()
 {
 	{
-		glm::ivec2 windowSize(500, 500);
+		glm::ivec2 windowSize(1000, 500);
 
 		auto window = VulkanWindow(0, 0, windowSize.x, windowSize.y);
 
@@ -56,10 +59,16 @@ int main()
 				emissiveTarget
 				}, true);
 
+			sceneRenderer->setClearColors({
+				{0.0f, 0.0f, 0.0f, 0.0f},
+				//{0.1f, 0.3f, 0.05f, 1.0f},
+				{ 0.0f, 0.0f, 0.0f, 0.0f}
+			});
+
 			windowSize = size;
 		};
 
-		resize(ivec2(500, 500));
+		resize(windowSize);
 
 		auto sceneUBO = vctx->makeUBO<uSceneGlobals>(1);
 		{
@@ -69,8 +78,9 @@ int main()
 				radians(60.0f), 
 				(float)windowSize.x / (float)windowSize.y, 
 				1.0f, 80.0f);
-			
-			usb.view = lookAt(vec3(0.0, 3.0, -10.0), vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
+		
+		
+			usb.sunDirWorld = vec4(normalize(vec3(1.0, 1.0, -1.0)), 1.0);
 
 			sceneUBO->sync();
 		}
@@ -82,10 +92,15 @@ int main()
 			chrono::duration<double> nowS = chrono::system_clock::now() - startMS;
 			double now = nowS.count();
 
-			float rate = now * 0.1;
+			float rate = now * 0.05 + 1.0;
+			
 
 			float radius = 25.0;
-			sceneUBO->at(0).view = lookAt(vec3(sin(rate) * radius, 20.0, -cos(rate) * radius), vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
+			vec3 pos = vec3(sin(rate) * radius, 20.0, -cos(rate) * radius);
+
+			sceneUBO->at(0).viewPos = vec4(pos, 1.0);
+			sceneUBO->at(0).view = lookAt(pos, vec3(0.0, 12.0, 0.0), vec3(0.0, 1.0, 0.0));
+			sceneUBO->at(0).time.x = now;
 			sceneUBO->sync();
 
 		};
@@ -203,8 +218,31 @@ int main()
 			1.0
 		);
 
-		auto sceneTask = vctx->makeTask();
-		auto finalTask = vctx->makeTask();
+		auto sceneTask = vctx->makeTask(0);
+		auto finalTask = vctx->makeTask(1);
+
+		sceneTask->record([=](vk::CommandBuffer * cmd) {
+
+			cmd->setViewport(0, 1, &viewport);
+
+			cmd->setScissor(0, 1, &viewRect);
+
+			sceneRenderer->record(cmd, [=]() {
+
+				grassPipeline->bind(cmd);
+
+				grassVBO->bind(cmd);
+
+				//grassIBO->bind(cmd);
+
+				uSceneSet->bind(cmd, grassPipeline->getLayout());
+
+				//cmd->drawIndexed(grassIBO->getCount(), 3, 0, 0, 0);
+
+				cmd->draw(grassLevels * 2, 40000, 0, 0);
+
+			});
+		});
 
 		//Main Loop
 		window.run([=]() {
@@ -213,29 +251,6 @@ int main()
 			swapchain->nextFrame();
 
 			auto tStart = chrono::system_clock::now();
-
-			sceneTask->record([=](vk::CommandBuffer * cmd) {
-
-				cmd->setViewport(0, 1, &viewport);
-
-				cmd->setScissor(0, 1, &viewRect);
-
-				sceneRenderer->record(cmd, [=]() {
-
-					grassPipeline->bind(cmd);
-
-					grassVBO->bind(cmd);
-
-					//grassIBO->bind(cmd);
-
-					uSceneSet->bind(cmd, grassPipeline->getLayout());
-
-					//cmd->drawIndexed(grassIBO->getCount(), 3, 0, 0, 0);
-
-					cmd->draw(grassLevels * 2, 40000, 0, 0);
-
-				});
-			});
 
 			sceneTask->execute();
 
@@ -277,7 +292,7 @@ int main()
 			cout << "FPS: " << 1.0 / dt.count() << endl;
 
 			//Reset command buffers
-			vctx->resetTasks();
+			vctx->resetTasks(1);
 
 			rotateCam();
 

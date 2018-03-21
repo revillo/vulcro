@@ -18,6 +18,10 @@ public:
 	void targetSwapcahin(VulkanSwapchainRef swapchain, bool useDepth = true);
 	void targetImages(vector<VulkanImageRef> images, bool useDepth = true);
 
+	void setClearColors(vector<std::array<float, 4>> colors) {
+		_clearColors = colors;
+	};
+
 	void record(vk::CommandBuffer * cmd, function<void()> commands);
 
 	void begin(vk::CommandBuffer * cmd);
@@ -58,7 +62,7 @@ private:
 	vk::RenderPass _renderPass;
 
 	bool _useDepth = false;
-
+	vector<std::array<float, 4>> _clearColors;
 	vk::Rect2D _fullRect;
 
 	bool _renderPassCreated = false;

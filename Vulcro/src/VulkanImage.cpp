@@ -12,7 +12,8 @@ VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::i
 			vk::Extent3D(size.x, size.y, 1),
 			1, //Mip Levels
 			1, //Layers
-			vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal,
+			vk::SampleCountFlagBits::e1, 
+			vk::ImageTiling::eOptimal,
 			usage,
 			vk::SharingMode::eExclusive,
 			0,

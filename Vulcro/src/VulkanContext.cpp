@@ -19,6 +19,7 @@ VulkanContext::VulkanContext(vk::Instance instance)
 		}
 	}
 
+	_familyIndex = familyIndex;
 
 	std::vector<const char*> extensions;
 
@@ -39,9 +40,8 @@ VulkanContext::VulkanContext(vk::Instance instance)
 
 	_queue = _device.getQueue(familyIndex, 0);
 
-	_commandPool = _device.createCommandPool(
-		vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlags(), familyIndex)
-	);
+
+
 }
 
 
@@ -55,8 +55,8 @@ shared_ptr<ibo> VulkanContext::makeIBO(vector<uint16_t> indices)
 
 VulkanContext::~VulkanContext()
 {
-	
-	_device.destroyCommandPool(_commandPool);
+	for (auto keyval : _pools)
+		_device.destroyCommandPool(keyval.second);
 
 	_device.destroy();
 
@@ -117,9 +117,14 @@ VulkanUniformSetRef VulkanContext::makeUniformSet(VulkanUniformSetLayoutRef layo
 }
 
 #include "VulkanTask.h"
-VulkanTaskRef VulkanContext::makeTask()
+VulkanTaskRef VulkanContext::makeTask(uint32 poolIndex)
 {
-	return make_shared<VulkanTask>(this);
+	if (_pools.count(poolIndex) == 0) {
+		_pools[poolIndex] = _device.createCommandPool(
+			vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlags(), _familyIndex)
+		);
+	}
+	return make_shared<VulkanTask>(this, _pools[poolIndex]);
 }
 
 #include "VulkanImage.h"

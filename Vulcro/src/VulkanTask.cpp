@@ -2,15 +2,16 @@
 
 
 
-VulkanTask::VulkanTask(VulkanContextRef ctx) :
-	_ctx(ctx)
+VulkanTask::VulkanTask(VulkanContextRef ctx, vk::CommandPool pool) :
+	_ctx(ctx),
+	_pool(pool)
 {
 	_fence = _ctx->getDevice().createFence(
 		vk::FenceCreateInfo()
 	);
 
 	_commandBuffer = _ctx->getDevice().allocateCommandBuffers(
-		vk::CommandBufferAllocateInfo(_ctx->getCommandPool(), vk::CommandBufferLevel::ePrimary, 1)
+		vk::CommandBufferAllocateInfo(pool, vk::CommandBufferLevel::ePrimary, 1)
 	)[0];
 }
 
@@ -103,7 +104,7 @@ VulkanTask::~VulkanTask()
 {
 
 	_ctx->getDevice().freeCommandBuffers(
-		_ctx->getCommandPool(),
+		_pool,
 		1,
 		&_commandBuffer
 	);

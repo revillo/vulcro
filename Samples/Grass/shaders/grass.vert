@@ -8,10 +8,15 @@ layout (location = 0) in vec4 pos;
 
 layout (location = 0) out float nHeight;
 layout (location = 1) out vec2 uv;
+layout (location = 2) out vec4 eyePos;
+layout (location = 3) out vec4 worldPos;
 
 layout (set = 0, binding = 0) uniform SceneGlobals{
-  mat4 perspective;
-  mat4 view;
+	mat4 perspective;
+	mat4 view;
+	vec4 viewPos;
+	vec4 sunDirWorld;
+	vec4 time;
 } uScene;
 
 const int gridSize = 200;
@@ -45,21 +50,25 @@ void main() {
    int z = gl_InstanceIndex % gridSize;
    float rand = random(vec2(x / gridSizeF, z / gridSizeF));
    
-   vec4 tilt = pos;
+   vec4 shape = pos;
+   float time = uScene.time.x * 3.0 + (rand * 3.1415 * 2.0);
    
-   tilt.z += nHeight * nHeight * 0.6;
-   tilt.x *= taper;
+   float wave = 0.5 + 0.6 * (sin(time) + 0.1 * cos(time * 2.0));
    
-   vec4 newPos = rotationMatrix(vec3(0.0, 1.0, 0.0), rand * 10.0) * tilt;
+   shape.z += nHeight * nHeight * 0.6 * wave;
+   shape.x *= taper * 0.6;
+   
+   
+   worldPos = rotationMatrix(vec3(0.0, 1.0, 0.0), rand * 10.0) * shape;
 
    
-   newPos.x += x * 1.0;
-   newPos.z += z * 1.0;
-   newPos.y *= 6.0 + 2.0 * rand;
+   worldPos.x += x * 1.0 + rand * 0.5;
+   worldPos.z += z * 1.0 + rand * 0.5;
+   worldPos.y *= 6.0 + 2.0 * rand;
    
-   newPos.xyz -= vec3(gridSizeF, 0.0, gridSizeF) * 0.5;
+   worldPos.xyz -= vec3(gridSizeF, 0.0, gridSizeF) * 0.5;
    
+   eyePos = uScene.view * worldPos;
    
-   
-   gl_Position = uScene.perspective * uScene.view * newPos;
+   gl_Position = uScene.perspective * eyePos;
 }

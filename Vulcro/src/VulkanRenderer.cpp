@@ -212,11 +212,20 @@ void VulkanRenderer::begin(vk::CommandBuffer * cmd) {
 
 	if (_swapchain != nullptr) {
 		framebufferIndex = _swapchain->getRenderingIndex(); //todo
-		clears.push_back(vk::ClearColorValue(clearColor));
+
+		if (_clearColors.size() == 0)
+			clears.push_back(vk::ClearColorValue(clearColor));
+		else
+			clears.push_back(vk::ClearColorValue(_clearColors[0]));
 	}
 	else {
+
+		int count = 0;
 		for (auto &image : _images) {
-			clears.push_back(vk::ClearColorValue(clearColor));
+			if (_clearColors.size() <= count)
+				clears.push_back(vk::ClearColorValue(clearColor));
+			else
+				clears.push_back(vk::ClearColorValue(_clearColors[count++]));
 		}
 	}
 

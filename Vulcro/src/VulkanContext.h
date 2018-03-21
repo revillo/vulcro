@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.hpp>
 #include "General.h"
-
+#include <unordered_map>
 
 struct VulkanUniformLayoutBinding {
 
@@ -75,14 +75,10 @@ public:
 		return _queue;
 	}
 
-	vk::CommandPool &getCommandPool() {
-		return _commandPool;
-	}
-
-	void resetTasks() {
+	void resetTasks(uint32 poolIndex) {
 
 		_device.resetCommandPool(
-			_commandPool,
+			_pools[poolIndex],
 			vk::CommandPoolResetFlags()
 		);
 
@@ -113,7 +109,7 @@ public:
 		VulkanUniformSetLayoutRef layout
 	);
 
-	VulkanTaskRef makeTask();
+	VulkanTaskRef makeTask(uint32 poolIndex = 0);
 
 	VulkanImageRef makeImage(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
 	VulkanImageRef makeImage(vk::Image image, glm::ivec2 size, vk::Format format);
@@ -135,10 +131,15 @@ public:
 
 private:
 
+	uint32 _familyIndex;
+
 	vk::Instance _instance;
 	vector<vk::PhysicalDevice> _physicalDevices;
 	vk::Device _device;
-	vk::CommandPool _commandPool;
+	
+	unordered_map<uint32, vk::CommandPool> _pools;
+
+
 	vk::CommandBuffer _cmd;
 	vk::Queue _queue;
 
