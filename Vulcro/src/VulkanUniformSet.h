@@ -16,7 +16,9 @@ public:
 
 	void update();
 
-	void bind(vk::CommandBuffer * cmd, vk::PipelineLayout &pipelineLayout);
+	vk::DescriptorSet &getDescriptorSet() {
+		return _descriptorSet;
+	}
 
 	~VulkanUniformSet();
 

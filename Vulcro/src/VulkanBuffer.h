@@ -135,7 +135,7 @@ public:
 
 	void sync() {
 		_vbr->upload(_size, values);
-	};
+	}
 
 	void sync(uint32 index, uint32 count) {
 		_vbr->upload(count * sizeof(T), values[index], index * sizeof(T));

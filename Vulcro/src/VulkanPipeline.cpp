@@ -124,6 +124,26 @@ void VulkanPipeline::bind(vk::CommandBuffer * cmd)
 
 }
 
+void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef> sets)
+{
+	vector<vk::DescriptorSet> dsets;
+	dsets.reserve(sets.size());
+
+	for (auto &set : sets) {
+		dsets.push_back(set->getDescriptorSet());
+	}
+
+	cmd->bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics,
+		_pipelineLayout,
+		0,
+		dsets.size(),
+		dsets.size() > 0 ? &dsets[0] :nullptr,
+		0,
+		nullptr
+	);
+}
+
 VulkanPipeline::~VulkanPipeline() {
 
 	_ctx->getDevice().destroyPipeline(_pipeline);

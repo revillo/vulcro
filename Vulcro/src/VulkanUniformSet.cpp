@@ -99,20 +99,6 @@ void VulkanUniformSet::update() {
 
 }
 
-void VulkanUniformSet::bind(vk::CommandBuffer * cmd, vk::PipelineLayout &pipelineLayout)
-{
-	cmd->bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics,
-		pipelineLayout,
-		0,
-		1,
-		&_descriptorSet,
-		0,
-		nullptr
-	);
-}
-
-
 VulkanUniformSet::~VulkanUniformSet()
 {
 

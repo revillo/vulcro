@@ -95,6 +95,7 @@ void VulkanBuffer::upload(uint64 size, void * data, uint32 offset)
 
 	memcpy(pData, data, size);
 
+	
 	_ctx->getDevice().unmapMemory(
 		_memory
 	);

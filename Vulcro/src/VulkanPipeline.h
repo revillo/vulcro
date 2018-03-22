@@ -1,7 +1,7 @@
 #pragma once
 #include "VulkanContext.h"
 #include "VulkanRenderer.h"
-
+#include "VulkanUniformSet.h"
 
 class VulkanPipeline {
 
@@ -23,6 +23,8 @@ public:
 	}
 
 	void bind(vk::CommandBuffer * cmd);
+
+	void bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef> sets);
 
 	~VulkanPipeline();
 
