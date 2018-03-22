@@ -137,11 +137,7 @@ int main()
 
 		grassVBO->sync();
 
-		/*
-		auto grassIBO = vctx->makeIBO({
-			0, 1, 2
-			});
-			*/
+		int verticesPerBlade = grassLevels * 2;
 
 		auto grassShader = vctx->makeShader(
 			"shaders/grass_vert.spv",
@@ -224,13 +220,9 @@ int main()
 
 				grassVBO->bind(cmd);
 
-				//grassIBO->bind(cmd);
-
 				uSceneSet->bind(cmd, grassPipeline->getLayout());
 
-				//cmd->drawIndexed(grassIBO->getCount(), 3, 0, 0, 0);
-
-				cmd->draw(grassLevels * 2, 160000, 0, 0);
+				cmd->draw(verticesPerBlade, 160000, 0, 0);
 
 			});
 		});
