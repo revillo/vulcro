@@ -3,23 +3,23 @@
 
 VulkanWindow::VulkanWindow()
 {
-	initWindow();
+	initWindow(SDL_WINDOW_VULKAN);
 }
 
-VulkanWindow::VulkanWindow(int x, int y, int width, int height)
+VulkanWindow::VulkanWindow(int x, int y, int width, int height, uint32 flags)
 	:_x(x), _y(y), _width(width), _height(height)
 {
-	initWindow();
+	initWindow(flags);
 }
 
-int VulkanWindow::initWindow() {
+int VulkanWindow::initWindow(uint32 flags) {
 	// Create an SDL window that supports Vulkan rendering.
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		std::cout << "Could not initialize SDL." << std::endl;
 		return 1;
 	}
 	_window = SDL_CreateWindow("Vulkan Window", SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED, _width, _height, SDL_WINDOW_VULKAN  );
+		SDL_WINDOWPOS_CENTERED, _width, _height, flags);
 	if (_window == NULL) {
 		std::cout << "Could not create SDL window." << std::endl;
 		return 1;
@@ -101,14 +101,21 @@ void VulkanWindow::run(std::function<void()> update) {
 			case SDL_QUIT:
 				stillRunning = false;
 				break;
-
+			
 			default:
 				// Do nothing.
 				break;
 			}
 
 		}
+
+		
 		update();
+
+		const Uint8 *state = SDL_GetKeyboardState(NULL);
+		if (state[SDL_SCANCODE_ESCAPE]) {
+			stillRunning = false;
+		}
 	}
 }
 

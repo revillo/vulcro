@@ -29,7 +29,7 @@ class VulkanWindow
 public:
 
 	VulkanWindow();
-	VulkanWindow(int x, int y, int width, int height);
+	VulkanWindow(int x, int y, int width, int height, uint32 flags = SDL_WINDOW_VULKAN);
 
 	void run(std::function<void()> update);
 
@@ -50,7 +50,7 @@ private:
 	
 	shared_ptr<VulkanContext> _vulkanContext = nullptr;
 
-	int initWindow();
+	int initWindow(uint32 flags);
 
 	int _x = 100, _y = 100, _width = 300, _height = 300;
 

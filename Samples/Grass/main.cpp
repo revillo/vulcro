@@ -28,9 +28,9 @@ struct uSceneGlobals {
 int main()
 {
 	{
-		glm::ivec2 windowSize(1000, 500);
+		glm::ivec2 windowSize(1920, 1080);
 
-		auto window = VulkanWindow(0, 0, windowSize.x, windowSize.y);
+		auto window = VulkanWindow(0, 0, windowSize.x, windowSize.y, SDL_WINDOW_VULKAN | SDL_WINDOW_FULLSCREEN);
 
 		auto vctx = window.getContext();
 
@@ -42,7 +42,7 @@ int main()
 
 		VulkanImageRef colorTarget, emissiveTarget;
 
-		auto sceneSize = windowSize * 2;
+		auto sceneSize = windowSize;
 
 		auto resize = [&vctx, &colorTarget, &emissiveTarget, &sceneRenderer, &sceneSize](glm::ivec2 size) {
 			colorTarget = vctx->makeImage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, size, vk::Format::eR8G8B8A8Unorm);
