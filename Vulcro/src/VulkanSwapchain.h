@@ -15,7 +15,7 @@ public:
 
 	void nextFrame();
 
-	void present();
+	void present(vector<vk::Semaphore> inSems = {});
 
 	vk::Format getFormat() {
 		return _format;

@@ -148,8 +148,11 @@ int main()
 			});
 
 
-			//Submit command buffer
-			triangleTask->execute(swapchain->getSemaphore());
+			//Submit command buffer. 
+			triangleTask->execute(
+				true, // Block on CPU until completed
+				{ swapchain->getSemaphore() } //Wait for swapchain to be ready before rendering
+			);
 
 			//Present current frame to screen
 			swapchain->present();

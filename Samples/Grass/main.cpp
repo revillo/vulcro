@@ -42,8 +42,9 @@ int main()
 
 		VulkanImageRef colorTarget, emissiveTarget;
 
+		auto sceneSize = windowSize * 2;
 
-		auto resize = [&vctx, &colorTarget, &emissiveTarget, &sceneRenderer, &windowSize](glm::ivec2 size) {
+		auto resize = [&vctx, &colorTarget, &emissiveTarget, &sceneRenderer, &sceneSize](glm::ivec2 size) {
 			colorTarget = vctx->makeImage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, size, vk::Format::eR8G8B8A8Unorm);
 			colorTarget->allocateDeviceMemory();
 			colorTarget->createImageView();
@@ -65,10 +66,9 @@ int main()
 				{ 0.0f, 0.0f, 0.0f, 0.0f}
 			});
 
-			windowSize = size;
 		};
 
-		resize(windowSize);
+		resize(sceneSize);
 
 		auto sceneUBO = vctx->makeUBO<uSceneGlobals>(1);
 		{
@@ -77,7 +77,7 @@ int main()
 			usb.perspective = vulcro::glProjFixYZ * perspective(
 				radians(60.0f), 
 				(float)windowSize.x / (float)windowSize.y, 
-				1.0f, 80.0f);
+				1.0f, 100.0f);
 		
 		
 			usb.sunDirWorld = vec4(normalize(vec3(1.0, 1.0, -1.0)), 1.0);
@@ -119,7 +119,7 @@ int main()
 		uSceneSet->update();
 
 
-		int grassLevels = 10;
+		int grassLevels = 14;
 
 
 		auto grassVBO = vctx->makeVBO<Vertex>({
@@ -207,25 +207,16 @@ int main()
 			finalRenderer
 		);
 
-		const vk::Rect2D viewRect = swapchain->getRect();
-
-		auto viewport = vk::Viewport(
-			0.0f,
-			0.0f,
-			(float)viewRect.extent.width,
-			(float)viewRect.extent.height,
-			0.0,
-			1.0
-		);
-
+	
+	
 		auto sceneTask = vctx->makeTask(0);
 		auto finalTask = vctx->makeTask(1);
 
 		sceneTask->record([=](vk::CommandBuffer * cmd) {
 
-			cmd->setViewport(0, 1, &viewport);
+			cmd->setViewport(0, 1, &sceneRenderer->getFullViewport());
 
-			cmd->setScissor(0, 1, &viewRect);
+			cmd->setScissor(0, 1, &sceneRenderer->getFullRect());
 
 			sceneRenderer->record(cmd, [=]() {
 
@@ -239,10 +230,12 @@ int main()
 
 				//cmd->drawIndexed(grassIBO->getCount(), 3, 0, 0, 0);
 
-				cmd->draw(grassLevels * 2, 40000, 0, 0);
+				cmd->draw(grassLevels * 2, 160000, 0, 0);
 
 			});
 		});
+
+		vk::Semaphore sceneSemaphore = vctx->getDevice().createSemaphore(vk::SemaphoreCreateInfo());
 
 		//Main Loop
 		window.run([=]() {
@@ -252,15 +245,14 @@ int main()
 
 			auto tStart = chrono::system_clock::now();
 
-			sceneTask->execute();
-
+			sceneTask->execute(false, {}, { sceneSemaphore });
 
 			//Record to command buffer
 			finalTask->record([=](vk::CommandBuffer * cmd) {
 
-				cmd->setViewport(0, 1, &viewport);
+				cmd->setViewport(0, 1, &finalRenderer->getFullViewport());
 
-				cmd->setScissor(0, 1, &viewRect);
+				cmd->setScissor(0, 1, &finalRenderer->getFullRect());
 
 
 				finalRenderer->record(cmd, [=]() {
@@ -280,7 +272,7 @@ int main()
 			});
 
 			//Submit command buffer
-			finalTask->execute(swapchain->getSemaphore());
+			finalTask->execute(true, { swapchain->getSemaphore(), sceneSemaphore });
 
 			//Present current frame to screen
 			swapchain->present();
@@ -300,7 +292,7 @@ int main()
 			SDL_Delay(10);
 		});
 
-
+		vctx->getDevice().destroySemaphore(sceneSemaphore);
 	}
 
 	int i;

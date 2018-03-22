@@ -7,9 +7,10 @@ layout (location = 0) out vec4 OutColor;
 layout (location = 1) out vec4 OutEmissive;
 
 layout (location = 0) in float height;
+layout (location = 2) in vec3 randc;
 layout (location = 1) in vec2 uv;
-layout (location = 2) in vec4 eyePos;
 layout (location = 3) in vec4 worldPos;
+layout (location = 4) in float yShift;
 
 layout (set = 0, binding = 0) uniform SceneGlobals{
 	mat4 perspective;
@@ -39,15 +40,15 @@ void main() {
     
     vec3 refl = reflect(eyeRay, normal);
     
-    float diffuse = dot(normal, uScene.sunDirWorld.xyz) * 0.2 + 1.0;
+    float diffuse = dot(normal, uScene.sunDirWorld.xyz) * 0.2 * yShift + 1.0;
     float spec = pow(max(0.0, dot(refl, uScene.sunDirWorld.xyz)), 10.0);
       
-    OutEmissive = vec4(vec3(0.5, 0.65, 0.2) * spec * 1.5, spec);
     
-    vec4 upper = vec4(0.5, 0.65, 0.2, 1.0) * diffuse * 1.3;
-    
+    vec4 upper = (vec4(0.35, 0.65, 0.25, 1.0) * 1.0 + vec4(randc * 0.1, 0.0)) * diffuse * 1.1;
+    OutEmissive = vec4(upper.rgb * spec * 1.5, spec);
+
     OutColor = mix(
-      vec4(0.1, 0.3, 0.05, 1.0), 
+      vec4(0.1, 0.3, 0.05, 1.0) * 0.5, 
       upper, 
     height);
     OutColor.a = 1.0;

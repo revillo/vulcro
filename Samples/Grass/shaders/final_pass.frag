@@ -15,14 +15,14 @@ void main() {
     
     OutColor = texture(colorSampler, uv);
     
-    if (OutColor.a < 0.01) {
+    if (OutColor.a < 1.0) {
       
       if (uv.y > 0.5) 
         OutColor.rgba = vec4(0.1, 0.3, 0.05, 1.0);
       else
       OutColor.rgba = mix(
-        vec4(0.2, 0.5, 0.9, 1.0) * 0.6,
-        vec4(0.7, 0.9, 1.0, 1.0), uv.y * 2.0);
+        vec4(0.3, 0.6, 0.9, 1.0) * 0.6,
+        vec4(0.7, 0.9, 1.0, 1.0), uv.y * 1.4);
     }
     
     vec4 blur = vec4(0.0, 0.0, 0.0, 0.0);

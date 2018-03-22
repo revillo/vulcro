@@ -15,15 +15,16 @@ public:
 
 	void begin();
 	void end();
-
-	void execute(vk::Semaphore &semaphore);
-	void execute();
+	
+	void execute(bool blockUntilFinished = false, vector<vk::Semaphore> inSems = {}, vector<vk::Semaphore> outSems = {});
 
 	vk::CommandBuffer &cmdb() {
 		return _commandBuffer;
 	}
 
 private:
+
+	void waitUntilDone();
 
 	VulkanContextRef _ctx;
 	vk::CommandBuffer _commandBuffer;

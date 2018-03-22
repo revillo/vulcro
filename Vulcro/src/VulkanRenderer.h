@@ -30,6 +30,23 @@ public:
         return _useDepth;
     }
 
+	vk::Rect2D getFullRect() {
+		return _fullRect;
+	}
+
+	vk::Viewport getFullViewport() {
+		
+		
+		return vk::Viewport(
+			0,
+			0,
+			_fullRect.extent.width,
+			_fullRect.extent.height,
+			0.0,
+			1.0
+		);
+	}
+
     uint32 getNumTargets() {
         if (_swapchain != nullptr) {
             return 1;

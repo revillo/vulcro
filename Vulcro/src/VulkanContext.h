@@ -75,7 +75,7 @@ public:
 		return _queue;
 	}
 
-	void resetTasks(uint32 poolIndex) {
+	void resetTasks(uint32 poolIndex = 0) {
 
 		_device.resetCommandPool(
 			_pools[poolIndex],

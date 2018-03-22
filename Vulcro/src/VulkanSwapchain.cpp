@@ -76,15 +76,14 @@ void VulkanSwapchain::createSemaphore()
 	);
 }
 
-void VulkanSwapchain::present() {
+void VulkanSwapchain::present(vector<vk::Semaphore> inSems) {
 	_ctx->getQueue().presentKHR(
 		vk::PresentInfoKHR(
-			0,
-			nullptr,
+			inSems.size(),
+			inSems.size() > 0 ? &inSems[0] : nullptr,
 			1,
 			&_swapchain,
-			&_renderingIndex,
-			nullptr
+			&_renderingIndex
 		)
 	);
 }

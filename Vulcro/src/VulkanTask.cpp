@@ -37,62 +37,43 @@ void VulkanTask::end() {
 	_commandBuffer.end();
 }
 
-void VulkanTask::execute()
+void VulkanTask::execute(bool blockUntilFinished, vector<vk::Semaphore> inSems, vector<vk::Semaphore> outSems)
 {
-	vk::PipelineStageFlags wait_flags = vk::PipelineStageFlagBits::eBottomOfPipe;
+	vk::PipelineStageFlags wait_flags = vk::PipelineStageFlagBits::eTopOfPipe;
+
+	vk::PipelineStageFlags flags[5] = { wait_flags, wait_flags, wait_flags, wait_flags, wait_flags };
+
 
 	auto submit = vk::SubmitInfo(
-		0,
-		nullptr,
-		&wait_flags,
+		inSems.size(),
+		inSems.size() > 0 ? &inSems[0] : nullptr,
+		flags,
 		1,
 		&_commandBuffer,
-		0,
-		nullptr
+		outSems.size(),
+		outSems.size() > 0 ? &outSems[0] : nullptr
 	);
+
 	vk::Result res;
 
 	res = _ctx->getQueue().submit(
 		1,
 		&submit,
-		_fence
+		blockUntilFinished ? _fence : nullptr
 	);
 
-	do {
-		res = _ctx->getDevice().waitForFences(1, &_fence, VK_TRUE, 100000000);
-	} while (res == vk::Result::eTimeout);
-
-	_ctx->getDevice().resetFences(
-		1,
-		&_fence
-	);
+	if (blockUntilFinished) waitUntilDone();
 }
 
 
-void VulkanTask::execute(vk::Semaphore &semaphore)
-{
-	vk::PipelineStageFlags wait_flags = vk::PipelineStageFlagBits::eBottomOfPipe;
+void VulkanTask::waitUntilDone() {
 
-	auto submit = vk::SubmitInfo(
-		1,
-		&semaphore,
-		&wait_flags,
-		1,
-		&_commandBuffer,
-		0,
-		nullptr
-	);
 	vk::Result res;
-
-	res = _ctx->getQueue().submit(
-		1,
-		&submit,
-		_fence
-	);
 
 	do {
 		res = _ctx->getDevice().waitForFences(1, &_fence, VK_TRUE, 100000000);
 	} while (res == vk::Result::eTimeout);
+
 	
 	_ctx->getDevice().resetFences(
 		1,
