@@ -3,6 +3,9 @@
 #include <chrono>
 #include <ctime>
 
+#define SCENE_TASK_POOL 0
+#define FINAL_TASK_POOL 1
+
 float rand1() {
 	return (float)rand() / RAND_MAX;
 }
@@ -45,31 +48,29 @@ int main()
 
 		auto sceneSize = windowSize;
 
-		auto resize = [&vctx, &colorTarget, &emissiveTarget, &sceneRenderer, &sceneSize](glm::ivec2 size) {
-			colorTarget = vctx->makeImage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, size, vk::Format::eR8G8B8A8Unorm);
-			colorTarget->allocateDeviceMemory();
-			colorTarget->createImageView();
-			colorTarget->createSampler();
+		colorTarget = vctx->makeImage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, sceneSize, vk::Format::eR8G8B8A8Unorm);
+		colorTarget->allocateDeviceMemory();
+		colorTarget->createImageView();
+		colorTarget->createSampler();
 
-			emissiveTarget = vctx->makeImage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, size, vk::Format::eR8G8B8A8Unorm);
-			emissiveTarget->allocateDeviceMemory();
-			emissiveTarget->createImageView();
-			emissiveTarget->createSampler();
+		emissiveTarget = vctx->makeImage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, sceneSize, vk::Format::eR8G8B8A8Unorm);
+		emissiveTarget->allocateDeviceMemory();
+		emissiveTarget->createImageView();
+		emissiveTarget->createSampler();
 
-			sceneRenderer->targetImages({
-				colorTarget,
-				emissiveTarget
-				}, true);
+		sceneRenderer->targetImages({
+			colorTarget,
+			emissiveTarget
+			}, true);
 
-			sceneRenderer->setClearColors({
-				{0.0f, 0.0f, 0.0f, 0.0f},
-				//{0.1f, 0.3f, 0.05f, 1.0f},
-				{ 0.0f, 0.0f, 0.0f, 0.0f}
-			});
+		sceneRenderer->setClearColors({
+			{0.0f, 0.0f, 0.0f, 0.0f},
+			//{0.1f, 0.3f, 0.05f, 1.0f},
+			{ 0.0f, 0.0f, 0.0f, 0.0f}
+		});
 
-		};
+	
 
-		resize(sceneSize);
 
 		auto sceneUBO = vctx->makeUBO<uSceneGlobals>(1);
 		{
@@ -88,7 +89,7 @@ int main()
 		
 		auto startMS = chrono::system_clock::now();
 
-		auto rotateCam = [&sceneUBO, &startMS]() {
+		auto rotateCam = [&sceneUBO, &startMS, &sceneSize]() {
 
 			chrono::duration<double> nowS = chrono::system_clock::now() - startMS;
 			double now = nowS.count();
@@ -103,6 +104,10 @@ int main()
 			sceneUBO->at(0).view = lookAt(pos, vec3(0.0, 12.0, 0.0), vec3(0.0, 1.0, 0.0));
 			sceneUBO->at(0).time.x = now;
 			sceneUBO->sync();
+			sceneUBO->at(0).perspective = vulcro::glProjFixYZ * perspective(
+				radians(60.0f),
+				(float)sceneSize.x / (float)sceneSize.y,
+				1.0f, 100.0f);
 
 		};
 		
@@ -203,43 +208,73 @@ int main()
 			blitShader,
 			finalRenderer
 		);
-
 	
-	
-		auto sceneTask = vctx->makeTask(0);
-		auto finalTask = vctx->makeTask(1);
+		auto sceneTask = vctx->makeTask(SCENE_TASK_POOL);
+		auto finalTask = vctx->makeTask(FINAL_TASK_POOL);
 
-		sceneTask->record([=](vk::CommandBuffer * cmd) {
+		auto recordTasks = [=]() {
+			sceneTask->record([=](vk::CommandBuffer * cmd) {
 
-			cmd->setViewport(0, 1, &sceneRenderer->getFullViewport());
+				cmd->setViewport(0, 1, &sceneRenderer->getFullViewport());
 
-			cmd->setScissor(0, 1, &sceneRenderer->getFullRect());
+				cmd->setScissor(0, 1, &sceneRenderer->getFullRect());
 
-			sceneRenderer->record(cmd, [=]() {
+				sceneRenderer->record(cmd, [=]() {
 
-				grassPipeline->bind(cmd);
+					grassPipeline->bind(cmd);
 
-				grassVBO->bind(cmd);
+					grassVBO->bind(cmd);
 
-				grassPipeline->bindUniformSets(cmd, {
-					uSceneSet	
+					grassPipeline->bindUniformSets(cmd, {
+						uSceneSet
+						});
+
+					cmd->draw(verticesPerBlade, 160000, 0, 0);
+
 				});
-
-				cmd->draw(verticesPerBlade, 160000, 0, 0);
-
 			});
-		});
+		};
+
+		recordTasks();
 
 		vk::Semaphore sceneSemaphore = vctx->getDevice().createSemaphore(vk::SemaphoreCreateInfo());
+
+
+		auto resize2 = [=, &sceneSize, &windowSize]() {
+			if (!swapchain->resize()) {
+				SDL_Delay(100);
+				return;
+			}
+
+			auto rect = swapchain->getRect();
+			windowSize.x = rect.extent.width;
+			windowSize.y = rect.extent.height;
+			sceneSize = windowSize;
+
+			colorTarget->resize(sceneSize);
+			emissiveTarget->resize(sceneSize);
+
+			sceneRenderer->resize();
+			finalRenderer->resize();
+
+			blitUniformSet->bindImage(0, colorTarget);
+			blitUniformSet->bindImage(1, emissiveTarget);
+
+			vctx->resetTasks(SCENE_TASK_POOL);
+
+			recordTasks();
+		};
 
 		//Main Loop
 		window.run([=]() {
 
 			//Wait for next available frame
 			if (!swapchain->nextFrame()) {
-				SDL_Delay(1000);
+				resize2();
 				return;
 			}
+
+			rotateCam();
 
 			auto tStart = chrono::system_clock::now();
 
@@ -249,9 +284,7 @@ int main()
 			finalTask->record([=](vk::CommandBuffer * cmd) {
 
 				cmd->setViewport(0, 1, &finalRenderer->getFullViewport());
-
 				cmd->setScissor(0, 1, &finalRenderer->getFullRect());
-
 
 				finalRenderer->record(cmd, [=]() {
 
@@ -268,25 +301,23 @@ int main()
 					cmd->drawIndexed(blitIBO->getCount(), 1, 0, 0, 0);
 
 				});
-
 			});
 
 			//Submit command buffer
 			finalTask->execute(true, { swapchain->getSemaphore(), sceneSemaphore });
+			
+			//Reset command buffers
+			vctx->resetTasks(FINAL_TASK_POOL);
 
 			//Present current frame to screen
-			swapchain->present();
+			if (!swapchain->present()) {
+				resize2();
+				return;
+			}
 
 			auto tStop = chrono::system_clock::now();
-
 			chrono::duration<double> dt = tStop - tStart;
-
 			cout << "FPS: " << 1.0 / dt.count() << endl;
-
-			//Reset command buffers
-			vctx->resetTasks(1);
-
-			rotateCam();
 
 
 			SDL_Delay(10);
@@ -296,7 +327,6 @@ int main()
 	}
 
 	int i;
-	cin >> i;
-
+	std::cin >> i;
 	return 0;
 }

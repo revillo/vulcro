@@ -22,7 +22,7 @@ int main()
 
 		auto renderer = vctx->makeRenderer();
 		auto swapchain = vctx->makeSwapchain(window.getSurface());
-		renderer->targetSwapcahin(swapchain, false);
+		renderer->targetSwapcahin(swapchain);
 		
 		//Make a uniform buffer with one ExampleUniform to hold color
 		auto ubuf = vctx->makeUBO<ExampleUniform>(1);
@@ -72,9 +72,6 @@ int main()
 
 		//Bind ubo at binding point 0
 		uniformSet->bindBuffer(0, ubuf->getDBI());
-
-		//Must call update after all binding points are set
-		uniformSet->update();
 
 		//Lambda to randomize our triangle buffers
 		auto randomizeTriangle = [=]() {
@@ -134,6 +131,7 @@ int main()
 
 		auto resize = [=]() {
 			if (!swapchain->resize()) {
+				SDL_Delay(100);
 				return;
 			}
 			renderer->resize();

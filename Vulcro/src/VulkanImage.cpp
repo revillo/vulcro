@@ -3,26 +3,10 @@
 VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format)
 	:_ctx(ctx),
 	_format(format),
-	_size(size)
+	_size(size),
+	_usage(usage)
 {
-	_image = _ctx->getDevice().createImage(
-		vk::ImageCreateInfo(vk::ImageCreateFlags(),
-			vk::ImageType::e2D,
-			format,
-			vk::Extent3D(size.x, size.y, 1),
-			1, //Mip Levels
-			1, //Layers
-			vk::SampleCountFlagBits::e1, 
-			vk::ImageTiling::eOptimal,
-			usage,
-			vk::SharingMode::eExclusive,
-			0,
-			nullptr,
-			vk::ImageLayout::eUndefined
-        )
-	);
-
-	_imageCreated = true;
+	createImage();
 
 }
 
@@ -64,6 +48,28 @@ VulkanImage::VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size,
 	_image(image)
 {
 	
+}
+
+void VulkanImage::createImage()
+{
+	_image = _ctx->getDevice().createImage(
+		vk::ImageCreateInfo(vk::ImageCreateFlags(),
+			vk::ImageType::e2D,
+			_format,
+			vk::Extent3D(_size.x, _size.y, 1),
+			1, //Mip Levels
+			1, //Layers
+			vk::SampleCountFlagBits::e1,
+			vk::ImageTiling::eOptimal,
+			_usage,
+			vk::SharingMode::eExclusive,
+			0,
+			nullptr,
+			vk::ImageLayout::eUndefined
+		)
+	);
+
+	_imageCreated = true;
 }
 
 void VulkanImage::createImageView(vk::ImageAspectFlags aspectFlags) {
@@ -137,5 +143,19 @@ VulkanImage::~VulkanImage()
 	if (_memoryAllocated) _ctx->getDevice().freeMemory(_memory);
 
 	if (_sampler) _ctx->getDevice().destroySampler(_sampler);
+
+}
+
+void VulkanImage::resize(ivec2 size)
+{
+	if (_viewCreated) _ctx->getDevice().destroyImageView(_imageView);
+	if (_imageCreated) _ctx->getDevice().destroyImage(_image);
+	if (_memoryAllocated) _ctx->getDevice().freeMemory(_memory);
+	
+	_size = size;
+
+	if (_imageCreated) createImage();
+	if (_memoryAllocated) allocateDeviceMemory();
+	if (_viewCreated) createImageView();
 
 }

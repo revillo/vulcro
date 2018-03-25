@@ -259,11 +259,28 @@ void VulkanRenderer::resize()
 
 	_framebuffers.clear();
 
+	
+
 	if (_swapchain) {
 		
 		_fullRect = _swapchain->getRect();
 
+		if (_useDepth) {
+			createDepthBuffer();
+		}
+
 		createSwapchainFramebuffers(_swapchain);
+
+	}
+	else {
+
+		_fullRect = _images[0]->getFullRect();
+
+		if (_useDepth) {
+			createDepthBuffer();
+		}
+
+		createImagesFramebuffer();
 
 	}
 }
