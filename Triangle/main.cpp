@@ -16,13 +16,13 @@ struct ExampleUniform {
 int main()
 {
 	{
-		auto window = VulkanWindow(0, 0, 400, 400);
+		auto window = VulkanWindow(0, 0, 400, 400, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 
 		auto vctx = window.getContext();
 
 		auto renderer = vctx->makeRenderer();
 		auto swapchain = vctx->makeSwapchain(window.getSurface());
-		renderer->targetSwapcahin(swapchain);
+		renderer->targetSwapcahin(swapchain, false);
 		
 		//Make a uniform buffer with one ExampleUniform to hold color
 		auto ubuf = vctx->makeUBO<ExampleUniform>(1);
@@ -101,19 +101,45 @@ int main()
 		};
 
 		randomizeTriangle();
-	
-		const vk::Rect2D viewRect = swapchain->getRect();
-
-		auto viewport = vk::Viewport(
-			0.0f,
-			0.0f,
-			(float)viewRect.extent.width,
-			(float)viewRect.extent.height,
-			0.0,
-			1.0
-		);
 
 		auto triangleTask = vctx->makeTask();
+
+		auto taskGroup = vctx->makeTaskGroup(swapchain->numImages());
+
+		auto recordTasks = [=]() {
+			taskGroup->record([=](vk::CommandBuffer * cmd, glm::uint32 taskNumber) {
+
+				renderer->record(cmd, [=]() {
+
+					cmd->setViewport(0, 1, &renderer->getFullViewport());
+
+					cmd->setScissor(0, 1, &renderer->getFullRect());
+
+					vbuf->bind(cmd);
+
+					ibuf->bind(cmd);
+
+					pipeline->bind(cmd);
+
+					pipeline->bindUniformSets(cmd, { uniformSet });
+
+					cmd->drawIndexed(vbuf->getCount(), 1, 0, 0, 0);
+
+				}, taskNumber);
+
+			});
+		};
+
+		recordTasks();
+
+		auto resize = [=]() {
+			if (!swapchain->resize()) {
+				return;
+			}
+			renderer->resize();
+			vctx->resetTasks();
+			recordTasks();
+		};
 
 		//Main Loop
 		window.run([=]() {
@@ -122,50 +148,28 @@ int main()
 			randomizeTriangle();
 
 			//Wait for next available frame
-			swapchain->nextFrame();
+			if (!swapchain->nextFrame()) {
+				resize();
+				return;
+			}
 
-			//Record to command buffer
-			triangleTask->record([=](vk::CommandBuffer * cmd) {
-			
-				renderer->record(cmd, [=]() {
-
-					pipeline->bind(cmd);
-
-					cmd->setViewport(0, 1, &viewport);
-
-					cmd->setScissor(0, 1, &viewRect);
-
-					vbuf->bind(cmd);
-
-					ibuf->bind(cmd);
-
-					uniformSet->bind(cmd, pipeline->getLayout());
-
-					cmd->drawIndexed(vbuf->getCount(), 1, 0, 0, 0);
-				
-				});
-
-			});
-
-
-			//Submit command buffer. 
-			triangleTask->execute(
+			taskGroup->at(swapchain->getRenderingIndex())->execute(
 				true, // Block on CPU until completed
 				{ swapchain->getSemaphore() } //Wait for swapchain to be ready before rendering
 			);
 
 			//Present current frame to screen
-			swapchain->present();
-
-			//Reset command buffers
-			vctx->resetTasks();
+			if (!swapchain->present()) {
+				resize();
+				return;
+			}
 
 			SDL_Delay(100);
 		});
 	}
 
 	int i;
-	cin >> i;
+	std::cin >> i;
 
     return 0;
 }

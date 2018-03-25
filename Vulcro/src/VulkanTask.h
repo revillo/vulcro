@@ -8,6 +8,8 @@ class VulkanTask
 {
 public:
 	VulkanTask(VulkanContextRef ctx, vk::CommandPool pool);
+	VulkanTask(VulkanContextRef ctx, vk::CommandBuffer &cb);
+
 	~VulkanTask();
 
 
@@ -25,6 +27,8 @@ public:
 private:
 
 	void waitUntilDone();
+
+	bool createdCommandBuffer = false;
 
 	VulkanContextRef _ctx;
 	vk::CommandBuffer _commandBuffer;

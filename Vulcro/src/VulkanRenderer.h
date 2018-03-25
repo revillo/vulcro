@@ -22,9 +22,9 @@ public:
 		_clearColors = colors;
 	};
 
-	void record(vk::CommandBuffer * cmd, function<void()> commands);
+	void record(vk::CommandBuffer * cmd, function<void()> commands, int32 whichFramebuffer = -1);
 
-	void begin(vk::CommandBuffer * cmd);
+	void begin(vk::CommandBuffer * cmd, int32 whichFramebuffer = -1);
 
     bool hasDepth() {
         return _useDepth;
@@ -55,6 +55,8 @@ public:
             return _images.size();
         }
     }
+
+	void resize();
 
 	void end(vk::CommandBuffer * cmd);
 

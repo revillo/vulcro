@@ -28,10 +28,11 @@ struct uSceneGlobals {
 int main()
 {
 	{
-		glm::ivec2 windowSize(1920, 1080);
+		glm::ivec2 windowSize(455, 455);
 
-		auto window = VulkanWindow(0, 0, windowSize.x, windowSize.y, SDL_WINDOW_VULKAN | SDL_WINDOW_FULLSCREEN);
 
+		auto window = VulkanWindow(0, 0, windowSize.x, windowSize.y, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+		
 		auto vctx = window.getContext();
 
 		auto finalRenderer = vctx->makeRenderer();
@@ -220,7 +221,9 @@ int main()
 
 				grassVBO->bind(cmd);
 
-				uSceneSet->bind(cmd, grassPipeline->getLayout());
+				grassPipeline->bindUniformSets(cmd, {
+					uSceneSet	
+				});
 
 				cmd->draw(verticesPerBlade, 160000, 0, 0);
 
@@ -233,7 +236,10 @@ int main()
 		window.run([=]() {
 
 			//Wait for next available frame
-			swapchain->nextFrame();
+			if (!swapchain->nextFrame()) {
+				SDL_Delay(1000);
+				return;
+			}
 
 			auto tStart = chrono::system_clock::now();
 
@@ -255,7 +261,9 @@ int main()
 
 					blitIBO->bind(cmd);
 
-					blitUniformSet->bind(cmd, blitPipeline->getLayout());
+					blitPipeline->bindUniformSets(cmd, {
+						blitUniformSet
+						});
 
 					cmd->drawIndexed(blitIBO->getCount(), 1, 0, 0, 0);
 

@@ -91,6 +91,8 @@ int VulkanWindow::initWindow(uint32 flags) {
 void VulkanWindow::run(std::function<void()> update) {
 	// Poll for user input.
 	bool stillRunning = true;
+	bool minimized = false;
+
 	while (stillRunning) {
 
 		SDL_Event event;
@@ -101,7 +103,8 @@ void VulkanWindow::run(std::function<void()> update) {
 			case SDL_QUIT:
 				stillRunning = false;
 				break;
-			
+
+	
 			default:
 				// Do nothing.
 				break;
@@ -109,8 +112,8 @@ void VulkanWindow::run(std::function<void()> update) {
 
 		}
 
-		
-		update();
+		if (!minimized)
+			update();
 
 		const Uint8 *state = SDL_GetKeyboardState(NULL);
 		if (state[SDL_SCANCODE_ESCAPE]) {

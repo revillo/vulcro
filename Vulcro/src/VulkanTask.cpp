@@ -13,6 +13,19 @@ VulkanTask::VulkanTask(VulkanContextRef ctx, vk::CommandPool pool) :
 	_commandBuffer = _ctx->getDevice().allocateCommandBuffers(
 		vk::CommandBufferAllocateInfo(pool, vk::CommandBufferLevel::ePrimary, 1)
 	)[0];
+
+	createdCommandBuffer = true;
+}
+
+VulkanTask::VulkanTask(VulkanContextRef ctx, vk::CommandBuffer & cb) :
+	_ctx(ctx),
+	_commandBuffer(cb)
+{
+	_fence = _ctx->getDevice().createFence(
+		vk::FenceCreateInfo()
+	);
+
+	createdCommandBuffer = false;
 }
 
 
@@ -84,11 +97,13 @@ void VulkanTask::waitUntilDone() {
 VulkanTask::~VulkanTask()
 {
 
-	_ctx->getDevice().freeCommandBuffers(
-		_pool,
-		1,
-		&_commandBuffer
-	);
+	if (createdCommandBuffer) {
+		_ctx->getDevice().freeCommandBuffers(
+			_pool,
+			1,
+			&_commandBuffer
+		);
+	}
 
 
 	_ctx->getDevice().destroyFence(

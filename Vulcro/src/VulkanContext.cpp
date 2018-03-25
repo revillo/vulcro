@@ -127,6 +127,12 @@ VulkanTaskRef VulkanContext::makeTask(uint32 poolIndex)
 	return make_shared<VulkanTask>(this, _pools[poolIndex]);
 }
 
+#include "VulkanTaskGroup.h"
+VulkanTaskGroupRef VulkanContext::makeTaskGroup(uint32 numTasks, uint32 poolIndex)
+{
+	return make_shared<VulkanTaskGroup>(this, numTasks, _pools[poolIndex]);
+}
+
 #include "VulkanImage.h"
 VulkanImageRef VulkanContext::makeImage(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format)
 {

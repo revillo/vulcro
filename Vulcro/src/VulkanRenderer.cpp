@@ -195,16 +195,16 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 }
 
 
-void VulkanRenderer::record(vk::CommandBuffer * cmd, function<void()> commands)
+void VulkanRenderer::record(vk::CommandBuffer * cmd, function<void()> commands, int32 whichFramebuffer)
 {
-	begin(cmd);
+	begin(cmd, whichFramebuffer);
 
 	commands();
 
 	end(cmd);
 }
 
-void VulkanRenderer::begin(vk::CommandBuffer * cmd) {
+void VulkanRenderer::begin(vk::CommandBuffer * cmd, int32 whichFramebuffer) {
 
 	uint32 framebufferIndex = 0;
 	const std::array<float, 4> clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -229,6 +229,10 @@ void VulkanRenderer::begin(vk::CommandBuffer * cmd) {
 		}
 	}
 
+	if (whichFramebuffer >= 0) {
+		framebufferIndex = whichFramebuffer;
+	}
+
 	if (_useDepth) {
 		clears.push_back(vk::ClearDepthStencilValue(1.0, 0));
 	}
@@ -244,6 +248,24 @@ void VulkanRenderer::begin(vk::CommandBuffer * cmd) {
 
 		vk::SubpassContents::eInline
 	);
+}
+
+void VulkanRenderer::resize()
+{
+	for (auto &fb : _framebuffers) {
+		_ctx->getDevice().destroyFramebuffer(fb);
+	}
+
+
+	_framebuffers.clear();
+
+	if (_swapchain) {
+		
+		_fullRect = _swapchain->getRect();
+
+		createSwapchainFramebuffers(_swapchain);
+
+	}
 }
 
 void VulkanRenderer::end(vk::CommandBuffer * cmd) {

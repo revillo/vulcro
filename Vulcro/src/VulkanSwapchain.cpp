@@ -9,7 +9,7 @@ VulkanSwapchain::VulkanSwapchain(VulkanContextRef ctx, vk::SurfaceKHR surface) :
 
 }
 
-void VulkanSwapchain::init(vk::SurfaceKHR surface) {
+bool VulkanSwapchain::init(vk::SurfaceKHR surface) {
 	
 	auto &physicalDevice = _ctx->getPhysicalDevice();
 	
@@ -20,6 +20,8 @@ void VulkanSwapchain::init(vk::SurfaceKHR surface) {
 	auto presentModes = physicalDevice.getSurfacePresentModesKHR(surface);
 	_format = surfFormats[0].format;
 	_extent = surfCap.currentExtent;
+
+	if (_extent.width == 0) return false;
 
 	auto presentMode = vk::PresentModeKHR::eImmediate;
 
@@ -33,6 +35,8 @@ void VulkanSwapchain::init(vk::SurfaceKHR surface) {
 		}
 	}
 
+
+	vk::SwapchainKHR oldSwapchain = swapchainInited ? _swapchain : vk::SwapchainKHR();
 
 	_swapchain = _ctx->getDevice().createSwapchainKHR(
 		vk::SwapchainCreateInfoKHR(
@@ -51,9 +55,12 @@ void VulkanSwapchain::init(vk::SurfaceKHR surface) {
 			vk::CompositeAlphaFlagBitsKHR::eOpaque,
 			presentMode,
 			VK_TRUE, // Clipping
-			swapchainInited ? _swapchain : vk::SwapchainKHR()
+			oldSwapchain
 		)
 	);
+
+
+	_images.clear();
 
 
 	auto swapImages = _ctx->getDevice().getSwapchainImagesKHR(_swapchain);
@@ -64,9 +71,13 @@ void VulkanSwapchain::init(vk::SurfaceKHR surface) {
 		_images.push_back(vi);
 	}
 
+	if (swapchainInited) {
+		_ctx->getDevice().destroySwapchainKHR(oldSwapchain);
+	}
+
 	swapchainInited = true;
 
-
+	return true;
 }
 
 void VulkanSwapchain::createSemaphore()
@@ -76,29 +87,53 @@ void VulkanSwapchain::createSemaphore()
 	);
 }
 
-void VulkanSwapchain::present(vector<vk::Semaphore> inSems) {
-	_ctx->getQueue().presentKHR(
-		vk::PresentInfoKHR(
-			inSems.size(),
-			inSems.size() > 0 ? &inSems[0] : nullptr,
-			1,
-			&_swapchain,
-			&_renderingIndex
-		)
-	);
+bool VulkanSwapchain::present(vector<vk::Semaphore> inSems) {
+	try {
+		_ctx->getQueue().presentKHR(
+			vk::PresentInfoKHR(
+				inSems.size(),
+				inSems.size() > 0 ? &inSems[0] : nullptr,
+				1,
+				&_swapchain,
+				&_renderingIndex
+			)
+		);
+
+		return true;
+		
+	}
+	catch (vk::SystemError error) {
+		return false;
+	}
 }
 
-void VulkanSwapchain::nextFrame()
+bool VulkanSwapchain::nextFrame()
 {
 
-	auto ret = _ctx->getDevice().acquireNextImageKHR(
-		_swapchain,
-		UINT64_MAX,
-		_semaphore,
-		vk::Fence()
-	);
+	if (_extent.width == 0) return false;
 
-	_renderingIndex = ret.value;
+	try {
+
+
+		auto ret = _ctx->getDevice().acquireNextImageKHR(
+			_swapchain,
+			UINT64_MAX,
+			_semaphore,
+			vk::Fence()
+		);
+
+		_renderingIndex = ret.value;
+		_frameFailed = false;
+		return true;
+	}
+	catch (vk::SystemError error) {
+		return false;
+	}
+	}
+
+bool VulkanSwapchain::resize()
+{
+	return init(_surface);
 }
 
 vk::Rect2D VulkanSwapchain::getRect()

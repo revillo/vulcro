@@ -10,12 +10,12 @@ public:
 	VulkanSwapchain(VulkanContextRef ctx, vk::SurfaceKHR surface);
 	~VulkanSwapchain();
 
-	void init(vk::SurfaceKHR surface);
+	bool init(vk::SurfaceKHR surface);
 
 
-	void nextFrame();
+	bool nextFrame();
 
-	void present(vector<vk::Semaphore> inSems = {});
+	bool present(vector<vk::Semaphore> inSems = {});
 
 	vk::Format getFormat() {
 		return _format;
@@ -32,6 +32,8 @@ public:
 	vector<VulkanImageRef> getImages() {
 		return _images;
 	}
+
+	bool resize();
 
 	vk::Semaphore &getSemaphore() {
 		return _semaphore;
@@ -58,6 +60,7 @@ private:
 	vector<VulkanImageRef> _images;
 
 	bool swapchainInited = false;
+	bool _frameFailed = false;
 
 	vk::Extent2D _extent;
 };

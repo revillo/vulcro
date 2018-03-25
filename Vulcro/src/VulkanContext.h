@@ -40,6 +40,7 @@ class VulkanSwapchain;
 class VulkanBuffer;
 class VulkanUniformSet;
 class VulkanTask;
+class VulkanTaskGroup;
 class VulkanImage;
 
 template <class T>
@@ -60,8 +61,7 @@ typedef shared_ptr<VulkanBuffer> VulkanBufferRef;
 typedef shared_ptr<VulkanUniformSet> VulkanUniformSetRef;
 typedef shared_ptr<VulkanTask> VulkanTaskRef;
 typedef shared_ptr<VulkanImage> VulkanImageRef;
-
-
+typedef shared_ptr<VulkanTaskGroup> VulkanTaskGroupRef;
 
 
 class VulkanContext
@@ -110,6 +110,7 @@ public:
 	);
 
 	VulkanTaskRef makeTask(uint32 poolIndex = 0);
+	VulkanTaskGroupRef makeTaskGroup(uint32 numTasks, uint32 poolIndex = 0);
 
 	VulkanImageRef makeImage(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
 	VulkanImageRef makeImage(vk::Image image, glm::ivec2 size, vk::Format format);
