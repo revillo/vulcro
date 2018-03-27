@@ -72,7 +72,7 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 		vk::PipelineColorBlendStateCreateFlags(),
 		VK_FALSE, //Logic Op
 		vk::LogicOp::eNoOp,
-		cbas.size(),
+		static_cast<uint32>(cbas.size()),
 		&cbas[0],
 		blendConstants
 	);
@@ -82,7 +82,7 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 	_pipelineLayout = _ctx->getDevice().createPipelineLayout(
 		vk::PipelineLayoutCreateInfo(
 			vk::PipelineLayoutCreateFlags(),
-			uniLayouts.size(),
+			static_cast<uint32>(uniLayouts.size()),
 			uniLayouts.size() > 0 ? &uniLayouts[0] : nullptr,
 			0,
 			nullptr //Push constant Ranges
@@ -137,7 +137,7 @@ void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUnifo
 		vk::PipelineBindPoint::eGraphics,
 		_pipelineLayout,
 		0,
-		dsets.size(),
+		static_cast<uint32>(dsets.size()),
 		dsets.size() > 0 ? &dsets[0] :nullptr,
 		0,
 		nullptr

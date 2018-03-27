@@ -108,9 +108,9 @@ VulkanShader::VulkanShader(
 
 	_vis = vk::PipelineVertexInputStateCreateInfo(
 		vk::PipelineVertexInputStateCreateFlags(),
-		_vibds.size(),
+		static_cast<uint32>(_vibds.size()),
 		_vibds.size() > 0 ? &_vibds[0] : nullptr,
-		_viads.size(),
+		static_cast<uint32>(_viads.size()),
 		_viads.size() > 0 ? &_viads[0] : nullptr
 	);
 	

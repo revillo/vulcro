@@ -40,8 +40,8 @@ public:
 		return vk::Viewport(
 			0,
 			0,
-			_fullRect.extent.width,
-			_fullRect.extent.height,
+			(float)_fullRect.extent.width,
+			(float)_fullRect.extent.height,
 			0.0,
 			1.0
 		);
@@ -52,7 +52,7 @@ public:
             return 1;
         }
         else {
-            return _images.size();
+            return static_cast<uint32>(_images.size());
         }
     }
 
