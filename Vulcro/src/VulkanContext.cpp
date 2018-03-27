@@ -34,7 +34,8 @@ VulkanContext::VulkanContext(vk::Instance instance)
 		vk::DeviceCreateInfo(
 			vk::DeviceCreateFlags(),
 			1,
-			&devQ, 0, nullptr, extensions.size(), &extensions[0], nullptr)
+			&devQ, 0, nullptr, 
+			static_cast<uint32>(extensions.size()), &extensions[0], nullptr)
 	);
 
 

@@ -58,12 +58,12 @@ void VulkanTask::execute(bool blockUntilFinished, vector<vk::Semaphore> inSems, 
 
 
 	auto submit = vk::SubmitInfo(
-		inSems.size(),
+		static_cast<uint32>(inSems.size()),
 		inSems.size() > 0 ? &inSems[0] : nullptr,
 		flags,
 		1,
 		&_commandBuffer,
-		outSems.size(),
+		static_cast<uint32>(outSems.size()),
 		outSems.size() > 0 ? &outSems[0] : nullptr
 	);
 

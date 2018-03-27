@@ -169,7 +169,7 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 		vk::PipelineBindPoint::eGraphics,
 		0,
 		nullptr,
-		colorRefs.size(),
+		static_cast<uint32>(colorRefs.size()),
 		&colorRefs[0],
 		nullptr,
 		_useDepth ? &depthRef : nullptr,
@@ -180,7 +180,7 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 	_renderPass = _ctx->getDevice().createRenderPass(
 		vk::RenderPassCreateInfo(
 			vk::RenderPassCreateFlags(),
-			attachments.size(),
+			static_cast<uint32>(attachments.size()),
 			&attachments[0],
 			1,
 			&subpass,
@@ -242,7 +242,7 @@ void VulkanRenderer::begin(vk::CommandBuffer * cmd, int32 whichFramebuffer) {
 			_renderPass,
 			_framebuffers[framebufferIndex],
 			_fullRect,
-			clears.size(),
+			static_cast<uint32>(clears.size()),
 			&clears[0]
 		),
 
@@ -307,7 +307,7 @@ void VulkanRenderer::createImagesFramebuffer() {
 			vk::FramebufferCreateInfo(
 				vk::FramebufferCreateFlags(),
 				_renderPass,
-				fbAttachments.size(),
+				static_cast<uint32>(fbAttachments.size()),
 				&fbAttachments[0],
 				_fullRect.extent.width,
 				_fullRect.extent.height,

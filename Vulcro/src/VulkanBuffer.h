@@ -178,7 +178,7 @@ public:
 			&indices[0]
 		);
 
-        _count = indices.size();
+        _count = static_cast<uint32>(indices.size());
 	}
 
 	void bind(vk::CommandBuffer * cmd) {

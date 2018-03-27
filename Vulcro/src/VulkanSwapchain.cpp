@@ -91,7 +91,7 @@ bool VulkanSwapchain::present(vector<vk::Semaphore> inSems) {
 	try {
 		_ctx->getQueue().presentKHR(
 			vk::PresentInfoKHR(
-				inSems.size(),
+				static_cast<uint32>(inSems.size()),
 				inSems.size() > 0 ? &inSems[0] : nullptr,
 				1,
 				&_swapchain,

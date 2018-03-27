@@ -89,7 +89,7 @@ void VulkanUniformSet::update() {
 	if (_writes.size() == 0) return;
 
 	_ctx->getDevice().updateDescriptorSets(
-		_writes.size(),
+		static_cast<uint32>(_writes.size()),
 		&_writes[0],
 		0,
 		nullptr

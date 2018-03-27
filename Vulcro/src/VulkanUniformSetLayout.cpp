@@ -12,7 +12,7 @@ VulkanUniformSetLayout::VulkanUniformSetLayout(VulkanContextRef ctx, vector<Bind
 
 	for (auto &binding : bindings) {
 		vkbindings.push_back(vk::DescriptorSetLayoutBinding(
-			vkbindings.size(),
+			static_cast<uint32>(vkbindings.size()),
 			binding.type,
 			binding.arrayCount,
 			vk::ShaderStageFlagBits::eAllGraphics,
@@ -30,7 +30,7 @@ VulkanUniformSetLayout::VulkanUniformSetLayout(VulkanContextRef ctx, vector<Bind
 	_descriptorLayout = _ctx->getDevice().createDescriptorSetLayout(
 		vk::DescriptorSetLayoutCreateInfo(
 			vk::DescriptorSetLayoutCreateFlags(),
-			vkbindings.size(),
+			static_cast<uint32>(vkbindings.size()),
 			&vkbindings[0]
 		)
 	);
@@ -40,7 +40,7 @@ VulkanUniformSetLayout::VulkanUniformSetLayout(VulkanContextRef ctx, vector<Bind
 		vk::DescriptorPoolCreateInfo(
 			vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
 			10, // todo
-			poolSizes.size(),
+			static_cast<uint32>(poolSizes.size()),
 			&poolSizes[0]
 		)
 	);

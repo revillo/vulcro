@@ -29,7 +29,7 @@ VulkanTaskGroup::~VulkanTaskGroup()
 
 	_ctx->getDevice().freeCommandBuffers(
 		_pool,
-		_commandBuffers.size(),
+		static_cast<uint32>(_commandBuffers.size()),
 		&_commandBuffers[0]
 	);
 }
