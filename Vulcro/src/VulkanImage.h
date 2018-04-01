@@ -11,7 +11,6 @@ public:
 	VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
 	VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format);
 
-	void createImage();
 	void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor);
 	void createSampler();
 
@@ -51,6 +50,7 @@ public:
 	}
 
 private:
+	void createImage();
 
 	VulkanContextRef _ctx;
 

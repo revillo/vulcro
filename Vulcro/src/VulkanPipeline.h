@@ -43,3 +43,23 @@ private:
 	VulkanRendererRef _renderer;
 };
 
+class VulkanComputePipeline {
+
+public:
+
+	VulkanComputePipeline(VulkanContextRef ctx, VulkanShaderRef shader);
+
+	void bind(vk::CommandBuffer * cmd);
+
+	void bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef> sets);
+
+
+	~VulkanComputePipeline();
+
+private:
+
+	VulkanShaderRef  _shader;
+	VulkanContextRef _ctx;
+	vk::Pipeline _pipeline;
+	vk::PipelineLayout _pipelineLayout;
+};

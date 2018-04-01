@@ -15,6 +15,23 @@ public:
 		vector<VulkanVertexLayoutRef> vertexLayouts = {},
 		vector<VulkanUniformSetLayoutRef> uniformLayouts = {}
 	);
+
+	VulkanShader(
+		VulkanContextRef ctx,
+		const char * vertPath,
+		const char * tessControlPath,
+		const char * tessEvalPath,
+		const char * tessGeomPath,
+		const char * fragPath,
+		vector<VulkanVertexLayoutRef> vertexLayouts = {},
+		vector<VulkanUniformSetLayoutRef> uniformLayouts = {}
+	);
+
+	VulkanShader(
+		VulkanContextRef ctx,
+		const char * computePath,
+		vector<VulkanUniformSetLayoutRef> uniformLayouts = {}
+	);
 		
 	~VulkanShader();
 
@@ -36,6 +53,8 @@ public:
 
 private:
 
+	vk::ShaderModule loadModule(const char* path);
+
 	vector<VulkanUniformSetLayoutRef> _uniformLayouts;
 	vector<VulkanVertexLayoutRef> _vertexLayouts;
 
@@ -47,7 +66,7 @@ private:
 
 	VulkanContextRef _ctx;
 	vector<vk::PipelineShaderStageCreateInfo> _stages;
-	vk::ShaderModule _vertModule, _fragModule;
+	vector<vk::ShaderModule> _modules;
 
 	bool layoutCreated = false;
 };

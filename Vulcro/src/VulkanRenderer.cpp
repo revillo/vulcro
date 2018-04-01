@@ -207,7 +207,7 @@ void VulkanRenderer::record(vk::CommandBuffer * cmd, function<void()> commands, 
 void VulkanRenderer::begin(vk::CommandBuffer * cmd, int32 whichFramebuffer) {
 
 	uint32 framebufferIndex = 0;
-	const std::array<float, 4> clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+	const std::array<float, 4> clearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
 	std::vector<vk::ClearValue> clears;
 
 	if (_swapchain != nullptr) {

@@ -89,17 +89,22 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 		)
 	);
 
-	//_layoutCreated = true;
+	auto tsci = vk::PipelineTessellationStateCreateInfo(
+		vk::PipelineTessellationStateCreateFlags(),
+		3
+	);
+
+	uint32 numShaders = static_cast<uint32>(shader->getStages().size());
 
 	_pipeline = _ctx->getDevice().createGraphicsPipeline(
 		nullptr,
 		vk::GraphicsPipelineCreateInfo(
 			vk::PipelineCreateFlags(),
-			2,
+			numShaders,
 			&shader->getStages()[0],
 			&vis,
 			&ias,
-			nullptr, //Tesselation State
+			numShaders > 2 ? &tsci : nullptr, //Tesselation State
 			&vps,
 			&rs,
 			&mss,
@@ -197,4 +202,67 @@ vk::PipelineDepthStencilStateCreateInfo VulkanPipeline::configureDepthTest()
         0, //Min Depth Bounds
         1.0 //Max Depth Bounds
     );
+}
+
+VulkanComputePipeline::VulkanComputePipeline(VulkanContextRef ctx, VulkanShaderRef shader) :
+_shader(shader),
+_ctx(ctx)
+{
+	
+	_pipelineLayout = _ctx->getDevice().createPipelineLayout(
+		vk::PipelineLayoutCreateInfo(
+			vk::PipelineLayoutCreateFlags(),
+			static_cast<uint32>(_shader->getDescriptorSetLayouts().size()),
+			&_shader->getDescriptorSetLayouts()[0],
+			0, //push
+			nullptr //push constants
+		)
+	);
+	
+	_pipeline = _ctx->getDevice().createComputePipeline(
+		nullptr, //cache
+		vk::ComputePipelineCreateInfo(
+			vk::PipelineCreateFlags(),
+			_shader->getStages()[0],
+			_pipelineLayout,
+			nullptr,
+			0
+		)
+	);
+
+
+}
+
+void VulkanComputePipeline::bind(vk::CommandBuffer * cmd)
+{
+	cmd->bindPipeline(
+		vk::PipelineBindPoint::eCompute,
+		_pipeline
+	);
+}
+
+void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef> sets)
+{
+	vector<vk::DescriptorSet> dsets;
+	dsets.reserve(sets.size());
+
+	for (auto &set : sets) {
+		dsets.push_back(set->getDescriptorSet());
+	}
+
+	cmd->bindDescriptorSets(
+		vk::PipelineBindPoint::eCompute,
+		_pipelineLayout,
+		0,
+		static_cast<uint32>(dsets.size()),
+		dsets.size() > 0 ? &dsets[0] : nullptr,
+		0,
+		nullptr
+	);
+}
+
+VulkanComputePipeline::~VulkanComputePipeline()
+{
+	_ctx->getDevice().destroyPipelineLayout(_pipelineLayout);
+	_ctx->getDevice().destroyPipeline(_pipeline);
 }

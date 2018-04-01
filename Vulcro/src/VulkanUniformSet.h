@@ -10,9 +10,11 @@ public:
 	
 	VulkanUniformSet(VulkanContextRef ctx, VulkanUniformSetLayoutRef layout);
 
-	void bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi);
+	void bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi, vk::DescriptorType type = vk::DescriptorType::eUniformBuffer);
 
 	void bindImage(uint32 binding, VulkanImageRef image);
+	
+	void bindImages(vector<VulkanImageRef> _images);
 
 	void update();
 

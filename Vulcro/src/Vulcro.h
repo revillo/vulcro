@@ -4,6 +4,7 @@
 #include "VulkanRenderer.h"
 #include "VulkanPipeline.h"
 #include "VulkanTaskGroup.h"
+#include "VulkanSwapchain.h"
 
 namespace vulcro {
 	const glm::mat4 glProjFixYZ = mat4(

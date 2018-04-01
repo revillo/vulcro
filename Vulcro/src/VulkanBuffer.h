@@ -7,7 +7,16 @@
 class VulkanBuffer
 {
 public:
-	VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, void* data = nullptr);
+
+	
+
+	static const vk::MemoryPropertyFlags CPU_ALOT;
+	static const vk::MemoryPropertyFlags CPU_NEVER;
+
+	VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, 
+		vk::MemoryPropertyFlags memFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, 
+		void* data = nullptr);
+
 	~VulkanBuffer();
 	
 	void bindVertex(vk::CommandBuffer * cmd);
@@ -45,8 +54,14 @@ public:
 	ubo(VulkanContext * ctx, uint32 arrayCount = 1, T * data = nullptr) : _arrayCount(arrayCount)
 	{
 		values = new T[arrayCount];
+
 		_size = sizeof(T) * arrayCount;
-		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eUniformBuffer, _size, data);
+
+		if (data != nullptr) {
+			memcpy(values, data, _size);
+		}
+
+		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eUniformBuffer, _size, VulkanBuffer::CPU_ALOT, data);
 	};
 
 	T & at(uint32 i = 0) {
@@ -113,7 +128,7 @@ public:
 			memcpy(values, data, _size);
 		}
 
-		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eVertexBuffer, _size, data);
+		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eVertexBuffer, _size, VulkanBuffer::CPU_ALOT, data);
 		_layout = ctx->makeVertexLayout(fieldFormats);
 	};
 
@@ -175,6 +190,7 @@ public:
 		_vbr = ctx->makeBuffer(
 			vk::BufferUsageFlagBits::eIndexBuffer,
 			sizeof(uint16_t) * indices.size(),
+			VulkanBuffer::CPU_ALOT,
 			&indices[0]
 		);
 
@@ -192,6 +208,18 @@ public:
 private:
 
     uint32 _count = 0;
+	VulkanBufferRef _vbr;
+
+};
+
+template<class T>
+class ssbo {
+
+	ssbo(VulkanContextRef ctx) {
+		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eStorageBuffer, sizeof(T), VulkanBuffer::CPU_NEVER, nullptr);
+	}
+
+
 	VulkanBufferRef _vbr;
 
 };
