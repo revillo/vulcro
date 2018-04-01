@@ -21,8 +21,8 @@ public:
 		return _format;
 	}
 
-	uint64 numImages() {
-		return _images.size();
+	uint32 numImages() {
+		return static_cast<uint32>(_images.size());
 	}
 
 	vk::SwapchainKHR &getSwapchain() {

@@ -26,6 +26,13 @@ VulkanContext::VulkanContext(vk::Instance instance)
 	extensions.push_back("VK_KHR_swapchain");
 	//extensions.push_back("VK_KHR_win32_surface");
 
+
+	auto features = vk::PhysicalDeviceFeatures();
+
+	features.setTessellationShader(true);
+	features.setGeometryShader(true);
+
+
 	float qpriors[1] = { 0.0f };
 
 	auto devQ = vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), familyIndex, 1, qpriors);
@@ -34,8 +41,12 @@ VulkanContext::VulkanContext(vk::Instance instance)
 		vk::DeviceCreateInfo(
 			vk::DeviceCreateFlags(),
 			1,
-			&devQ, 0, nullptr, 
-			static_cast<uint32>(extensions.size()), &extensions[0], nullptr)
+			&devQ,
+			0, //Enabled Layers 
+			nullptr, 
+			static_cast<uint32>(extensions.size()), &extensions[0],
+			&features //enabled features
+		)
 	);
 
 
@@ -93,6 +104,11 @@ shared_ptr<VulkanPipeline> VulkanContext::makePipeline(VulkanShaderRef shader, V
 	return make_shared<VulkanPipeline>(this, shader, renderer, config, colorBlendConfigs);
 }
 
+VulkanComputePipelineRef VulkanContext::makeComputePipeline(VulkanShaderRef shader)
+{
+	return make_shared<VulkanComputePipeline>(this, shader);
+}
+
 #include "VulkanSwapchain.h"
 VulkanSwapchainRef VulkanContext::makeSwapchain(vk::SurfaceKHR surface)
 {
@@ -104,10 +120,21 @@ VulkanShaderRef VulkanContext::makeShader(const char * vertPath, const char * fr
 {
 	return make_shared<VulkanShader>(this, vertPath, fragPath, vertexLayouts, uniformLayouts);
 }
-#include "VulkanBuffer.h"
-VulkanBufferRef VulkanContext::makeBuffer(vk::BufferUsageFlags usage, uint64 size, void * data)
+
+VulkanShaderRef VulkanContext::makeTessShader(const char * vertPath, const char * tessControlPath, const char * tessEvalPath, const char * tessGeomPath, const char * fragPath, vector<VulkanVertexLayoutRef> vertexLayouts, vector<VulkanUniformSetLayoutRef> uniformLayouts)
 {
-	return make_shared<VulkanBuffer>(this, usage, size, data);
+	return make_shared<VulkanShader>(this, vertPath, tessControlPath, tessEvalPath, tessGeomPath, fragPath, vertexLayouts, uniformLayouts);
+}
+
+VulkanShaderRef VulkanContext::makeComputeShader(const char * computePath, vector<VulkanUniformSetLayoutRef> uniformLayouts)
+{
+	return make_shared<VulkanShader>(this, computePath, uniformLayouts);
+}
+
+#include "VulkanBuffer.h"
+VulkanBufferRef VulkanContext::makeBuffer(vk::BufferUsageFlags usage, uint64 size, vk::MemoryPropertyFlags flags, void * data)
+{
+	return make_shared<VulkanBuffer>(this, usage, size, flags, data);
 }
 
 
@@ -131,6 +158,11 @@ VulkanTaskRef VulkanContext::makeTask(uint32 poolIndex)
 #include "VulkanTaskGroup.h"
 VulkanTaskGroupRef VulkanContext::makeTaskGroup(uint32 numTasks, uint32 poolIndex)
 {
+	if (_pools.count(poolIndex) == 0) {
+		_pools[poolIndex] = _device.createCommandPool(
+			vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlags(), _familyIndex)
+		);
+	}
 	return make_shared<VulkanTaskGroup>(this, numTasks, _pools[poolIndex]);
 }
 

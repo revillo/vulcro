@@ -1,10 +1,10 @@
 #include "VulkanBuffer.h"
 
 
+const vk::MemoryPropertyFlags VulkanBuffer::CPU_ALOT = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
+const vk::MemoryPropertyFlags VulkanBuffer::CPU_NEVER = vk::MemoryPropertyFlagBits::eDeviceLocal;
 
-
-
-VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, void * data) :
+VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, vk::MemoryPropertyFlags memFlags, void * data) :
 	_ctx(ctx),
 	_size(size)
 {
@@ -28,8 +28,7 @@ VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uin
 	auto reqBits = memReqs.memoryTypeBits;
 	auto memProps = _ctx->getPhysicalDevice().getMemoryProperties();
 	
-	vk::MemoryPropertyFlags propMask = vk::MemoryPropertyFlagBits::eHostVisible;
-	propMask |= vk::MemoryPropertyFlagBits::eHostCoherent;
+	vk::MemoryPropertyFlags propMask = memFlags;
 	
 	for (uint32 i = 0; i < memProps.memoryTypeCount; i++) {
 		auto type = memProps.memoryTypes[i];
@@ -116,7 +115,7 @@ void * VulkanBuffer::getData()
 	void * pData = _ctx->getDevice().mapMemory(
 		_memory,
 		0,
-		96,
+		_size,
 		vk::MemoryMapFlags()
 	);
 

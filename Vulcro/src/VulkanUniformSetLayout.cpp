@@ -15,7 +15,7 @@ VulkanUniformSetLayout::VulkanUniformSetLayout(VulkanContextRef ctx, vector<Bind
 			static_cast<uint32>(vkbindings.size()),
 			binding.type,
 			binding.arrayCount,
-			vk::ShaderStageFlagBits::eAllGraphics,
+			vk::ShaderStageFlagBits::eAll,
 			binding.samplers
 		));
 

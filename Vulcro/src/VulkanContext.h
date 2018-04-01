@@ -36,6 +36,7 @@ class VulkanVertexLayout;
 class VulkanRenderer;
 class VulkanShader;
 class VulkanPipeline;
+class VulkanComputePipeline;
 class VulkanSwapchain;
 class VulkanBuffer;
 class VulkanUniformSet;
@@ -62,6 +63,7 @@ typedef shared_ptr<VulkanUniformSet> VulkanUniformSetRef;
 typedef shared_ptr<VulkanTask> VulkanTaskRef;
 typedef shared_ptr<VulkanImage> VulkanImageRef;
 typedef shared_ptr<VulkanTaskGroup> VulkanTaskGroupRef;
+typedef shared_ptr<VulkanComputePipeline> VulkanComputePipelineRef;
 
 
 class VulkanContext
@@ -92,6 +94,8 @@ public:
 		vector<ColorBlendConfig> colorBlendConfigs = {}
 	);
 
+	VulkanComputePipelineRef makeComputePipeline(VulkanShaderRef shader);
+
 	VulkanSwapchainRef makeSwapchain(vk::SurfaceKHR surface);
 
 	VulkanShaderRef makeShader(const char * vertPath,
@@ -99,10 +103,23 @@ public:
 		vector<VulkanVertexLayoutRef> vertexLayouts,
 		vector<VulkanUniformSetLayoutRef> uniformLayouts = {});
 
+	VulkanShaderRef makeTessShader(
+		const char * vertPath,
+		const char * tessControlPath,
+		const char * tessEvalPath,
+		const char * tessGeomPath,
+		const char * fragPath,
+		vector<VulkanVertexLayoutRef> vertexLayouts = {},
+		vector<VulkanUniformSetLayoutRef> uniformLayouts = {}
+	);
+
+	VulkanShaderRef makeComputeShader(const char * computePath, vector<VulkanUniformSetLayoutRef> uniformLayouts = {});
+
 	VulkanBufferRef makeBuffer(
 		vk::BufferUsageFlags usage,
 		uint64 size,
-		void* data
+		vk::MemoryPropertyFlags flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+		, void* data = nullptr
 	);
 
 	VulkanUniformSetRef makeUniformSet(

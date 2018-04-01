@@ -9,7 +9,7 @@ VulkanUniformSet::VulkanUniformSet(VulkanContextRef ctx, VulkanUniformSetLayoutR
 	_descriptorSet = layout->allocateDescriptorSet();
 }
 
-void VulkanUniformSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi)
+void VulkanUniformSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi, vk::DescriptorType type)
 {
 	/*
 	if (_dbis.size() < binding + 1) {
@@ -42,7 +42,7 @@ void VulkanUniformSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi)
 		binding,
 		0,
 		1,
-		vk::DescriptorType::eUniformBuffer,
+		type,
 		nullptr,
 		&dbi,
 		nullptr
@@ -82,6 +82,14 @@ void VulkanUniformSet::bindImage(uint32 binding, VulkanImageRef image)
 		nullptr
 	);
 
+}
+
+void VulkanUniformSet::bindImages(vector<VulkanImageRef> images)
+{
+	uint32 binding = 0;
+	for (auto &img : images) {
+		bindImage(binding++, img);
+	}
 }
 
 void VulkanUniformSet::update() {
