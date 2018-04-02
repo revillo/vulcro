@@ -6,6 +6,8 @@
 #include "VulkanTaskGroup.h"
 #include "VulkanSwapchain.h"
 
+#include "glm\gtc\matrix_transform.inl"
+
 namespace vulcro {
 	const glm::mat4 glProjFixYZ = mat4(
 		1.0f, 0.0f, 0.0f, 0.0f,
