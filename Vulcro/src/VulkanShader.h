@@ -12,8 +12,8 @@ public:
 		VulkanContextRef ctx,
 		const char * vertPath,
 		const char * fragPath,
-		vector<VulkanVertexLayoutRef> vertexLayouts = {},
-		vector<VulkanUniformSetLayoutRef> uniformLayouts = {}
+		vector<VulkanVertexLayoutRef>&& vertexLayouts = {},
+		vector<VulkanUniformSetLayoutRef>&& uniformLayouts = {}
 	);
 
 	VulkanShader(
@@ -23,19 +23,19 @@ public:
 		const char * tessEvalPath,
 		const char * tessGeomPath,
 		const char * fragPath,
-		vector<VulkanVertexLayoutRef> vertexLayouts = {},
-		vector<VulkanUniformSetLayoutRef> uniformLayouts = {}
+		vector<VulkanVertexLayoutRef>&& vertexLayouts = {},
+		vector<VulkanUniformSetLayoutRef>&& uniformLayouts = {}
 	);
 
 	VulkanShader(
 		VulkanContextRef ctx,
 		const char * computePath,
-		vector<VulkanUniformSetLayoutRef> uniformLayouts = {}
+		vector<VulkanUniformSetLayoutRef>&& uniformLayouts = {}
 	);
 		
 	~VulkanShader();
 
-	vector<vk::PipelineShaderStageCreateInfo> getStages() {
+	const vector<vk::PipelineShaderStageCreateInfo> & getStages() {
 		return _stages;
 	}
 
@@ -43,11 +43,11 @@ public:
 		return _vis;
 	}
 
-	vector<VulkanUniformSetLayoutRef> &getUniformLayouts() {
+	const vector<VulkanUniformSetLayoutRef> &getUniformLayouts() {
 		return _uniformLayouts;
 	}
 
-	vector<vk::DescriptorSetLayout> &getDescriptorSetLayouts() {
+	const vector<vk::DescriptorSetLayout> &getDescriptorSetLayouts() {
 		return _descriptorSetLayouts;
 	}
 

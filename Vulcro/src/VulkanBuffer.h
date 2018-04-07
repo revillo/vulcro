@@ -118,7 +118,7 @@ template <class T>
 class vbo {
 public:
 
-	vbo(VulkanContext * ctx, vector<vk::Format> fieldFormats, uint32 arrayCount = 1, void * data = nullptr) 
+	vbo(VulkanContext * ctx, vector<vk::Format> &&fieldFormats, uint32 arrayCount = 1, void * data = nullptr) 
 		: _arrayCount(arrayCount)
 	{
 		values = new T[arrayCount];

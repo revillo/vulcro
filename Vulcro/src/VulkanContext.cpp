@@ -116,19 +116,19 @@ VulkanSwapchainRef VulkanContext::makeSwapchain(vk::SurfaceKHR surface)
 }
 
 #include "VulkanShader.h"
-VulkanShaderRef VulkanContext::makeShader(const char * vertPath, const char * fragPath, vector<VulkanVertexLayoutRef> vertexLayouts, vector<VulkanUniformSetLayoutRef> uniformLayouts)
+VulkanShaderRef VulkanContext::makeShader(const char * vertPath, const char * fragPath, vector<VulkanVertexLayoutRef>&& vertexLayouts, vector<VulkanUniformSetLayoutRef>&& uniformLayouts)
 {
-	return make_shared<VulkanShader>(this, vertPath, fragPath, vertexLayouts, uniformLayouts);
+	return make_shared<VulkanShader>(this, vertPath, fragPath, std::move(vertexLayouts), std::move(uniformLayouts));
 }
 
-VulkanShaderRef VulkanContext::makeTessShader(const char * vertPath, const char * tessControlPath, const char * tessEvalPath, const char * tessGeomPath, const char * fragPath, vector<VulkanVertexLayoutRef> vertexLayouts, vector<VulkanUniformSetLayoutRef> uniformLayouts)
+VulkanShaderRef VulkanContext::makeTessShader(const char * vertPath, const char * tessControlPath, const char * tessEvalPath, const char * tessGeomPath, const char * fragPath, vector<VulkanVertexLayoutRef>&& vertexLayouts, vector<VulkanUniformSetLayoutRef>&& uniformLayouts)
 {
-	return make_shared<VulkanShader>(this, vertPath, tessControlPath, tessEvalPath, tessGeomPath, fragPath, vertexLayouts, uniformLayouts);
+	return make_shared<VulkanShader>(this, vertPath, tessControlPath, tessEvalPath, tessGeomPath, fragPath, std::move(vertexLayouts), std::move(uniformLayouts));
 }
 
-VulkanShaderRef VulkanContext::makeComputeShader(const char * computePath, vector<VulkanUniformSetLayoutRef> uniformLayouts)
+VulkanShaderRef VulkanContext::makeComputeShader(const char * computePath, vector<VulkanUniformSetLayoutRef>&& uniformLayouts)
 {
-	return make_shared<VulkanShader>(this, computePath, uniformLayouts);
+	return make_shared<VulkanShader>(this, computePath, std::move(uniformLayouts));
 }
 
 #include "VulkanBuffer.h"

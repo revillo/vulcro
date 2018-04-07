@@ -18,7 +18,7 @@ public:
 	void begin();
 	void end();
 	
-	void execute(bool blockUntilFinished = false, vector<vk::Semaphore> inSems = {}, vector<vk::Semaphore> outSems = {});
+	void execute(bool blockUntilFinished = false, vector<vk::Semaphore>&& inSems = {}, vector<vk::Semaphore>&& outSems = {});
 
 	vk::CommandBuffer &cmdb() {
 		return _commandBuffer;

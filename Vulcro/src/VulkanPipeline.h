@@ -24,7 +24,7 @@ public:
 
 	void bind(vk::CommandBuffer * cmd);
 
-	void bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef> sets);
+	void bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef>&& sets);
 
 	~VulkanPipeline();
 

@@ -21,6 +21,7 @@ struct VulkanUniformLayoutBinding {
 
 struct PipelineConfig {
 	vk::PrimitiveTopology topology = vk::PrimitiveTopology::eTriangleList;
+	uint32 patchCount = 3;
 };
 
 struct ColorBlendConfig {
@@ -100,8 +101,8 @@ public:
 
 	VulkanShaderRef makeShader(const char * vertPath,
 		const char * fragPath,
-		vector<VulkanVertexLayoutRef> vertexLayouts,
-		vector<VulkanUniformSetLayoutRef> uniformLayouts = {});
+		vector<VulkanVertexLayoutRef>&& vertexLayouts,
+		vector<VulkanUniformSetLayoutRef>&& uniformLayouts = {});
 
 	VulkanShaderRef makeTessShader(
 		const char * vertPath,
@@ -109,11 +110,14 @@ public:
 		const char * tessEvalPath,
 		const char * tessGeomPath,
 		const char * fragPath,
-		vector<VulkanVertexLayoutRef> vertexLayouts = {},
-		vector<VulkanUniformSetLayoutRef> uniformLayouts = {}
+		vector<VulkanVertexLayoutRef>&& vertexLayouts = {},
+		vector<VulkanUniformSetLayoutRef>&& uniformLayouts = {}
 	);
 
-	VulkanShaderRef makeComputeShader(const char * computePath, vector<VulkanUniformSetLayoutRef> uniformLayouts = {});
+	VulkanShaderRef makeComputeShader(
+		const char * computePath,
+		vector<VulkanUniformSetLayoutRef>&& uniformLayouts = {}
+	);
 
 	VulkanBufferRef makeBuffer(
 		vk::BufferUsageFlags usage,
@@ -139,8 +143,8 @@ public:
 	}
 
 	template <class T>
-	shared_ptr<vbo<T>> makeVBO(vector<vk::Format> fieldFormats, uint32 arrayCount, T * data = nullptr) {
-		return make_shared<vbo<T>>(this, fieldFormats, arrayCount, data);
+	shared_ptr<vbo<T>> makeVBO(vector<vk::Format> &&fieldFormats, uint32 arrayCount, T * data = nullptr) {
+		return make_shared<vbo<T>>(this, std::move(fieldFormats), arrayCount, data);
 	}
 
 	shared_ptr<ibo> makeIBO(vector<uint16_t> indices);
