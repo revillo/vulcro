@@ -91,7 +91,7 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 
 	auto tsci = vk::PipelineTessellationStateCreateInfo(
 		vk::PipelineTessellationStateCreateFlags(),
-		3
+		config.patchCount
 	);
 
 	uint32 numShaders = static_cast<uint32>(shader->getStages().size());
@@ -129,12 +129,13 @@ void VulkanPipeline::bind(vk::CommandBuffer * cmd)
 
 }
 
-void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef> sets)
+void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef>&& sets)
 {
 	vector<vk::DescriptorSet> dsets;
 	dsets.reserve(sets.size());
 
 	for (auto &set : sets) {
+		if (set == nullptr) continue;
 		dsets.push_back(set->getDescriptorSet());
 	}
 

@@ -50,7 +50,7 @@ void VulkanTask::end() {
 	_commandBuffer.end();
 }
 
-void VulkanTask::execute(bool blockUntilFinished, vector<vk::Semaphore> inSems, vector<vk::Semaphore> outSems)
+void VulkanTask::execute(bool blockUntilFinished, vector<vk::Semaphore>&& inSems, vector<vk::Semaphore> &&outSems)
 {
 	vk::PipelineStageFlags wait_flags = vk::PipelineStageFlagBits::eTopOfPipe;
 
