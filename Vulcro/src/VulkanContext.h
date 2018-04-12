@@ -130,7 +130,7 @@ public:
 		VulkanUniformSetLayoutRef layout
 	);
 
-	VulkanTaskRef makeTask(uint32 poolIndex = 0);
+	VulkanTaskRef makeTask(uint32 poolIndex = 0, bool autoReset = false);
 	VulkanTaskGroupRef makeTaskGroup(uint32 numTasks, uint32 poolIndex = 0);
 
 	VulkanImageRef makeImage(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
@@ -147,7 +147,7 @@ public:
 		return make_shared<vbo<T>>(this, std::move(fieldFormats), arrayCount, data);
 	}
 
-	shared_ptr<ibo> makeIBO(vector<uint16_t> indices);
+	shared_ptr<ibo> makeIBO(vector<uint16_t> && indices);
 
 	~VulkanContext();
 

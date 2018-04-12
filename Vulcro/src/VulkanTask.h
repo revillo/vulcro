@@ -7,8 +7,8 @@
 class VulkanTask
 {
 public:
-	VulkanTask(VulkanContextRef ctx, vk::CommandPool pool);
-	VulkanTask(VulkanContextRef ctx, vk::CommandBuffer &cb);
+	VulkanTask(VulkanContextRef ctx, vk::CommandPool pool, bool autoReset = false);
+	VulkanTask(VulkanContextRef ctx, vk::CommandBuffer &cb, bool autoReset = false);
 
 	~VulkanTask();
 
@@ -24,7 +24,9 @@ public:
 		return _commandBuffer;
 	}
 
-private:
+protected:
+
+	bool _autoReset;
 
 	void waitUntilDone();
 

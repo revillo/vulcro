@@ -9,6 +9,30 @@ VulkanUniformSet::VulkanUniformSet(VulkanContextRef ctx, VulkanUniformSetLayoutR
 	_descriptorSet = layout->allocateDescriptorSet();
 }
 
+void VulkanUniformSet::bindBuffer(uint32 binding, VulkanBufferRef buffer)
+{
+
+	auto dbi = buffer->getDBI();
+
+	auto write = vk::WriteDescriptorSet(
+		_descriptorSet,
+		binding,
+		0,
+		1,
+		buffer->getDescriptorType(),
+		nullptr,
+		&dbi,
+		nullptr
+	);
+
+	_ctx->getDevice().updateDescriptorSets(
+		1,
+		&write,
+		0,
+		nullptr
+	);
+}
+
 void VulkanUniformSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi, vk::DescriptorType type)
 {
 	/*
@@ -58,7 +82,7 @@ void VulkanUniformSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi, 
 	);
 }
 
-void VulkanUniformSet::bindImage(uint32 binding, VulkanImageRef image)
+void VulkanUniformSet::bindImage(uint32 binding, VulkanImageRef image, vk::DescriptorType type)
 {
 
 	auto dii = image->getDII();
@@ -68,7 +92,7 @@ void VulkanUniformSet::bindImage(uint32 binding, VulkanImageRef image)
 		binding,
 		0,
 		1,
-		vk::DescriptorType::eCombinedImageSampler,
+		type,
 		&dii,
 		nullptr,
 		nullptr
@@ -84,11 +108,12 @@ void VulkanUniformSet::bindImage(uint32 binding, VulkanImageRef image)
 
 }
 
-void VulkanUniformSet::bindImages(vector<VulkanImageRef> images)
+
+void VulkanUniformSet::bindImages(vector<VulkanImageRef> images, vk::DescriptorType type)
 {
 	uint32 binding = 0;
 	for (auto &img : images) {
-		bindImage(binding++, img);
+		bindImage(binding++, img, type);
 	}
 }
 

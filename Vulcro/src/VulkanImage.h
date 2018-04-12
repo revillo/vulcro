@@ -15,6 +15,7 @@ public:
 	void createSampler();
 
 	vk::DescriptorImageInfo getDII();
+	vk::DescriptorType getDescriptorType();
 
 	void allocateDeviceMemory();
 

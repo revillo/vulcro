@@ -3,6 +3,7 @@
 #include "VulkanContext.h"
 #include "VulkanUniformSetLayout.h"
 #include "VulkanImage.h"
+#include "VulkanBuffer.h"
 
 class VulkanUniformSet
 {
@@ -10,11 +11,18 @@ public:
 	
 	VulkanUniformSet(VulkanContextRef ctx, VulkanUniformSetLayoutRef layout);
 
+	void bindBuffer(uint32 binding, VulkanBufferRef buffer);
+
 	void bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi, vk::DescriptorType type = vk::DescriptorType::eUniformBuffer);
 
-	void bindImage(uint32 binding, VulkanImageRef image);
-	
-	void bindImages(vector<VulkanImageRef> _images);
+	void bindImage(uint32 binding, VulkanImageRef image, vk::DescriptorType type = vk::DescriptorType::eCombinedImageSampler);
+
+	void bindStorageImage(uint32 binding, VulkanImageRef image) {
+		bindImage(binding, image, vk::DescriptorType::eStorageImage);
+	}
+
+
+	void bindImages(vector<VulkanImageRef> _images, vk::DescriptorType type = vk::DescriptorType::eCombinedImageSampler);
 
 	void update();
 

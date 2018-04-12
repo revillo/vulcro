@@ -100,6 +100,7 @@ VulkanShader::VulkanShader(VulkanContextRef ctx,
 	const char * tessGeomPath, const char * fragPath, 
 	vector<VulkanVertexLayoutRef>&& vertexLayouts, vector<VulkanUniformSetLayoutRef>&& uniformLayouts)
 	:_ctx(ctx),
+	_vertexLayouts(vertexLayouts),
 	_uniformLayouts(uniformLayouts)
 {
 

@@ -2,9 +2,10 @@
 
 
 
-VulkanTask::VulkanTask(VulkanContextRef ctx, vk::CommandPool pool) :
+VulkanTask::VulkanTask(VulkanContextRef ctx, vk::CommandPool pool, bool autoReset) :
 	_ctx(ctx),
-	_pool(pool)
+	_pool(pool),
+	_autoReset(autoReset)
 {
 	_fence = _ctx->getDevice().createFence(
 		vk::FenceCreateInfo()
@@ -17,9 +18,11 @@ VulkanTask::VulkanTask(VulkanContextRef ctx, vk::CommandPool pool) :
 	createdCommandBuffer = true;
 }
 
-VulkanTask::VulkanTask(VulkanContextRef ctx, vk::CommandBuffer & cb) :
+VulkanTask::VulkanTask(VulkanContextRef ctx, vk::CommandBuffer & cb, bool autoReset) :
 	_ctx(ctx),
-	_commandBuffer(cb)
+	_commandBuffer(cb),
+	_autoReset(autoReset)
+
 {
 	_fence = _ctx->getDevice().createFence(
 		vk::FenceCreateInfo()
@@ -39,7 +42,7 @@ void VulkanTask::record(function<void(vk::CommandBuffer*)> commands)
 void VulkanTask::begin() {
 
 	vk::CommandBufferBeginInfo bgi;
-	bgi.flags = vk::CommandBufferUsageFlagBits::eSimultaneousUse;
+	bgi.flags = _autoReset ? vk::CommandBufferUsageFlagBits::eOneTimeSubmit : vk::CommandBufferUsageFlagBits::eSimultaneousUse;
 
 	_commandBuffer.begin(
 		bgi
