@@ -9,6 +9,9 @@ class VulkanBuffer
 public:
 
 	
+	static const vk::BufferUsageFlags UNIFORM_BUFFER;
+	static const vk::BufferUsageFlags STORAGE_BUFFER;
+	static const vk::BufferUsageFlags STORAGE_TEXEL_BUFFER;
 
 	static const vk::MemoryPropertyFlags CPU_ALOT;
 	static const vk::MemoryPropertyFlags CPU_NEVER;
@@ -30,6 +33,18 @@ public:
 	*/
 	vk::DescriptorBufferInfo getDBI(uint32 offset = 0, int64 size = -1);
 
+	vk::DescriptorType getDescriptorType() {
+		if (_usage == vk::BufferUsageFlagBits::eUniformBuffer) {
+			return vk::DescriptorType::eUniformBuffer;
+		}
+		else if (_usage == vk::BufferUsageFlagBits::eStorageBuffer) {
+			return vk::DescriptorType::eStorageBuffer;
+		}
+		else {
+			throw "Unsupported buffer as descriptor";
+		}
+	};
+
 
 	vk::Buffer &getBuffer() {
 		return _buffer;
@@ -41,6 +56,7 @@ private:
 	uint64 _size;
 
 	VulkanContextRef _ctx;
+	vk::BufferUsageFlags _usage;
 
 	vk::DeviceMemory _memory;
 	vk::Buffer _buffer;
@@ -114,8 +130,20 @@ private:
 	VulkanBufferRef _vbr;
 };
 
+class ivbo {
+	
+public:
+	virtual ~ivbo() {};
+
+	virtual void bind(vk::CommandBuffer * cmd) = 0;
+	virtual VulkanVertexLayoutRef getLayout() = 0;
+	virtual uint32 getCount() = 0;
+};
+
+typedef shared_ptr<ivbo> vboRef;
+
 template <class T>
-class vbo {
+class vbo : public ivbo {
 public:
 
 	vbo(VulkanContext * ctx, vector<vk::Format> &&fieldFormats, uint32 arrayCount = 1, void * data = nullptr) 
@@ -156,11 +184,11 @@ public:
 		_vbr->upload(count * sizeof(T), values[index], index * sizeof(T));
 	}
 
-	void bind(vk::CommandBuffer * cmd) {
+	void bind(vk::CommandBuffer * cmd) override {
 		_vbr->bindVertex(cmd);
 	}
 
-	VulkanVertexLayoutRef getLayout() {
+	VulkanVertexLayoutRef getLayout() override {
 		return _layout;
 	}
 
@@ -185,7 +213,7 @@ private:
 class ibo {
 
 public:
-	ibo(VulkanContextRef ctx, vector<uint16_t> indices) {
+	ibo(VulkanContextRef ctx, vector<uint16_t> && indices) {
 
 		_vbr = ctx->makeBuffer(
 			vk::BufferUsageFlagBits::eIndexBuffer,
@@ -211,6 +239,8 @@ private:
 	VulkanBufferRef _vbr;
 
 };
+
+typedef shared_ptr<ibo> iboRef;
 
 template<class T>
 class ssbo {

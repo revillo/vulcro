@@ -58,10 +58,9 @@ VulkanContext::VulkanContext(vk::Instance instance)
 
 
 
-shared_ptr<ibo> VulkanContext::makeIBO(vector<uint16_t> indices)
+shared_ptr<ibo> VulkanContext::makeIBO(vector<uint16_t> && indices)
 {
-	
-	return make_shared<ibo>(this, indices);
+	return make_shared<ibo>(this, move(indices));
 	
 }
 
@@ -145,14 +144,14 @@ VulkanUniformSetRef VulkanContext::makeUniformSet(VulkanUniformSetLayoutRef layo
 }
 
 #include "VulkanTask.h"
-VulkanTaskRef VulkanContext::makeTask(uint32 poolIndex)
+VulkanTaskRef VulkanContext::makeTask(uint32 poolIndex, bool autoReset)
 {
 	if (_pools.count(poolIndex) == 0) {
 		_pools[poolIndex] = _device.createCommandPool(
 			vk::CommandPoolCreateInfo(vk::CommandPoolCreateFlags(), _familyIndex)
 		);
 	}
-	return make_shared<VulkanTask>(this, _pools[poolIndex]);
+	return make_shared<VulkanTask>(this, _pools[poolIndex], autoReset);
 }
 
 #include "VulkanTaskGroup.h"

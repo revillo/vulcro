@@ -131,9 +131,22 @@ vk::DescriptorImageInfo VulkanImage::getDII()
 	return vk::DescriptorImageInfo(
 		_sampler,
 		_imageView,
-		vk::ImageLayout::eColorAttachmentOptimal
+		(_usage & vk::ImageUsageFlagBits::eColorAttachment) ? 
+			vk::ImageLayout::eColorAttachmentOptimal
+		:
+			vk::ImageLayout::eGeneral
 	);
 }
+
+vk::DescriptorType VulkanImage::getDescriptorType()
+{
+	if (_usage & vk::ImageUsageFlagBits::eSampled) {
+		return vk::DescriptorType::eCombinedImageSampler;
+	}
+	else if (_usage & vk::ImageUsageFlagBits::eStorage) {
+		return vk::DescriptorType::eStorageImage;
+	}
+};
 
 VulkanImage::~VulkanImage()
 {
