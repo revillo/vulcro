@@ -108,6 +108,14 @@ VulkanComputePipelineRef VulkanContext::makeComputePipeline(VulkanShaderRef shad
 	return make_shared<VulkanComputePipeline>(this, shader);
 }
 
+VulkanComputePipelineRef VulkanContext::makeComputePipeline(const char * computePath, vector<VulkanUniformSetLayoutRef>&& setLayouts)
+{
+	return makeComputePipeline(
+		makeComputeShader(computePath, move(setLayouts))
+	);
+}
+
+
 #include "VulkanSwapchain.h"
 VulkanSwapchainRef VulkanContext::makeSwapchain(vk::SurfaceKHR surface)
 {
@@ -134,6 +142,11 @@ VulkanShaderRef VulkanContext::makeComputeShader(const char * computePath, vecto
 VulkanBufferRef VulkanContext::makeBuffer(vk::BufferUsageFlags usage, uint64 size, vk::MemoryPropertyFlags flags, void * data)
 {
 	return make_shared<VulkanBuffer>(this, usage, size, flags, data);
+}
+
+VulkanBufferRef VulkanContext::makeLocalStorageBuffer(uint64 size)
+{
+	return makeBuffer(VulkanBuffer::STORAGE_BUFFER, size, VulkanBuffer::CPU_NEVER);
 }
 
 

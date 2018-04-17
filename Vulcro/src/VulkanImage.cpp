@@ -1,5 +1,9 @@
 #include "VulkanImage.h"
 
+
+vk::ImageUsageFlags VulkanImage::SAMPLED_STORAGE = vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled;
+vk::ImageUsageFlags VulkanImage::SAMPLED_COLOR_ATTACHMENT = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled;
+
 VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format)
 	:_ctx(ctx),
 	_format(format),
@@ -10,7 +14,7 @@ VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::i
 
 }
 
-void VulkanImage::allocateDeviceMemory()
+void VulkanImage::allocateDeviceMemory(vk::MemoryPropertyFlags memFlags)
 {
 	auto memProps = _ctx->getPhysicalDevice().getMemoryProperties();
 
@@ -19,11 +23,11 @@ void VulkanImage::allocateDeviceMemory()
 
 	uint32 memTypeIndex = 1000;
 	auto reqBits = req.memoryTypeBits;
-	auto p = vk::MemoryPropertyFlagBits::eDeviceLocal;
+	auto p = memFlags;
 
 	for (uint32 i = 0; i < memProps.memoryTypeCount; i++) {
 		auto type = memProps.memoryTypes[i];
-		if ((reqBits && (1 << i)) && (type.propertyFlags & p) == p) {
+		if ((reqBits & (1 << i)) && ((type.propertyFlags & p) == p)) {
 
 			memTypeIndex = i;
 			break;

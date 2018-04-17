@@ -13,6 +13,10 @@ public:
 
 	void bindBuffer(uint32 binding, VulkanBufferRef buffer);
 
+	void bindBuffer(uint32 binding, ssboRef buffer) {
+		bindBuffer(binding, buffer->getBuffer());
+	}
+
 	void bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi, vk::DescriptorType type = vk::DescriptorType::eUniformBuffer);
 
 	void bindImage(uint32 binding, VulkanImageRef image, vk::DescriptorType type = vk::DescriptorType::eCombinedImageSampler);

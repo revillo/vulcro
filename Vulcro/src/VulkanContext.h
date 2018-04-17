@@ -51,6 +51,9 @@ class ubo;
 template <class T>
 class vbo;
 
+template <class T>
+class ssbo;
+
 class ibo;
 
 typedef shared_ptr<VulkanShader> VulkanShaderRef;
@@ -96,6 +99,7 @@ public:
 	);
 
 	VulkanComputePipelineRef makeComputePipeline(VulkanShaderRef shader);
+	VulkanComputePipelineRef makeComputePipeline(const char * shaderPath, vector<VulkanUniformSetLayoutRef> && setLayouts );
 
 	VulkanSwapchainRef makeSwapchain(vk::SurfaceKHR surface);
 
@@ -126,6 +130,10 @@ public:
 		, void* data = nullptr
 	);
 
+	VulkanBufferRef makeLocalStorageBuffer(
+		uint64 size
+	);
+
 	VulkanUniformSetRef makeUniformSet(
 		VulkanUniformSetLayoutRef layout
 	);
@@ -145,6 +153,11 @@ public:
 	template <class T>
 	shared_ptr<vbo<T>> makeVBO(vector<vk::Format> &&fieldFormats, uint32 arrayCount, T * data = nullptr) {
 		return make_shared<vbo<T>>(this, std::move(fieldFormats), arrayCount, data);
+	}
+
+	template <class T>
+	shared_ptr<ssbo<T>> makeSSBO(uint32 arrayCount) {
+		return make_shared<ssbo<T>>(this, arrayCount);
 	}
 
 	shared_ptr<ibo> makeIBO(vector<uint16_t> && indices);

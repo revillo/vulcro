@@ -50,7 +50,10 @@ public:
 		return _buffer;
 	}
 
-	void *getData();
+	void * getMapped(uint32 offset = 0, int64 size = -1);
+
+	void unmap();
+
 private:
 
 	uint64 _size;
@@ -242,14 +245,57 @@ private:
 
 typedef shared_ptr<ibo> iboRef;
 
-template<class T>
-class ssbo {
+class issbo {
+public:
+	virtual VulkanBufferRef getBuffer() = 0;
+	virtual ~issbo() {};
+};
 
-	ssbo(VulkanContextRef ctx) {
-		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eStorageBuffer, sizeof(T), VulkanBuffer::CPU_NEVER, nullptr);
+typedef shared_ptr<issbo> ssboRef;
+
+template<class T>
+class ssbo : public issbo {
+public:
+	ssbo(VulkanContextRef ctx, uint32 arrayCount) :
+		_arrayCount(arrayCount) 
+	{
+		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eStorageBuffer, sizeof(T) * arrayCount, VulkanBuffer::CPU_ALOT, nullptr);
 	}
 
+	T* loadMapped() {
+		return static_cast<T*>(_vbr->getMapped());
+	}
+	
+	T* loadHeap() {
+		if (_heapBuffer == nullptr) {
+			_heapBuffer = new T[_arrayCount];
+		}
 
+		memcpy(_heapBuffer, loadMapped(), sizeof(T) * _arrayCount);
+
+		unmap();
+
+		return _heapBuffer;
+	}
+
+	void unmap() {
+		_vbr->unmap();
+	}
+
+	VulkanBufferRef getBuffer() override {
+		return _vbr;
+	};
+
+	~ssbo() {
+		if (_heapBuffer != nullptr) {
+			delete _heapBuffer;
+		}
+	}
+
+protected:
+
+	T* _heapBuffer = nullptr;
+	uint32 _arrayCount;
 	VulkanBufferRef _vbr;
 
 };

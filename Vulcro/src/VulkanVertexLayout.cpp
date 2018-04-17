@@ -10,7 +10,7 @@ uint32 getSizeOf(vk::Format format) {
 			return 8;
 	}
 
-	cout << "VVertexLayout Format unrecognized";
+	cout << "VertexLayout Format unrecognized";
 	return 0;
 }
 
