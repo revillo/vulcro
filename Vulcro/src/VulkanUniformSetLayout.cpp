@@ -1,5 +1,6 @@
 #include "VulkanUniformSetLayout.h"
 
+#define TEMP_SET_MAX 1
 
 VulkanUniformSetLayout::VulkanUniformSetLayout(VulkanContextRef ctx, vector<Binding> bindings) :
 	_ctx(ctx),
@@ -22,7 +23,7 @@ VulkanUniformSetLayout::VulkanUniformSetLayout(VulkanContextRef ctx, vector<Bind
 		poolSizes.push_back(
 			vk::DescriptorPoolSize(
 				binding.type,
-				10
+				TEMP_SET_MAX
 			)
 		);
 	}
@@ -39,7 +40,7 @@ VulkanUniformSetLayout::VulkanUniformSetLayout(VulkanContextRef ctx, vector<Bind
 	_pool = _ctx->getDevice().createDescriptorPool(
 		vk::DescriptorPoolCreateInfo(
 			vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
-			10, // todo
+			TEMP_SET_MAX, // todo
 			static_cast<uint32>(poolSizes.size()),
 			&poolSizes[0]
 		)

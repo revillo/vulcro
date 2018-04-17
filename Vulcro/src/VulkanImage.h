@@ -8,6 +8,10 @@
 class VulkanImage
 {
 public:
+
+	static vk::ImageUsageFlags SAMPLED_STORAGE;
+	static vk::ImageUsageFlags SAMPLED_COLOR_ATTACHMENT;
+
 	VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
 	VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format);
 
@@ -17,7 +21,7 @@ public:
 	vk::DescriptorImageInfo getDII();
 	vk::DescriptorType getDescriptorType();
 
-	void allocateDeviceMemory();
+	void allocateDeviceMemory(vk::MemoryPropertyFlags memFlags = vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 	vk::Format getFormat() {
 		return _format;
