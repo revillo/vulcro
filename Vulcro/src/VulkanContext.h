@@ -4,6 +4,8 @@
 #include "General.h"
 #include <unordered_map>
 
+typedef const char * FilePath;
+
 struct VulkanUniformLayoutBinding {
 
 	VulkanUniformLayoutBinding(uint32 _arrayCount = 1, vk::DescriptorType _type = vk::DescriptorType::eUniformBuffer, vk::Sampler * _samplers = nullptr) :
@@ -90,7 +92,6 @@ public:
 
 	}
 
-	VulkanUniformSetLayoutRef makeUniformSetLayout(vector<VulkanUniformLayoutBinding> bindings);
 	VulkanVertexLayoutRef makeVertexLayout(vector<vk::Format> fields);
 	VulkanRendererRef makeRenderer();
 
@@ -134,8 +135,14 @@ public:
 		uint64 size
 	);
 
+	VulkanUniformSetLayoutRef makeUniformSetLayout(vector<VulkanUniformLayoutBinding> && bindings);
+
 	VulkanUniformSetRef makeUniformSet(
 		VulkanUniformSetLayoutRef layout
+	);
+
+	VulkanUniformSetRef makeUniformSet(
+		vector<VulkanUniformLayoutBinding> && bindings
 	);
 
 	VulkanTaskRef makeTask(uint32 poolIndex = 0, bool autoReset = false);

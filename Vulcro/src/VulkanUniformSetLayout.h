@@ -21,6 +21,10 @@ public:
 
 	void freeDescriptorSet(vk::DescriptorSet set);
 
+	VulkanContextRef getContext() {
+		return _ctx;
+	}
+
 private:
 
 	vk::DescriptorSetLayout _descriptorLayout;

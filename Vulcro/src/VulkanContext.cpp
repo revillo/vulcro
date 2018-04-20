@@ -78,9 +78,9 @@ VulkanContext::~VulkanContext()
 
 
 #include "VulkanUniformSetLayout.h"
-shared_ptr<VulkanUniformSetLayout> VulkanContext::makeUniformSetLayout(vector<VulkanUniformLayoutBinding> bindings)
+shared_ptr<VulkanUniformSetLayout> VulkanContext::makeUniformSetLayout(vector<VulkanUniformLayoutBinding> && bindings)
 {
-	return make_shared<VulkanUniformSetLayout>(this, bindings);
+	return make_shared<VulkanUniformSetLayout>(this, move(bindings));
 }
 
 #include "VulkanVertexLayout.h"
@@ -154,6 +154,12 @@ VulkanBufferRef VulkanContext::makeLocalStorageBuffer(uint64 size)
 VulkanUniformSetRef VulkanContext::makeUniformSet(VulkanUniformSetLayoutRef layout)
 {
 	return make_shared<VulkanUniformSet>(this, layout);
+}
+
+VulkanUniformSetRef VulkanContext::makeUniformSet(vector<VulkanUniformLayoutBinding>&& bindings)
+{
+	return make_shared<VulkanUniformSet>(this, VulkanContext::makeUniformSetLayout(move(bindings)));
+
 }
 
 #include "VulkanTask.h"

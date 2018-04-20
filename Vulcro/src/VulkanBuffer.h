@@ -34,10 +34,10 @@ public:
 	vk::DescriptorBufferInfo getDBI(uint32 offset = 0, int64 size = -1);
 
 	vk::DescriptorType getDescriptorType() {
-		if (_usage == vk::BufferUsageFlagBits::eUniformBuffer) {
+		if (_usage & vk::BufferUsageFlagBits::eUniformBuffer) {
 			return vk::DescriptorType::eUniformBuffer;
 		}
-		else if (_usage == vk::BufferUsageFlagBits::eStorageBuffer) {
+		else if (_usage & vk::BufferUsageFlagBits::eStorageBuffer) {
 			return vk::DescriptorType::eStorageBuffer;
 		}
 		else {
@@ -45,6 +45,13 @@ public:
 		}
 	};
 
+	VulkanUniformLayoutBinding getBinding() {
+		return ULB(1, getDescriptorType());
+	}
+
+	void recordClear(vk::CommandBuffer * cmd) {
+		cmd->fillBuffer(_buffer, 0, _size, 0);
+	}
 
 	vk::Buffer &getBuffer() {
 		return _buffer;
