@@ -34,6 +34,10 @@ public:
 		return _descriptorSet;
 	}
 
+	VulkanUniformSetLayoutRef getLayout() {
+		return _layout;
+	}
+
 	~VulkanUniformSet();
 
 private:
