@@ -33,8 +33,8 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 		VK_FALSE, // DEPTH CLAMP
 		VK_FALSE, // DISCARD
 		vk::PolygonMode::eFill,
-		vk::CullModeFlagBits::eNone,
-		vk::FrontFace::eCounterClockwise,
+		config.cullFlags,
+		config.frontFace,
 		VK_FALSE, //DEPTH BIAS
 		0,
 		0,
@@ -129,25 +129,37 @@ void VulkanPipeline::bind(vk::CommandBuffer * cmd)
 
 }
 
-void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef>&& sets)
+void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanUniformSetRef * sets, uint32 numSets)
 {
-	vector<vk::DescriptorSet> dsets;
-	dsets.reserve(sets.size());
+	int skips = 0;
 
-	for (auto &set : sets) {
-		if (set == nullptr) continue;
-		dsets.push_back(set->getDescriptorSet());
+	for (int i = 0; i < numSets; i++) {
+		if (sets[i] != nullptr) 
+			_descriptorSets[i] = sets[i]->getDescriptorSet();
+		else ++skips;
 	}
+
+	numSets -= skips;
 
 	cmd->bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics,
 		_pipelineLayout,
 		0,
-		static_cast<uint32>(dsets.size()),
-		dsets.size() > 0 ? &dsets[0] :nullptr,
+		numSets,
+		numSets > 0 ? _descriptorSets : nullptr,
 		0,
 		nullptr
 	);
+}
+
+void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, temps<VulkanUniformSetRef> sets)
+{
+	bindUniformSets(cmd, sets.begin(), sets.size());
+}
+
+void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef>& sets)
+{
+	bindUniformSets(cmd, &sets[0], sets.size());
 }
 
 VulkanPipeline::~VulkanPipeline() {
@@ -242,26 +254,33 @@ void VulkanComputePipeline::bind(vk::CommandBuffer * cmd)
 	);
 }
 
-void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef> sets)
+void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, temps<VulkanUniformSetRef> sets)
 {
-	vector<vk::DescriptorSet> dsets;
-	dsets.reserve(sets.size());
+	bindUniformSets(cmd, sets.begin(), sets.size());
+}
 
-	for (auto &set : sets) {
-		dsets.push_back(set->getDescriptorSet());
+void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef>& sets)
+{
+	bindUniformSets(cmd, &sets[0], sets.size());
+}
+
+void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanUniformSetRef * sets, uint32 numSets)
+{
+	
+	for (int i = 0; i < numSets; i++) {
+		_descriptorSets[i] = sets[i]->getDescriptorSet();
 	}
 
 	cmd->bindDescriptorSets(
 		vk::PipelineBindPoint::eCompute,
 		_pipelineLayout,
 		0,
-		static_cast<uint32>(dsets.size()),
-		dsets.size() > 0 ? &dsets[0] : nullptr,
+		numSets,
+		numSets > 0 ? _descriptorSets : nullptr,
 		0,
 		nullptr
 	);
 }
-
 VulkanComputePipeline::~VulkanComputePipeline()
 {
 	_ctx->getDevice().destroyPipelineLayout(_pipelineLayout);

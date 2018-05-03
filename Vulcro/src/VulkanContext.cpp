@@ -60,7 +60,7 @@ VulkanContext::VulkanContext(vk::Instance instance)
 
 shared_ptr<ibo> VulkanContext::makeIBO(vector<uint16_t> && indices)
 {
-	return make_shared<ibo>(this, move(indices));
+	return make_shared<ibo>(this, std::move(indices));
 	
 }
 
@@ -78,15 +78,20 @@ VulkanContext::~VulkanContext()
 
 
 #include "VulkanUniformSetLayout.h"
-shared_ptr<VulkanUniformSetLayout> VulkanContext::makeUniformSetLayout(vector<VulkanUniformLayoutBinding> && bindings)
+shared_ptr<VulkanUniformSetLayout> VulkanContext::makeUniformSetLayout(temps<VulkanUniformLayoutBinding> bindings)
 {
-	return make_shared<VulkanUniformSetLayout>(this, move(bindings));
+	return make_shared<VulkanUniformSetLayout>(this, std::move(bindings));
+}
+
+VulkanUniformSetLayoutRef VulkanContext::makeUniformSetLayout(vector<VulkanUniformLayoutBinding>& bindings)
+{
+	return make_shared<VulkanUniformSetLayout>(this, std::move(bindings));
 }
 
 #include "VulkanVertexLayout.h"
-shared_ptr<VulkanVertexLayout> VulkanContext::makeVertexLayout(vector<vk::Format> fields)
+shared_ptr<VulkanVertexLayout> VulkanContext::makeVertexLayout(temps<vk::Format> fields)
 {
-	return make_shared<VulkanVertexLayout>(fields);
+	return make_shared<VulkanVertexLayout>(move(fields));
 }
 
 #include "VulkanRenderer.h"
@@ -111,7 +116,7 @@ VulkanComputePipelineRef VulkanContext::makeComputePipeline(VulkanShaderRef shad
 VulkanComputePipelineRef VulkanContext::makeComputePipeline(const char * computePath, vector<VulkanUniformSetLayoutRef>&& setLayouts)
 {
 	return makeComputePipeline(
-		makeComputeShader(computePath, move(setLayouts))
+		makeComputeShader(computePath, std::move(setLayouts))
 	);
 }
 
@@ -156,10 +161,15 @@ VulkanUniformSetRef VulkanContext::makeUniformSet(VulkanUniformSetLayoutRef layo
 	return make_shared<VulkanUniformSet>(this, layout);
 }
 
-VulkanUniformSetRef VulkanContext::makeUniformSet(vector<VulkanUniformLayoutBinding>&& bindings)
+VulkanUniformSetRef VulkanContext::makeUniformSet(temps<VulkanUniformLayoutBinding>&& bindings)
 {
-	return make_shared<VulkanUniformSet>(this, VulkanContext::makeUniformSetLayout(move(bindings)));
+	return make_shared<VulkanUniformSet>(this, VulkanContext::makeUniformSetLayout(std::move(bindings)));
 
+}
+
+VulkanUniformSetRef VulkanContext::makeUniformSet(vector<VulkanUniformLayoutBinding>& bindings)
+{
+	return make_shared<VulkanUniformSet>(this, VulkanContext::makeUniformSetLayout(bindings));
 }
 
 #include "VulkanTask.h"

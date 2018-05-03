@@ -24,6 +24,8 @@ struct VulkanUniformLayoutBinding {
 struct PipelineConfig {
 	vk::PrimitiveTopology topology = vk::PrimitiveTopology::eTriangleList;
 	uint32 patchCount = 3;
+	vk::CullModeFlags cullFlags = vk::CullModeFlagBits::eBack;
+	vk::FrontFace frontFace = vk::FrontFace::eCounterClockwise;
 };
 
 struct ColorBlendConfig {
@@ -92,7 +94,7 @@ public:
 
 	}
 
-	VulkanVertexLayoutRef makeVertexLayout(vector<vk::Format> fields);
+	VulkanVertexLayoutRef makeVertexLayout(temps<vk::Format> fields);
 	VulkanRendererRef makeRenderer();
 
 	VulkanPipelineRef makePipeline(VulkanShaderRef shader, VulkanRendererRef renderer, PipelineConfig config = PipelineConfig(),
@@ -135,14 +137,20 @@ public:
 		uint64 size
 	);
 
-	VulkanUniformSetLayoutRef makeUniformSetLayout(vector<VulkanUniformLayoutBinding> && bindings);
+	VulkanUniformSetLayoutRef makeUniformSetLayout(temps<VulkanUniformLayoutBinding> bindings);
+
+	VulkanUniformSetLayoutRef makeUniformSetLayout(vector<VulkanUniformLayoutBinding> & bindings);
 
 	VulkanUniformSetRef makeUniformSet(
 		VulkanUniformSetLayoutRef layout
 	);
 
 	VulkanUniformSetRef makeUniformSet(
-		vector<VulkanUniformLayoutBinding> && bindings
+		temps<VulkanUniformLayoutBinding> && bindings
+	);
+
+	VulkanUniformSetRef makeUniformSet(
+		vector<VulkanUniformLayoutBinding> & bindings
 	);
 
 	VulkanTaskRef makeTask(uint32 poolIndex = 0, bool autoReset = false);
@@ -158,7 +166,7 @@ public:
 	}
 
 	template <class T>
-	shared_ptr<vbo<T>> makeVBO(vector<vk::Format> &&fieldFormats, uint32 arrayCount, T * data = nullptr) {
+	shared_ptr<vbo<T>> makeVBO(temps<vk::Format> fieldFormats, uint32 arrayCount, T * data = nullptr) {
 		return make_shared<vbo<T>>(this, std::move(fieldFormats), arrayCount, data);
 	}
 
@@ -179,7 +187,7 @@ private:
 	vector<vk::PhysicalDevice> _physicalDevices;
 	vk::Device _device;
 	
-	unordered_map<uint32, vk::CommandPool> _pools;
+	std::unordered_map<uint32, vk::CommandPool> _pools;
 
 
 	vk::CommandBuffer _cmd;

@@ -53,7 +53,7 @@ void VulkanTask::end() {
 	_commandBuffer.end();
 }
 
-void VulkanTask::execute(bool blockUntilFinished, vector<vk::Semaphore>&& inSems, vector<vk::Semaphore> &&outSems)
+void VulkanTask::execute(bool blockUntilFinished, temps<vk::Semaphore> inSems, temps<vk::Semaphore> outSems)
 {
 	vk::PipelineStageFlags wait_flags = vk::PipelineStageFlagBits::eTopOfPipe;
 
@@ -62,12 +62,12 @@ void VulkanTask::execute(bool blockUntilFinished, vector<vk::Semaphore>&& inSems
 
 	auto submit = vk::SubmitInfo(
 		static_cast<uint32>(inSems.size()),
-		inSems.size() > 0 ? &inSems[0] : nullptr,
+		inSems.size() > 0 ? inSems.begin() : nullptr,
 		flags,
 		1,
 		&_commandBuffer,
 		static_cast<uint32>(outSems.size()),
-		outSems.size() > 0 ? &outSems[0] : nullptr
+		outSems.size() > 0 ? outSems.begin() : nullptr
 	);
 
 	vk::Result res;

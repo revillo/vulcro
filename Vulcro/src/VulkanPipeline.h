@@ -24,7 +24,9 @@ public:
 
 	void bind(vk::CommandBuffer * cmd);
 
-	void bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef>&& sets);
+	void bindUniformSets(vk::CommandBuffer * cmd, temps<VulkanUniformSetRef> sets);
+	void bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef>& sets);
+	void bindUniformSets(vk::CommandBuffer * cmd, const VulkanUniformSetRef * sets, uint32 numSets);
 
 	~VulkanPipeline();
 
@@ -37,6 +39,7 @@ private:
 	vk::Pipeline _pipeline;
 	vk::PipelineLayout _pipelineLayout;
 
+	vk::DescriptorSet _descriptorSets[16];
 
 	VulkanShaderRef  _shader;
 	VulkanContextRef _ctx;
@@ -51,12 +54,14 @@ public:
 
 	void bind(vk::CommandBuffer * cmd);
 
-	void bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef> sets);
-
+	void bindUniformSets(vk::CommandBuffer * cmd, temps<VulkanUniformSetRef> sets);
+	void bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef>& sets);
+	void bindUniformSets(vk::CommandBuffer * cmd, const VulkanUniformSetRef * sets, uint32 numSets);
 
 	~VulkanComputePipeline();
 
 private:
+	vk::DescriptorSet _descriptorSets[16];
 
 	VulkanShaderRef  _shader;
 	VulkanContextRef _ctx;

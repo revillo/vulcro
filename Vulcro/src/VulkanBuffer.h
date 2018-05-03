@@ -156,7 +156,7 @@ template <class T>
 class vbo : public ivbo {
 public:
 
-	vbo(VulkanContext * ctx, vector<vk::Format> &&fieldFormats, uint32 arrayCount = 1, void * data = nullptr) 
+	vbo(VulkanContext * ctx, temps<vk::Format> fieldFormats, uint32 arrayCount = 1, void * data = nullptr) 
 		: _arrayCount(arrayCount)
 	{
 		values = new T[arrayCount];
@@ -167,7 +167,7 @@ public:
 		}
 
 		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eVertexBuffer, _size, VulkanBuffer::CPU_ALOT, data);
-		_layout = ctx->makeVertexLayout(fieldFormats);
+		_layout = ctx->makeVertexLayout(move(fieldFormats));
 	};
 
 	T & at(uint32 i = 0) {
