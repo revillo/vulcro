@@ -132,13 +132,20 @@ void VulkanImage::createSampler()
 
 vk::DescriptorImageInfo VulkanImage::getDII()
 {
+
+	vk::ImageLayout layout;
+
+	if (_usage & vk::ImageUsageFlagBits::eColorAttachment)
+		layout = vk::ImageLayout::eColorAttachmentOptimal;
+	else if (_usage & vk::ImageUsageFlagBits::eDepthStencilAttachment)
+		layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+	else
+		layout = vk::ImageLayout::eGeneral;
+
 	return vk::DescriptorImageInfo(
 		_sampler,
 		_imageView,
-		(_usage & vk::ImageUsageFlagBits::eColorAttachment) ? 
-			vk::ImageLayout::eColorAttachmentOptimal
-		:
-			vk::ImageLayout::eGeneral
+		layout
 	);
 }
 

@@ -8,8 +8,8 @@ VulkanRenderer::VulkanRenderer(VulkanContextRef ctx) :
 }
 
 void VulkanRenderer::createDepthBuffer() {
-	
-	_depthImage = _ctx->makeImage(vk::ImageUsageFlagBits::eDepthStencilAttachment, 
+
+	_depthImage = _ctx->makeImage(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
         glm::ivec2(_fullRect.extent.width, _fullRect.extent.height), vk::Format::eD32Sfloat);
 	
     _depthImage->allocateDeviceMemory();
