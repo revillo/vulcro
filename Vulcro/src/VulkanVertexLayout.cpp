@@ -10,11 +10,11 @@ uint32 getSizeOf(vk::Format format) {
 			return 8;
 	}
 
-	cout << "VertexLayout Format unrecognized";
+	std::cout << "VertexLayout Format unrecognized";
 	return 0;
 }
 
-VulkanVertexLayout::VulkanVertexLayout(vector<vk::Format> fields) :
+VulkanVertexLayout::VulkanVertexLayout(temps<vk::Format> fields) :
 	_fields(fields)
 {
 

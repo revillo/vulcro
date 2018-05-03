@@ -2,9 +2,11 @@
 #include <iostream>
 #include <fstream>
 
+using std::ifstream;
+
 void readFile(const char * filepath, uint32 &size, uint32 ** data) {
 
-	ifstream file(filepath, ios::in | ios::binary);
+	ifstream file(filepath, std::ios::in | std::ios::binary);
 	char * memblock;
 
 	if (file.is_open()) {
