@@ -63,6 +63,11 @@ public:
 	vk::RenderPass getRenderPass() {
 		return _renderPass;
 	}
+
+	VulkanImageRef getDepthBuffer() {
+		return _depthImage;
+	}
+	
 	~VulkanRenderer();
 
 private:
