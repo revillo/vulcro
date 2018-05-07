@@ -41,6 +41,18 @@ public:
 		return _surfaceKHR;
 	}
 
+	bool isKeyDown(SDL_Scancode keyCode) {
+		return _keyStates[keyCode] != 0;
+	}
+
+	glm::ivec2 getMousePos() {
+		return _mousePos;
+	}
+
+	glm::ivec2 getMouseMove() {
+		return _mouseMove;
+	}
+
 	~VulkanWindow();
 
 private:
@@ -52,7 +64,10 @@ private:
 
 	int initWindow(uint32 flags);
 
-	int _x = 100, _y = 100, _width = 300, _height = 300;
+	glm::ivec2 _mousePos;
+	glm::ivec2 _mouseMove;
 
+	int _x = 100, _y = 100, _width = 300, _height = 300;
+	const uint8_t * _keyStates;
 };
 

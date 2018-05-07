@@ -91,6 +91,7 @@ int VulkanWindow::initWindow(uint32 flags) {
 void VulkanWindow::run(std::function<void()> update) {
 	// Poll for user input.
 	bool stillRunning = true;
+	SDL_GetMouseState(&_mousePos.x, &_mousePos.y);
 
 	while (stillRunning) {
 
@@ -110,11 +111,17 @@ void VulkanWindow::run(std::function<void()> update) {
 			}
 
 		}
+		
+		_keyStates = SDL_GetKeyboardState(NULL);
+
+		_mouseMove = _mousePos;
+		SDL_GetMouseState(&_mousePos.x, &_mousePos.y);
+		_mouseMove = _mousePos - _mouseMove;
+
 
 		update();
 
-		const Uint8 *state = SDL_GetKeyboardState(NULL);
-		if (state[SDL_SCANCODE_ESCAPE]) {
+		if (_keyStates[SDL_SCANCODE_ESCAPE]) {
 			stillRunning = false;
 		}
 	}

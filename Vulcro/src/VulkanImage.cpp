@@ -11,6 +11,17 @@ VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::i
 	_usage(usage)
 {
 	createImage();
+	_sampler = _ctx->getNearestSampler();
+
+}
+
+VulkanImage::VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format)
+	:_ctx(ctx),
+	_format(format),
+	_size(size),
+	_image(image)
+{
+	_sampler = _ctx->getNearestSampler();
 
 }
 
@@ -45,14 +56,7 @@ void VulkanImage::allocateDeviceMemory(vk::MemoryPropertyFlags memFlags)
 	_memoryAllocated = true;
 }
 
-VulkanImage::VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format)
-	:_ctx(ctx),
-	_format(format),
-	_size(size),
-	_image(image)
-{
-	
-}
+
 
 void VulkanImage::createImage()
 {
@@ -105,30 +109,7 @@ void VulkanImage::createImageView(vk::ImageAspectFlags aspectFlags) {
 
 }
 
-void VulkanImage::createSampler()
-{
-	_sampler = _ctx->getDevice().createSampler(
-		vk::SamplerCreateInfo(
-			vk::SamplerCreateFlags(),
-			vk::Filter::eLinear, //Mag Filter
-			vk::Filter::eLinear, //Min Filter
-			vk::SamplerMipmapMode::eLinear,
-			vk::SamplerAddressMode::eRepeat, //U
-			vk::SamplerAddressMode::eRepeat,  //V
-			vk::SamplerAddressMode::eRepeat, //W
-			0.0, //mip lod bias
-			0, //Anisotropy Enable
-			1.0f,
-			0, //Compare Enable
-			vk::CompareOp::eAlways,
-			0.0f, //min lod
-			0.0f, //max lod
-			vk::BorderColor::eFloatOpaqueBlack,
-			0 //Unnormalized Coordinates
 
-		)
-	);
-}
 
 vk::DescriptorImageInfo VulkanImage::getDII()
 {
@@ -166,7 +147,7 @@ VulkanImage::~VulkanImage()
 	if (_imageCreated) _ctx->getDevice().destroyImage(_image);
 	if (_memoryAllocated) _ctx->getDevice().freeMemory(_memory);
 
-	if (_sampler) _ctx->getDevice().destroySampler(_sampler);
+	//if (_sampler) _ctx->getDevice().destroySampler(_sampler);
 
 }
 

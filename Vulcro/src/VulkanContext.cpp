@@ -51,12 +51,28 @@ VulkanContext::VulkanContext(vk::Instance instance)
 
 
 	_queue = _device.getQueue(familyIndex, 0);
-
-
-
 }
 
 
+
+vk::Sampler VulkanContext::getLinearSampler()
+{		
+	if (!_linearSampler) {
+		_linearSampler = createSampler2D(vk::Filter::eLinear);
+	}
+
+	return _linearSampler;
+	
+}
+
+vk::Sampler VulkanContext::getNearestSampler()
+{
+	if (!_nearestSampler) {
+		_nearestSampler = createSampler2D(vk::Filter::eNearest);
+	}
+
+	return _nearestSampler;
+}
 
 shared_ptr<ibo> VulkanContext::makeIBO(vector<uint16_t> && indices)
 {
@@ -69,8 +85,37 @@ VulkanContext::~VulkanContext()
 	for (auto keyval : _pools)
 		_device.destroyCommandPool(keyval.second);
 
+	if (_linearSampler) getDevice().destroySampler(_linearSampler);
+	if (_nearestSampler) getDevice().destroySampler(_nearestSampler);
+	if (_shadowSampler) getDevice().destroySampler(_shadowSampler);
+
 	_device.destroy();
 
+}
+
+vk::Sampler VulkanContext::createSampler2D(vk::Filter filter)
+{
+	return getDevice().createSampler(
+		vk::SamplerCreateInfo(
+			vk::SamplerCreateFlags(),
+			filter, //Mag Filter
+			filter, //Min Filter
+			vk::SamplerMipmapMode::eLinear,
+			vk::SamplerAddressMode::eClampToEdge, //U
+			vk::SamplerAddressMode::eClampToEdge,  //V
+			vk::SamplerAddressMode::eClampToEdge, //W
+			0.0, //mip lod bias
+			0, //Anisotropy Enable
+			1.0f,
+			0, //Compare Enable
+			vk::CompareOp::eAlways,
+			0.0f, //min lod
+			0.0f, //max lod
+			vk::BorderColor::eFloatOpaqueBlack,
+			0 //Unnormalized Coordinates
+
+		)
+	);
 }
 
 

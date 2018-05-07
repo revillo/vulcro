@@ -7,6 +7,7 @@
 #include "VulkanSwapchain.h"
 
 #include "glm\gtc\matrix_transform.inl"
+#include "glm\gtc\matrix_inverse.hpp"
 
 namespace vulcro {
 	const glm::mat4 glProjFixYZ = mat4(
