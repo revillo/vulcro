@@ -175,6 +175,9 @@ public:
 		return make_shared<ssbo<T>>(this, arrayCount);
 	}
 
+	vk::Sampler getLinearSampler();
+	vk::Sampler getNearestSampler();
+
 	shared_ptr<ibo> makeIBO(vector<uint16_t> && indices);
 
 	~VulkanContext();
@@ -192,8 +195,10 @@ private:
 
 	vk::CommandBuffer _cmd;
 	vk::Queue _queue;
+	vk::Sampler _linearSampler = nullptr, _nearestSampler = nullptr, _shadowSampler = nullptr;
 
 
+	vk::Sampler createSampler2D(vk::Filter filter);
 };
 
 typedef VulkanContext * VulkanContextRef;

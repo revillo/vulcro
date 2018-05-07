@@ -16,7 +16,9 @@ public:
 	VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format);
 
 	void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor);
-	void createSampler();
+	void createSampler() {};
+	void setSampler(vk::Sampler sampler) { _sampler = sampler; }
+
 
 	vk::DescriptorImageInfo getDII();
 	vk::DescriptorType getDescriptorType();
