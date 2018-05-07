@@ -208,6 +208,8 @@ void VulkanRenderer::begin(vk::CommandBuffer * cmd, int32 whichFramebuffer) {
 
 	uint32 framebufferIndex = 0;
 	const std::array<float, 4> clearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	//todo avoid vector
 	std::vector<vk::ClearValue> clears;
 
 	if (_swapchain != nullptr) {
@@ -230,7 +232,7 @@ void VulkanRenderer::begin(vk::CommandBuffer * cmd, int32 whichFramebuffer) {
 	}
 
 	if (whichFramebuffer >= 0) {
-		framebufferIndex = whichFramebuffer;
+		framebufferIndex = whichFramebuffer % _framebuffers.size();
 	}
 
 	if (_useDepth) {
