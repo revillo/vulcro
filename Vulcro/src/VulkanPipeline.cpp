@@ -129,7 +129,7 @@ void VulkanPipeline::bind(vk::CommandBuffer * cmd)
 
 }
 
-void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanUniformSetRef * sets, uint32 numSets)
+void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanSetRef * sets, uint32 numSets)
 {
 	int skips = 0;
 
@@ -152,12 +152,12 @@ void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanUnifor
 	);
 }
 
-void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, temps<VulkanUniformSetRef> sets)
+void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, temps<VulkanSetRef> sets)
 {
 	bindUniformSets(cmd, sets.begin(), sets.size());
 }
 
-void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef>& sets)
+void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanSetRef>& sets)
 {
 	bindUniformSets(cmd, &sets[0], sets.size());
 }
@@ -254,17 +254,17 @@ void VulkanComputePipeline::bind(vk::CommandBuffer * cmd)
 	);
 }
 
-void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, temps<VulkanUniformSetRef> sets)
+void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, temps<VulkanSetRef> sets)
 {
 	bindUniformSets(cmd, sets.begin(), sets.size());
 }
 
-void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef>& sets)
+void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanSetRef>& sets)
 {
 	bindUniformSets(cmd, &sets[0], sets.size());
 }
 
-void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanUniformSetRef * sets, uint32 numSets)
+void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanSetRef * sets, uint32 numSets)
 {
 	
 	for (int i = 0; i < numSets; i++) {

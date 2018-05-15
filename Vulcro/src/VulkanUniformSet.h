@@ -5,11 +5,11 @@
 #include "VulkanImage.h"
 #include "VulkanBuffer.h"
 
-class VulkanUniformSet
+class VulkanSet
 {
 public:
 	
-	VulkanUniformSet(VulkanContextRef ctx, VulkanUniformSetLayoutRef layout);
+	VulkanSet(VulkanContextRef ctx, VulkanSetLayoutRef layout);
 
 	void bindBuffer(uint32 binding, VulkanBufferRef buffer);
 
@@ -34,11 +34,11 @@ public:
 		return _descriptorSet;
 	}
 
-	VulkanUniformSetLayoutRef getLayout() {
+	VulkanSetLayoutRef getLayout() {
 		return _layout;
 	}
 
-	~VulkanUniformSet();
+	~VulkanSet();
 
 private:
 
@@ -48,7 +48,7 @@ private:
 
 	VulkanContextRef _ctx;
 
-	VulkanUniformSetLayoutRef _layout;
+	VulkanSetLayoutRef _layout;
 
 	vector<vk::WriteDescriptorSet> _writes;
 

@@ -13,10 +13,11 @@ public:
 	static vk::ImageUsageFlags SAMPLED_COLOR_ATTACHMENT;
 
 	VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
+	
 	VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format);
 
-	void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor);
-	void createSampler() {};
+	virtual void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor);
+	virtual void createSampler();
 	void setSampler(vk::Sampler sampler) { _sampler = sampler; }
 
 
@@ -56,8 +57,12 @@ public:
 		return _imageView;
 	}
 
-private:
-	void createImage();
+	virtual void createImage();
+
+protected:
+
+	VulkanImage() {};
+
 
 	VulkanContextRef _ctx;
 
@@ -75,4 +80,18 @@ private:
 
 	vk::Image _image;
 	glm::ivec2 _size;
+};
+
+class VulkanCubeImage : public VulkanImage {
+
+public:
+
+	VulkanCubeImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
+
+	
+	void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor) override;
+	
+	void createImage() override;
+
+
 };

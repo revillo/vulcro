@@ -2,7 +2,7 @@
 
 #define TEMP_SET_MAX 1
 
-VulkanUniformSetLayout::VulkanUniformSetLayout(VulkanContextRef ctx, vector<Binding> bindings) :
+VulkanSetLayout::VulkanSetLayout(VulkanContextRef ctx, vector<Binding> bindings) :
 	_ctx(ctx),
 	_bindings(bindings)
 {
@@ -48,7 +48,7 @@ VulkanUniformSetLayout::VulkanUniformSetLayout(VulkanContextRef ctx, vector<Bind
 
 }
 
-vk::DescriptorSet VulkanUniformSetLayout::allocateDescriptorSet() {
+vk::DescriptorSet VulkanSetLayout::allocateDescriptorSet() {
 
 	auto set = _ctx->getDevice().allocateDescriptorSets(
 		vk::DescriptorSetAllocateInfo(
@@ -61,7 +61,7 @@ vk::DescriptorSet VulkanUniformSetLayout::allocateDescriptorSet() {
 	return set;
 }
 
-void VulkanUniformSetLayout::freeDescriptorSet(vk::DescriptorSet set)
+void VulkanSetLayout::freeDescriptorSet(vk::DescriptorSet set)
 {
 	_ctx->getDevice().freeDescriptorSets(
 		_pool,
@@ -70,7 +70,7 @@ void VulkanUniformSetLayout::freeDescriptorSet(vk::DescriptorSet set)
 
 }
 
-VulkanUniformSetLayout::~VulkanUniformSetLayout()
+VulkanSetLayout::~VulkanSetLayout()
 {
 	_ctx->getDevice().destroyDescriptorSetLayout(_descriptorLayout);
 	_ctx->getDevice().destroyDescriptorPool(_pool);

@@ -10,8 +10,7 @@ VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::i
 	_size(size),
 	_usage(usage)
 {
-	createImage();
-	_sampler = _ctx->getNearestSampler();
+
 
 }
 
@@ -21,7 +20,7 @@ VulkanImage::VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size,
 	_size(size),
 	_image(image)
 {
-	_sampler = _ctx->getNearestSampler();
+	createSampler();
 
 }
 
@@ -109,6 +108,11 @@ void VulkanImage::createImageView(vk::ImageAspectFlags aspectFlags) {
 
 }
 
+void VulkanImage::createSampler()
+{
+	_sampler = _ctx->getNearestSampler();
+}
+
 
 
 vk::DescriptorImageInfo VulkanImage::getDII()
@@ -163,4 +167,62 @@ void VulkanImage::resize(ivec2 size)
 	if (_memoryAllocated) allocateDeviceMemory();
 	if (_viewCreated) createImageView();
 
+}
+
+
+void VulkanCubeImage::createImage()
+{
+	_image = _ctx->getDevice().createImage(
+		vk::ImageCreateInfo(vk::ImageCreateFlagBits::eCubeCompatible,
+			vk::ImageType::e2D,
+			_format,
+			vk::Extent3D(_size.x, _size.y, 1),
+			1, //Mip Levels
+			6, //Layers
+			vk::SampleCountFlagBits::e1,
+			vk::ImageTiling::eOptimal,
+			_usage,
+			vk::SharingMode::eExclusive,
+			0,
+			nullptr,
+			vk::ImageLayout::eUndefined
+		)
+	);
+
+	_imageCreated = true;
+}
+
+VulkanCubeImage::VulkanCubeImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format) :
+	VulkanImage(ctx, usage, size, format)
+{
+	//_sampler = _ctx->getLinearSampler();
+}
+
+void VulkanCubeImage::createImageView(vk::ImageAspectFlags aspectFlags)
+{
+	vk::ComponentMapping cmap;
+	cmap.r = vk::ComponentSwizzle::eR;
+	cmap.g = vk::ComponentSwizzle::eG;
+	cmap.b = vk::ComponentSwizzle::eB;
+	cmap.a = vk::ComponentSwizzle::eA;
+
+	vk::ImageSubresourceRange irange;
+	irange.baseMipLevel = 0;
+	irange.levelCount = 1;
+	irange.setBaseArrayLayer(0);
+	irange.layerCount = 6;
+	irange.aspectMask = aspectFlags;
+
+	_imageView = _ctx->getDevice().createImageView(
+		vk::ImageViewCreateInfo(
+			vk::ImageViewCreateFlags(),
+			_image,
+			vk::ImageViewType::eCube,
+			_format,
+			cmap,
+			irange
+		)
+	);
+
+	_viewCreated = true;
 }

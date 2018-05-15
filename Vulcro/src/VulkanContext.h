@@ -35,8 +35,8 @@ struct ColorBlendConfig {
 
 typedef VulkanUniformLayoutBinding ULB;
 
-class VulkanUniformSetLayout;
-class VulkanUniformSet;
+class VulkanSetLayout;
+class VulkanSet;
 class VulkanVertexLayout;
 class VulkanRenderer;
 class VulkanShader;
@@ -44,7 +44,7 @@ class VulkanPipeline;
 class VulkanComputePipeline;
 class VulkanSwapchain;
 class VulkanBuffer;
-class VulkanUniformSet;
+class VulkanSet;
 class VulkanTask;
 class VulkanTaskGroup;
 class VulkanImage;
@@ -63,11 +63,11 @@ class ibo;
 typedef shared_ptr<VulkanShader> VulkanShaderRef;
 typedef shared_ptr<VulkanRenderer> VulkanRendererRef;
 typedef shared_ptr<VulkanPipeline> VulkanPipelineRef;
-typedef shared_ptr<VulkanUniformSetLayout> VulkanUniformSetLayoutRef;
+typedef shared_ptr<VulkanSetLayout> VulkanSetLayoutRef;
 typedef shared_ptr<VulkanVertexLayout> VulkanVertexLayoutRef;
 typedef shared_ptr<VulkanSwapchain> VulkanSwapchainRef;
 typedef shared_ptr<VulkanBuffer> VulkanBufferRef;
-typedef shared_ptr<VulkanUniformSet> VulkanUniformSetRef;
+typedef shared_ptr<VulkanSet> VulkanSetRef;
 typedef shared_ptr<VulkanTask> VulkanTaskRef;
 typedef shared_ptr<VulkanImage> VulkanImageRef;
 typedef shared_ptr<VulkanTaskGroup> VulkanTaskGroupRef;
@@ -102,14 +102,14 @@ public:
 	);
 
 	VulkanComputePipelineRef makeComputePipeline(VulkanShaderRef shader);
-	VulkanComputePipelineRef makeComputePipeline(const char * shaderPath, vector<VulkanUniformSetLayoutRef> && setLayouts );
+	VulkanComputePipelineRef makeComputePipeline(const char * shaderPath, vector<VulkanSetLayoutRef> && setLayouts );
 
 	VulkanSwapchainRef makeSwapchain(vk::SurfaceKHR surface);
 
 	VulkanShaderRef makeShader(const char * vertPath,
 		const char * fragPath,
 		vector<VulkanVertexLayoutRef>&& vertexLayouts,
-		vector<VulkanUniformSetLayoutRef>&& uniformLayouts = {});
+		vector<VulkanSetLayoutRef>&& setLayouts = {});
 
 	VulkanShaderRef makeTessShader(
 		const char * vertPath,
@@ -118,12 +118,12 @@ public:
 		const char * tessGeomPath,
 		const char * fragPath,
 		vector<VulkanVertexLayoutRef>&& vertexLayouts = {},
-		vector<VulkanUniformSetLayoutRef>&& uniformLayouts = {}
+		vector<VulkanSetLayoutRef>&& setLayouts = {}
 	);
 
 	VulkanShaderRef makeComputeShader(
 		const char * computePath,
-		vector<VulkanUniformSetLayoutRef>&& uniformLayouts = {}
+		vector<VulkanSetLayoutRef>&& setLayouts = {}
 	);
 
 	VulkanBufferRef makeBuffer(
@@ -137,19 +137,19 @@ public:
 		uint64 size
 	);
 
-	VulkanUniformSetLayoutRef makeUniformSetLayout(temps<VulkanUniformLayoutBinding> bindings);
+	VulkanSetLayoutRef makeSetLayout(temps<VulkanUniformLayoutBinding> bindings);
 
-	VulkanUniformSetLayoutRef makeUniformSetLayout(vector<VulkanUniformLayoutBinding> & bindings);
+	VulkanSetLayoutRef makeSetLayout(vector<VulkanUniformLayoutBinding> & bindings);
 
-	VulkanUniformSetRef makeUniformSet(
-		VulkanUniformSetLayoutRef layout
+	VulkanSetRef makeSet(
+		VulkanSetLayoutRef layout
 	);
 
-	VulkanUniformSetRef makeUniformSet(
+	VulkanSetRef makeSet(
 		temps<VulkanUniformLayoutBinding> && bindings
 	);
 
-	VulkanUniformSetRef makeUniformSet(
+	VulkanSetRef makeSet(
 		vector<VulkanUniformLayoutBinding> & bindings
 	);
 
@@ -159,6 +159,13 @@ public:
 	VulkanImageRef makeImage(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
 	VulkanImageRef makeImage(vk::Image image, glm::ivec2 size, vk::Format format);
 	
+	template <class T>
+	VulkanImageRef makeImageTyped(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format) {
+		auto r = make_shared<T>(this, usage, size, format);
+		r->createImage();
+		r->setSampler(getNearestSampler());
+		return r;
+	};
 
 	template <class T>
 	shared_ptr<ubo<T>> makeUBO(uint32 arrayCount, T * data = nullptr) {
@@ -177,7 +184,6 @@ public:
 
 	vk::Sampler getLinearSampler();
 	vk::Sampler getNearestSampler();
-
 	shared_ptr<ibo> makeIBO(vector<uint16_t> && indices);
 
 	~VulkanContext();
