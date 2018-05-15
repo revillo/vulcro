@@ -13,7 +13,7 @@ public:
 		const char * vertPath,
 		const char * fragPath,
 		vector<VulkanVertexLayoutRef>&& vertexLayouts = {},
-		vector<VulkanUniformSetLayoutRef>&& uniformLayouts = {}
+		vector<VulkanSetLayoutRef>&& uniformLayouts = {}
 	);
 
 	VulkanShader(
@@ -24,13 +24,13 @@ public:
 		const char * tessGeomPath,
 		const char * fragPath,
 		vector<VulkanVertexLayoutRef>&& vertexLayouts = {},
-		vector<VulkanUniformSetLayoutRef>&& uniformLayouts = {}
+		vector<VulkanSetLayoutRef>&& uniformLayouts = {}
 	);
 
 	VulkanShader(
 		VulkanContextRef ctx,
 		const char * computePath,
-		vector<VulkanUniformSetLayoutRef>&& uniformLayouts = {}
+		vector<VulkanSetLayoutRef>&& uniformLayouts = {}
 	);
 		
 	~VulkanShader();
@@ -43,7 +43,7 @@ public:
 		return _vis;
 	}
 
-	const vector<VulkanUniformSetLayoutRef> &getUniformLayouts() {
+	const vector<VulkanSetLayoutRef> &getUniformLayouts() {
 		return _uniformLayouts;
 	}
 
@@ -55,7 +55,7 @@ private:
 
 	vk::ShaderModule loadModule(const char* path);
 
-	vector<VulkanUniformSetLayoutRef> _uniformLayouts;
+	vector<VulkanSetLayoutRef> _uniformLayouts;
 	vector<VulkanVertexLayoutRef> _vertexLayouts;
 
 	vk::PipelineVertexInputStateCreateInfo _vis;

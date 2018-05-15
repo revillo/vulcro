@@ -31,7 +31,7 @@ VulkanContext::VulkanContext(vk::Instance instance)
 
 	features.setTessellationShader(true);
 	features.setGeometryShader(true);
-
+	features.setShaderStorageImageExtendedFormats(true);
 
 	float qpriors[1] = { 0.0f };
 
@@ -73,6 +73,7 @@ vk::Sampler VulkanContext::getNearestSampler()
 
 	return _nearestSampler;
 }
+
 
 shared_ptr<ibo> VulkanContext::makeIBO(vector<uint16_t> && indices)
 {
@@ -123,14 +124,14 @@ vk::Sampler VulkanContext::createSampler2D(vk::Filter filter)
 
 
 #include "VulkanUniformSetLayout.h"
-shared_ptr<VulkanUniformSetLayout> VulkanContext::makeUniformSetLayout(temps<VulkanUniformLayoutBinding> bindings)
+shared_ptr<VulkanSetLayout> VulkanContext::makeSetLayout(temps<VulkanUniformLayoutBinding> bindings)
 {
-	return make_shared<VulkanUniformSetLayout>(this, std::move(bindings));
+	return make_shared<VulkanSetLayout>(this, std::move(bindings));
 }
 
-VulkanUniformSetLayoutRef VulkanContext::makeUniformSetLayout(vector<VulkanUniformLayoutBinding>& bindings)
+VulkanSetLayoutRef VulkanContext::makeSetLayout(vector<VulkanUniformLayoutBinding>& bindings)
 {
-	return make_shared<VulkanUniformSetLayout>(this, std::move(bindings));
+	return make_shared<VulkanSetLayout>(this, std::move(bindings));
 }
 
 #include "VulkanVertexLayout.h"
@@ -158,7 +159,7 @@ VulkanComputePipelineRef VulkanContext::makeComputePipeline(VulkanShaderRef shad
 	return make_shared<VulkanComputePipeline>(this, shader);
 }
 
-VulkanComputePipelineRef VulkanContext::makeComputePipeline(const char * computePath, vector<VulkanUniformSetLayoutRef>&& setLayouts)
+VulkanComputePipelineRef VulkanContext::makeComputePipeline(const char * computePath, vector<VulkanSetLayoutRef>&& setLayouts)
 {
 	return makeComputePipeline(
 		makeComputeShader(computePath, std::move(setLayouts))
@@ -173,17 +174,17 @@ VulkanSwapchainRef VulkanContext::makeSwapchain(vk::SurfaceKHR surface)
 }
 
 #include "VulkanShader.h"
-VulkanShaderRef VulkanContext::makeShader(const char * vertPath, const char * fragPath, vector<VulkanVertexLayoutRef>&& vertexLayouts, vector<VulkanUniformSetLayoutRef>&& uniformLayouts)
+VulkanShaderRef VulkanContext::makeShader(const char * vertPath, const char * fragPath, vector<VulkanVertexLayoutRef>&& vertexLayouts, vector<VulkanSetLayoutRef>&& uniformLayouts)
 {
 	return make_shared<VulkanShader>(this, vertPath, fragPath, std::move(vertexLayouts), std::move(uniformLayouts));
 }
 
-VulkanShaderRef VulkanContext::makeTessShader(const char * vertPath, const char * tessControlPath, const char * tessEvalPath, const char * tessGeomPath, const char * fragPath, vector<VulkanVertexLayoutRef>&& vertexLayouts, vector<VulkanUniformSetLayoutRef>&& uniformLayouts)
+VulkanShaderRef VulkanContext::makeTessShader(const char * vertPath, const char * tessControlPath, const char * tessEvalPath, const char * tessGeomPath, const char * fragPath, vector<VulkanVertexLayoutRef>&& vertexLayouts, vector<VulkanSetLayoutRef>&& uniformLayouts)
 {
 	return make_shared<VulkanShader>(this, vertPath, tessControlPath, tessEvalPath, tessGeomPath, fragPath, std::move(vertexLayouts), std::move(uniformLayouts));
 }
 
-VulkanShaderRef VulkanContext::makeComputeShader(const char * computePath, vector<VulkanUniformSetLayoutRef>&& uniformLayouts)
+VulkanShaderRef VulkanContext::makeComputeShader(const char * computePath, vector<VulkanSetLayoutRef>&& uniformLayouts)
 {
 	return make_shared<VulkanShader>(this, computePath, std::move(uniformLayouts));
 }
@@ -201,20 +202,20 @@ VulkanBufferRef VulkanContext::makeLocalStorageBuffer(uint64 size)
 
 
 #include "VulkanUniformSet.h"
-VulkanUniformSetRef VulkanContext::makeUniformSet(VulkanUniformSetLayoutRef layout)
+VulkanSetRef VulkanContext::makeSet(VulkanSetLayoutRef layout)
 {
-	return make_shared<VulkanUniformSet>(this, layout);
+	return make_shared<VulkanSet>(this, layout);
 }
 
-VulkanUniformSetRef VulkanContext::makeUniformSet(temps<VulkanUniformLayoutBinding>&& bindings)
+VulkanSetRef VulkanContext::makeSet(temps<VulkanUniformLayoutBinding>&& bindings)
 {
-	return make_shared<VulkanUniformSet>(this, VulkanContext::makeUniformSetLayout(std::move(bindings)));
+	return make_shared<VulkanSet>(this, VulkanContext::makeSetLayout(std::move(bindings)));
 
 }
 
-VulkanUniformSetRef VulkanContext::makeUniformSet(vector<VulkanUniformLayoutBinding>& bindings)
+VulkanSetRef VulkanContext::makeSet(vector<VulkanUniformLayoutBinding>& bindings)
 {
-	return make_shared<VulkanUniformSet>(this, VulkanContext::makeUniformSetLayout(bindings));
+	return make_shared<VulkanSet>(this, VulkanContext::makeSetLayout(bindings));
 }
 
 #include "VulkanTask.h"
@@ -242,7 +243,10 @@ VulkanTaskGroupRef VulkanContext::makeTaskGroup(uint32 numTasks, uint32 poolInde
 #include "VulkanImage.h"
 VulkanImageRef VulkanContext::makeImage(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format)
 {
-	return make_shared<VulkanImage>(this, usage, size, format);
+	auto r = make_shared<VulkanImage>(this, usage, size, format);
+	r->createImage();
+	r->setSampler(getNearestSampler());
+	return r;
 }
 
 VulkanImageRef VulkanContext::makeImage(vk::Image image, glm::ivec2 size, vk::Format format)

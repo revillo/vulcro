@@ -33,7 +33,7 @@ VulkanShader::VulkanShader(
 	const char * vertPath, 
 	const char * fragPath, 
 	vector<VulkanVertexLayoutRef>&& vertexLayouts,
-	vector<VulkanUniformSetLayoutRef>&& uniformLayouts)
+	vector<VulkanSetLayoutRef>&& uniformLayouts)
 	
 	:
 	_ctx(ctx),
@@ -100,7 +100,7 @@ VulkanShader::VulkanShader(
 VulkanShader::VulkanShader(VulkanContextRef ctx, 
 	const char * vertPath, const char * tessControlPath, const char * tessEvalPath,
 	const char * tessGeomPath, const char * fragPath, 
-	vector<VulkanVertexLayoutRef>&& vertexLayouts, vector<VulkanUniformSetLayoutRef>&& uniformLayouts)
+	vector<VulkanVertexLayoutRef>&& vertexLayouts, vector<VulkanSetLayoutRef>&& uniformLayouts)
 	:_ctx(ctx),
 	_vertexLayouts(vertexLayouts),
 	_uniformLayouts(uniformLayouts)
@@ -204,7 +204,7 @@ VulkanShader::VulkanShader(VulkanContextRef ctx,
 
 }
 
-VulkanShader::VulkanShader(VulkanContextRef ctx, const char * computePath, vector<VulkanUniformSetLayoutRef>&& uniformLayouts)
+VulkanShader::VulkanShader(VulkanContextRef ctx, const char * computePath, vector<VulkanSetLayoutRef>&& uniformLayouts)
 	: _ctx(ctx)
 	, _uniformLayouts(uniformLayouts)
 {

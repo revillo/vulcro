@@ -2,14 +2,14 @@
 
 #include "VulkanUniformSetLayout.h"
 
-VulkanUniformSet::VulkanUniformSet(VulkanContextRef ctx, VulkanUniformSetLayoutRef layout) :
+VulkanSet::VulkanSet(VulkanContextRef ctx, VulkanSetLayoutRef layout) :
 	_ctx(ctx),
 	_layout(layout)
 {
 	_descriptorSet = layout->allocateDescriptorSet();
 }
 
-void VulkanUniformSet::bindBuffer(uint32 binding, VulkanBufferRef buffer)
+void VulkanSet::bindBuffer(uint32 binding, VulkanBufferRef buffer)
 {
 
 	auto dbi = buffer->getDBI();
@@ -33,7 +33,7 @@ void VulkanUniformSet::bindBuffer(uint32 binding, VulkanBufferRef buffer)
 	);
 }
 
-void VulkanUniformSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi, vk::DescriptorType type)
+void VulkanSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi, vk::DescriptorType type)
 {
 	/*
 	if (_dbis.size() < binding + 1) {
@@ -82,7 +82,7 @@ void VulkanUniformSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi, 
 	);
 }
 
-void VulkanUniformSet::bindImage(uint32 binding, VulkanImageRef image, vk::DescriptorType type)
+void VulkanSet::bindImage(uint32 binding, VulkanImageRef image, vk::DescriptorType type)
 {
 
 	auto dii = image->getDII();
@@ -109,7 +109,7 @@ void VulkanUniformSet::bindImage(uint32 binding, VulkanImageRef image, vk::Descr
 }
 
 
-void VulkanUniformSet::bindImages(vector<VulkanImageRef> images, vk::DescriptorType type)
+void VulkanSet::bindImages(vector<VulkanImageRef> images, vk::DescriptorType type)
 {
 	uint32 binding = 0;
 	for (auto &img : images) {
@@ -117,7 +117,7 @@ void VulkanUniformSet::bindImages(vector<VulkanImageRef> images, vk::DescriptorT
 	}
 }
 
-void VulkanUniformSet::update() {
+void VulkanSet::update() {
 
 	if (_writes.size() == 0) return;
 
@@ -132,7 +132,7 @@ void VulkanUniformSet::update() {
 
 }
 
-VulkanUniformSet::~VulkanUniformSet()
+VulkanSet::~VulkanSet()
 {
 
 	_layout->freeDescriptorSet(_descriptorSet);
