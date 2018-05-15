@@ -49,6 +49,11 @@ public:
 		return _mousePos;
 	}
 
+	glm::ivec2 getWindowSize() {
+		SDL_GetWindowSize(_window, &_width, &_height);
+		return ivec2(_width, _height);
+	}
+
 	glm::ivec2 getMouseMove() {
 		return _mouseMove;
 	}
