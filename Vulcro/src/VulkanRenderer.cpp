@@ -118,7 +118,7 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 	vector<vk::AttachmentReference> colorRefs;
 
 
-	uint32 attachment = 0;
+	uint32_t attachment = 0;
 
 	for (auto &image : images) {
 		
@@ -169,7 +169,7 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 		vk::PipelineBindPoint::eGraphics,
 		0,
 		nullptr,
-		static_cast<uint32>(colorRefs.size()),
+		static_cast<uint32_t>(colorRefs.size()),
 		&colorRefs[0],
 		nullptr,
 		_useDepth ? &depthRef : nullptr,
@@ -180,7 +180,7 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 	_renderPass = _ctx->getDevice().createRenderPass(
 		vk::RenderPassCreateInfo(
 			vk::RenderPassCreateFlags(),
-			static_cast<uint32>(attachments.size()),
+			static_cast<uint32_t>(attachments.size()),
 			&attachments[0],
 			1,
 			&subpass,
@@ -206,7 +206,7 @@ void VulkanRenderer::record(vk::CommandBuffer * cmd, function<void()> commands, 
 
 void VulkanRenderer::begin(vk::CommandBuffer * cmd, int32 whichFramebuffer) {
 
-	uint32 framebufferIndex = 0;
+	uint32_t framebufferIndex = 0;
 	const std::array<float, 4> clearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	//todo avoid vector
@@ -244,7 +244,7 @@ void VulkanRenderer::begin(vk::CommandBuffer * cmd, int32 whichFramebuffer) {
 			_renderPass,
 			_framebuffers[framebufferIndex],
 			_fullRect,
-			static_cast<uint32>(clears.size()),
+			static_cast<uint32_t>(clears.size()),
 			&clears[0]
 		),
 
@@ -309,7 +309,7 @@ void VulkanRenderer::createImagesFramebuffer() {
 			vk::FramebufferCreateInfo(
 				vk::FramebufferCreateFlags(),
 				_renderPass,
-				static_cast<uint32>(fbAttachments.size()),
+				static_cast<uint32_t>(fbAttachments.size()),
 				&fbAttachments[0],
 				_fullRect.extent.width,
 				_fullRect.extent.height,

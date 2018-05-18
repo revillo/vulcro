@@ -8,7 +8,7 @@ typedef const char * FilePath;
 
 struct VulkanUniformLayoutBinding {
 
-	VulkanUniformLayoutBinding(uint32 _arrayCount = 1, vk::DescriptorType _type = vk::DescriptorType::eUniformBuffer, vk::Sampler * _samplers = nullptr) :
+	VulkanUniformLayoutBinding(uint32_t _arrayCount = 1, vk::DescriptorType _type = vk::DescriptorType::eUniformBuffer, vk::Sampler * _samplers = nullptr) :
 		type(_type), 
 		arrayCount(_arrayCount),
 		samplers(_samplers)
@@ -17,13 +17,13 @@ struct VulkanUniformLayoutBinding {
 	}
 
 	vk::DescriptorType type = vk::DescriptorType::eUniformBuffer;
-	uint32 arrayCount = 1;
+	uint32_t arrayCount = 1;
 	vk::Sampler * samplers = nullptr;
 };
 
 struct PipelineConfig {
 	vk::PrimitiveTopology topology = vk::PrimitiveTopology::eTriangleList;
-	uint32 patchCount = 3;
+	uint32_t patchCount = 3;
 	vk::CullModeFlags cullFlags = vk::CullModeFlagBits::eBack;
 	vk::FrontFace frontFace = vk::FrontFace::eCounterClockwise;
 };
@@ -85,7 +85,7 @@ public:
 		return _queue;
 	}
 
-	void resetTasks(uint32 poolIndex = 0) {
+	void resetTasks(uint32_t poolIndex = 0) {
 
 		_device.resetCommandPool(
 			_pools[poolIndex],
@@ -128,13 +128,13 @@ public:
 
 	VulkanBufferRef makeBuffer(
 		vk::BufferUsageFlags usage,
-		uint64 size,
+		uint64_t size,
 		vk::MemoryPropertyFlags flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
 		, void* data = nullptr
 	);
 
 	VulkanBufferRef makeLocalStorageBuffer(
-		uint64 size
+		uint64_t size
 	);
 
 	VulkanSetLayoutRef makeSetLayout(temps<VulkanUniformLayoutBinding> bindings);
@@ -153,8 +153,8 @@ public:
 		vector<VulkanUniformLayoutBinding> & bindings
 	);
 
-	VulkanTaskRef makeTask(uint32 poolIndex = 0, bool autoReset = false);
-	VulkanTaskGroupRef makeTaskGroup(uint32 numTasks, uint32 poolIndex = 0);
+	VulkanTaskRef makeTask(uint32_t poolIndex = 0, bool autoReset = false);
+	VulkanTaskGroupRef makeTaskGroup(uint32_t numTasks, uint32_t poolIndex = 0);
 
 	VulkanImageRef makeImage(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
 	VulkanImageRef makeImage(vk::Image image, glm::ivec2 size, vk::Format format);
@@ -168,17 +168,17 @@ public:
 	};
 
 	template <class T>
-	shared_ptr<ubo<T>> makeUBO(uint32 arrayCount, T * data = nullptr) {
+	shared_ptr<ubo<T>> makeUBO(uint32_t arrayCount, T * data = nullptr) {
 		return make_shared<ubo<T>>(this, arrayCount, data);
 	}
 
 	template <class T>
-	shared_ptr<vbo<T>> makeVBO(temps<vk::Format> fieldFormats, uint32 arrayCount, T * data = nullptr) {
+	shared_ptr<vbo<T>> makeVBO(temps<vk::Format> fieldFormats, uint32_t arrayCount, T * data = nullptr) {
 		return make_shared<vbo<T>>(this, std::move(fieldFormats), arrayCount, data);
 	}
 
 	template <class T>
-	shared_ptr<ssbo<T>> makeSSBO(uint32 arrayCount) {
+	shared_ptr<ssbo<T>> makeSSBO(uint32_t arrayCount) {
 		return make_shared<ssbo<T>>(this, arrayCount);
 	}
 
@@ -190,13 +190,13 @@ public:
 
 private:
 
-	uint32 _familyIndex;
+	uint32_t _familyIndex;
 
 	vk::Instance _instance;
 	vector<vk::PhysicalDevice> _physicalDevices;
 	vk::Device _device;
 	
-	std::unordered_map<uint32, vk::CommandPool> _pools;
+	std::unordered_map<uint32_t, vk::CommandPool> _pools;
 
 
 	vk::CommandBuffer _cmd;

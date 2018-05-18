@@ -6,13 +6,13 @@ VulkanWindow::VulkanWindow()
 	initWindow(SDL_WINDOW_VULKAN);
 }
 
-VulkanWindow::VulkanWindow(int x, int y, int width, int height, uint32 flags)
+VulkanWindow::VulkanWindow(int x, int y, int width, int height, uint32_t flags)
 	:_x(x), _y(y), _width(width), _height(height)
 {
 	initWindow(flags);
 }
 
-int VulkanWindow::initWindow(uint32 flags) {
+int VulkanWindow::initWindow(uint32_t flags) {
 	// Create an SDL window that supports Vulkan rendering.
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		std::cout << "Could not initialize SDL." << std::endl;
@@ -103,8 +103,12 @@ void VulkanWindow::run(std::function<void()> update) {
 			case SDL_QUIT:
 				stillRunning = false;
 				break;
-
-	
+			case SDL_MOUSEBUTTONDOWN:
+				_isMouseDown = true;
+				break;
+			case SDL_MOUSEBUTTONUP:
+				_isMouseDown = false;
+				break;
 			default:
 				// Do nothing.
 				break;
@@ -114,10 +118,14 @@ void VulkanWindow::run(std::function<void()> update) {
 		
 		_keyStates = SDL_GetKeyboardState(NULL);
 
-		_mouseMove = _mousePos;
-		SDL_GetMouseState(&_mousePos.x, &_mousePos.y);
-		_mouseMove = _mousePos - _mouseMove;
-
+		if (!_relativeMouseMode) {
+			_mouseMove = _mousePos;
+			SDL_GetMouseState(&_mousePos.x, &_mousePos.y);
+			_mouseMove = _mousePos - _mouseMove;
+		}
+		else {
+			SDL_GetRelativeMouseState(&_mouseMove.x, &_mouseMove.y);
+		}
 
 		update();
 
@@ -125,6 +133,18 @@ void VulkanWindow::run(std::function<void()> update) {
 			stillRunning = false;
 		}
 	}
+}
+
+void VulkanWindow::lockCursor(bool toggle)
+{
+	SDL_SetRelativeMouseMode((SDL_bool)toggle);
+	
+
+	if (_relativeMouseMode != toggle) {
+		SDL_GetRelativeMouseState(&_mouseMove.x, &_mouseMove.y);
+		_mouseMove = ivec2(0, 0);
+	}
+	_relativeMouseMode = toggle;
 }
 
 VulkanWindow::~VulkanWindow()

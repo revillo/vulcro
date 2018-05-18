@@ -29,7 +29,7 @@ class VulkanWindow
 public:
 
 	VulkanWindow();
-	VulkanWindow(int x, int y, int width, int height, uint32 flags = SDL_WINDOW_VULKAN);
+	VulkanWindow(int x, int y, int width, int height, uint32_t flags = SDL_WINDOW_VULKAN);
 
 	void run(std::function<void()> update);
 
@@ -58,6 +58,12 @@ public:
 		return _mouseMove;
 	}
 
+	bool getMouseDown() {
+		return _isMouseDown;
+	}
+
+	void lockCursor(bool toggle);
+
 	~VulkanWindow();
 
 private:
@@ -67,10 +73,12 @@ private:
 	
 	shared_ptr<VulkanContext> _vulkanContext = nullptr;
 
-	int initWindow(uint32 flags);
+	int initWindow(uint32_t flags);
 
 	glm::ivec2 _mousePos;
 	glm::ivec2 _mouseMove;
+	bool _relativeMouseMode = false;
+	bool _isMouseDown = false;
 
 	int _x = 100, _y = 100, _width = 300, _height = 300;
 	const uint8_t * _keyStates;

@@ -16,7 +16,7 @@ public:
 	static const vk::MemoryPropertyFlags CPU_ALOT;
 	static const vk::MemoryPropertyFlags CPU_NEVER;
 
-	VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, 
+	VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64_t size, 
 		vk::MemoryPropertyFlags memFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, 
 		void* data = nullptr);
 
@@ -26,12 +26,12 @@ public:
 	
 	void bindIndex(vk::CommandBuffer * cmd);
 
-	void upload(uint64 size, void* data, uint32 offset = 0);
+	void upload(uint64_t size, void* data, uint32_t offset = 0);
 
 	/*
 	* Set size to -1 for full buffer
 	*/
-	vk::DescriptorBufferInfo getDBI(uint32 offset = 0, int64 size = -1);
+	vk::DescriptorBufferInfo getDBI(uint32_t offset = 0, int64 size = -1);
 
 	vk::DescriptorType getDescriptorType() {
 		if (_usage & vk::BufferUsageFlagBits::eUniformBuffer) {
@@ -40,7 +40,9 @@ public:
 		else if (_usage & vk::BufferUsageFlagBits::eStorageBuffer) {
 			return vk::DescriptorType::eStorageBuffer;
 		}
-		else {
+		else if (_usage & vk::BufferUsageFlagBits::eStorageTexelBuffer) {
+			return vk::DescriptorType::eStorageTexelBuffer;
+		} else { 
 			throw "Unsupported buffer as descriptor";
 		}
 	};
@@ -57,27 +59,54 @@ public:
 		return _buffer;
 	}
 
-	void * getMapped(uint32 offset = 0, int64 size = -1);
+	void * getMapped(uint32_t offset = 0, int64 size = -1);
 
 	void unmap();
 
+	void createView(vk::Format format) {
+		
+		_view = _ctx->getDevice().createBufferView(vk::BufferViewCreateInfo(
+			vk::BufferViewCreateFlags(),
+			_buffer,
+			format,
+			0,
+			_size));
+	}
+
+	vk::BufferView getView() {
+		return _view;
+	}
+
+
 private:
 
-	uint64 _size;
+	uint64_t _size;
 
 	VulkanContextRef _ctx;
 	vk::BufferUsageFlags _usage;
 
 	vk::DeviceMemory _memory;
 	vk::Buffer _buffer;
+	vk::BufferView _view = nullptr;
+
 };
 
 
-template <class T>
-class ubo {
+class iubo {
 public:
 
-	ubo(VulkanContext * ctx, uint32 arrayCount = 1, T * data = nullptr) : _arrayCount(arrayCount)
+	virtual vk::DescriptorBufferInfo getDBI() = 0;
+	virtual ~iubo() {};
+};
+
+
+typedef shared_ptr<iubo> uboRef;
+
+template <class T>
+class ubo : public iubo {
+public:
+
+	ubo(VulkanContext * ctx, uint32_t arrayCount = 1, T * data = nullptr) : _arrayCount(arrayCount)
 	{
 		values = new T[arrayCount];
 
@@ -90,11 +119,11 @@ public:
 		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eUniformBuffer, _size, VulkanBuffer::CPU_ALOT, data);
 	};
 
-	T & at(uint32 i = 0) {
+	T & at(uint32_t i = 0) {
 		return values[i];
 	}
 
-	void set(uint32 i, T value) {
+	void set(uint32_t i, T value) {
 		values[i] = value;
 	}
 
@@ -102,7 +131,7 @@ public:
 		values[0] = value;
 	}
 
-	void set(uint32 start, uint32 count, T * values) {
+	void set(uint32_t start, uint32_t count, T * values) {
 		memcpy(&values[i], values, count * sizeof(T));
 	}
 
@@ -110,7 +139,7 @@ public:
 		_vbr->upload(_size, values);
 	};
 
-	void sync(uint32 index, uint32 count) {
+	void sync(uint32_t index, uint32_t count) {
 		_vbr->upload(count * sizeof(T), values[index], index * sizeof(T));
 	}
 
@@ -118,11 +147,11 @@ public:
 		return ULB(_arrayCount, vk::DescriptorType::eUniformBuffer);
 	}
 
-	vk::DescriptorBufferInfo getDBI() {
+	vk::DescriptorBufferInfo getDBI() override {
 		return _vbr->getDBI(0, -1);
 	}
 	
-	vk::DescriptorBufferInfo getDBI(uint32 offset, int64 size) {
+	vk::DescriptorBufferInfo getDBI(uint32_t offset, int64 size) {
 		return _vbr->getDBI(offset, size);
 	}
 
@@ -135,8 +164,8 @@ private:
 	T * values;
 
 	vk::BufferUsageFlags _usage;
-	uint32 _arrayCount;
-	uint32 _size;
+	uint32_t _arrayCount;
+	uint32_t _size;
 	VulkanBufferRef _vbr;
 };
 
@@ -147,7 +176,7 @@ public:
 
 	virtual void bind(vk::CommandBuffer * cmd) = 0;
 	virtual VulkanVertexLayoutRef getLayout() = 0;
-	virtual uint32 getCount() = 0;
+	virtual uint32_t getCount() = 0;
 };
 
 typedef shared_ptr<ivbo> vboRef;
@@ -156,7 +185,7 @@ template <class T>
 class vbo : public ivbo {
 public:
 
-	vbo(VulkanContext * ctx, temps<vk::Format> fieldFormats, uint32 arrayCount = 1, void * data = nullptr) 
+	vbo(VulkanContext * ctx, temps<vk::Format> fieldFormats, uint32_t arrayCount = 1, void * data = nullptr) 
 		: _arrayCount(arrayCount)
 	{
 		values = new T[arrayCount];
@@ -170,11 +199,11 @@ public:
 		_layout = ctx->makeVertexLayout(move(fieldFormats));
 	};
 
-	T & at(uint32 i = 0) {
+	T & at(uint32_t i = 0) {
 		return values[i];
 	}
 
-	void set(uint32 i, T value) {
+	void set(uint32_t i, T value) {
 		values[i] = value;
 	}
 
@@ -182,7 +211,7 @@ public:
 		values[0] = value;
 	}
 
-	void set(uint32 start, uint32 count, T * newValues) {
+	void set(uint32_t start, uint32_t count, T * newValues) {
 		memcpy(&values[0], newValues, count * sizeof(T));
 	}
 
@@ -190,7 +219,7 @@ public:
 		_vbr->upload(_size, values);
 	}
 
-	void sync(uint32 index, uint32 count) {
+	void sync(uint32_t index, uint32_t count) {
 		_vbr->upload(count * sizeof(T), values[index], index * sizeof(T));
 	}
 
@@ -202,7 +231,7 @@ public:
 		return _layout;
 	}
 
-	uint32 getCount() {
+	uint32_t getCount() {
 		return _arrayCount;
 	}
 
@@ -214,8 +243,8 @@ private:
 
 	T * values;
 	VulkanVertexLayoutRef _layout;
-	uint32 _arrayCount;
-	uint32 _size;
+	uint32_t _arrayCount;
+	uint32_t _size;
 	VulkanBufferRef _vbr;
 	vector<vk::Format> fieldFormats;
 };
@@ -232,20 +261,20 @@ public:
 			&indices[0]
 		);
 
-        _count = static_cast<uint32>(indices.size());
+        _count = static_cast<uint32_t>(indices.size());
 	}
 
 	void bind(vk::CommandBuffer * cmd) {
 		_vbr->bindIndex(cmd);
 	}
 
-    uint32 getCount() {
+    uint32_t getCount() {
         return _count;
     }
 
 private:
 
-    uint32 _count = 0;
+    uint32_t _count = 0;
 	VulkanBufferRef _vbr;
 
 };
@@ -263,7 +292,7 @@ typedef shared_ptr<issbo> ssboRef;
 template<class T>
 class ssbo : public issbo {
 public:
-	ssbo(VulkanContextRef ctx, uint32 arrayCount) :
+	ssbo(VulkanContextRef ctx, uint32_t arrayCount) :
 		_arrayCount(arrayCount) 
 	{
 		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eStorageBuffer, sizeof(T) * arrayCount, VulkanBuffer::CPU_ALOT, nullptr);
@@ -302,7 +331,7 @@ public:
 protected:
 
 	T* _heapBuffer = nullptr;
-	uint32 _arrayCount;
+	uint32_t _arrayCount;
 	VulkanBufferRef _vbr;
 
 };

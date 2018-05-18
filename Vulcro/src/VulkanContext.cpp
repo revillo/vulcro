@@ -11,7 +11,7 @@ VulkanContext::VulkanContext(vk::Instance instance)
 
 	int familyIndex = -1;
 
-	for (uint32 i = 0; i < qfps.size(); i++) {
+	for (uint32_t i = 0; i < qfps.size(); i++) {
 		if (qfps[i].queueFlags & vk::QueueFlagBits::eGraphics) {
 
 			familyIndex = i;
@@ -44,7 +44,7 @@ VulkanContext::VulkanContext(vk::Instance instance)
 			&devQ,
 			0, //Enabled Layers 
 			nullptr, 
-			static_cast<uint32>(extensions.size()), &extensions[0],
+			static_cast<uint32_t>(extensions.size()), &extensions[0],
 			&features //enabled features
 		)
 	);
@@ -190,12 +190,12 @@ VulkanShaderRef VulkanContext::makeComputeShader(const char * computePath, vecto
 }
 
 #include "VulkanBuffer.h"
-VulkanBufferRef VulkanContext::makeBuffer(vk::BufferUsageFlags usage, uint64 size, vk::MemoryPropertyFlags flags, void * data)
+VulkanBufferRef VulkanContext::makeBuffer(vk::BufferUsageFlags usage, uint64_t size, vk::MemoryPropertyFlags flags, void * data)
 {
 	return make_shared<VulkanBuffer>(this, usage, size, flags, data);
 }
 
-VulkanBufferRef VulkanContext::makeLocalStorageBuffer(uint64 size)
+VulkanBufferRef VulkanContext::makeLocalStorageBuffer(uint64_t size)
 {
 	return makeBuffer(VulkanBuffer::STORAGE_BUFFER, size, VulkanBuffer::CPU_NEVER);
 }
@@ -219,7 +219,7 @@ VulkanSetRef VulkanContext::makeSet(vector<VulkanUniformLayoutBinding>& bindings
 }
 
 #include "VulkanTask.h"
-VulkanTaskRef VulkanContext::makeTask(uint32 poolIndex, bool autoReset)
+VulkanTaskRef VulkanContext::makeTask(uint32_t poolIndex, bool autoReset)
 {
 	if (_pools.count(poolIndex) == 0) {
 		_pools[poolIndex] = _device.createCommandPool(
@@ -230,7 +230,7 @@ VulkanTaskRef VulkanContext::makeTask(uint32 poolIndex, bool autoReset)
 }
 
 #include "VulkanTaskGroup.h"
-VulkanTaskGroupRef VulkanContext::makeTaskGroup(uint32 numTasks, uint32 poolIndex)
+VulkanTaskGroupRef VulkanContext::makeTaskGroup(uint32_t numTasks, uint32_t poolIndex)
 {
 	if (_pools.count(poolIndex) == 0) {
 		_pools[poolIndex] = _device.createCommandPool(

@@ -47,12 +47,12 @@ public:
 		);
 	}
 
-    uint32 getNumTargets() {
+    uint32_t getNumTargets() {
         if (_swapchain != nullptr) {
             return 1;
         }
         else {
-            return static_cast<uint32>(_images.size());
+            return static_cast<uint32_t>(_images.size());
         }
     }
 

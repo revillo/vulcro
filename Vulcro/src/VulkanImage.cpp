@@ -12,6 +12,7 @@ VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::i
 {
 
 
+
 }
 
 VulkanImage::VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format)
@@ -31,11 +32,11 @@ void VulkanImage::allocateDeviceMemory(vk::MemoryPropertyFlags memFlags)
 
 	auto req = _ctx->getDevice().getImageMemoryRequirements(_image);
 
-	uint32 memTypeIndex = 1000;
+	uint32_t memTypeIndex = 1000;
 	auto reqBits = req.memoryTypeBits;
 	auto p = memFlags;
 
-	for (uint32 i = 0; i < memProps.memoryTypeCount; i++) {
+	for (uint32_t i = 0; i < memProps.memoryTypeCount; i++) {
 		auto type = memProps.memoryTypes[i];
 		if ((reqBits & (1 << i)) && ((type.propertyFlags & p) == p)) {
 
@@ -44,6 +45,7 @@ void VulkanImage::allocateDeviceMemory(vk::MemoryPropertyFlags memFlags)
 		}
 	}
 
+	_memorySize = req.size;
 
 	_memory = _ctx->getDevice().allocateMemory(
 		vk::MemoryAllocateInfo(req.size, memTypeIndex)
@@ -56,6 +58,42 @@ void VulkanImage::allocateDeviceMemory(vk::MemoryPropertyFlags memFlags)
 }
 
 
+
+void VulkanImage::upload(uint64_t size, void* data)
+{
+	void * pData = _ctx->getDevice().mapMemory(
+		_memory,
+		0,
+		_memorySize,
+		vk::MemoryMapFlags()
+	);
+
+
+	memcpy(pData, data, size);
+
+	_ctx->getDevice().unmapMemory(
+		_memory
+	);
+
+	//return pData;
+}
+
+void * VulkanImage::getMapped()
+{
+	return  _ctx->getDevice().mapMemory(
+		_memory,
+		0,
+		_memorySize,
+		vk::MemoryMapFlags()
+	);
+}
+
+void VulkanImage::unmap()
+{
+	_ctx->getDevice().unmapMemory(
+		_memory
+	);
+}
 
 void VulkanImage::createImage()
 {

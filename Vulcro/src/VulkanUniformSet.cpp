@@ -9,31 +9,62 @@ VulkanSet::VulkanSet(VulkanContextRef ctx, VulkanSetLayoutRef layout) :
 	_descriptorSet = layout->allocateDescriptorSet();
 }
 
-void VulkanSet::bindBuffer(uint32 binding, VulkanBufferRef buffer)
+void VulkanSet::bindBuffer(uint32_t binding, VulkanBufferRef buffer)
 {
 
 	auto dbi = buffer->getDBI();
 
-	auto write = vk::WriteDescriptorSet(
-		_descriptorSet,
-		binding,
-		0,
-		1,
-		buffer->getDescriptorType(),
-		nullptr,
-		&dbi,
-		nullptr
-	);
+	auto type = buffer->getDescriptorType();
 
-	_ctx->getDevice().updateDescriptorSets(
-		1,
-		&write,
-		0,
-		nullptr
-	);
+	vk::WriteDescriptorSet write;
+
+	if ((type == vk::DescriptorType::eStorageTexelBuffer) || (type == vk::DescriptorType::eUniformTexelBuffer)) {
+		write = vk::WriteDescriptorSet(
+			_descriptorSet,
+			binding,
+			0,
+			1,
+			type,
+			nullptr,
+			nullptr,
+			&buffer->getView()
+		);
+	
+		_ctx->getDevice().updateDescriptorSets(
+			1,
+			&write,
+			0,
+			nullptr
+		);
+
+	}
+	else {
+		write = vk::WriteDescriptorSet(
+			_descriptorSet,
+			binding,
+			0,
+			1,
+			buffer->getDescriptorType(),
+			nullptr,
+			&dbi,
+			nullptr
+		);
+
+		_ctx->getDevice().updateDescriptorSets(
+			1,
+			&write,
+			0,
+			nullptr
+		);
+
+	}
+
+	
+
+	
 }
 
-void VulkanSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi, vk::DescriptorType type)
+void VulkanSet::bindBuffer(uint32_t binding, vk::DescriptorBufferInfo dbi, vk::DescriptorType type)
 {
 	/*
 	if (_dbis.size() < binding + 1) {
@@ -82,7 +113,12 @@ void VulkanSet::bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi, vk::Des
 	);
 }
 
-void VulkanSet::bindImage(uint32 binding, VulkanImageRef image, vk::DescriptorType type)
+void VulkanSet::bindBuffer(uint32_t binding, uboRef uboref)
+{
+	bindBuffer(binding, uboref->getDBI());
+}
+
+void VulkanSet::bindImage(uint32_t binding, VulkanImageRef image, vk::DescriptorType type)
 {
 
 	auto dii = image->getDII();
@@ -111,7 +147,7 @@ void VulkanSet::bindImage(uint32 binding, VulkanImageRef image, vk::DescriptorTy
 
 void VulkanSet::bindImages(vector<VulkanImageRef> images, vk::DescriptorType type)
 {
-	uint32 binding = 0;
+	uint32_t binding = 0;
 	for (auto &img : images) {
 		bindImage(binding++, img, type);
 	}
@@ -122,7 +158,7 @@ void VulkanSet::update() {
 	if (_writes.size() == 0) return;
 
 	_ctx->getDevice().updateDescriptorSets(
-		static_cast<uint32>(_writes.size()),
+		static_cast<uint32_t>(_writes.size()),
 		&_writes[0],
 		0,
 		nullptr

@@ -11,17 +11,19 @@ public:
 	
 	VulkanSet(VulkanContextRef ctx, VulkanSetLayoutRef layout);
 
-	void bindBuffer(uint32 binding, VulkanBufferRef buffer);
+	void bindBuffer(uint32_t binding, VulkanBufferRef buffer);
 
-	void bindBuffer(uint32 binding, ssboRef buffer) {
+	void bindBuffer(uint32_t binding, ssboRef buffer) {
 		bindBuffer(binding, buffer->getBuffer());
 	}
 
-	void bindBuffer(uint32 binding, vk::DescriptorBufferInfo dbi, vk::DescriptorType type = vk::DescriptorType::eUniformBuffer);
+	void bindBuffer(uint32_t binding, vk::DescriptorBufferInfo dbi, vk::DescriptorType type = vk::DescriptorType::eUniformBuffer);
 
-	void bindImage(uint32 binding, VulkanImageRef image, vk::DescriptorType type = vk::DescriptorType::eCombinedImageSampler);
+	void bindBuffer(uint32_t binding, uboRef uboref);
 
-	void bindStorageImage(uint32 binding, VulkanImageRef image) {
+	void bindImage(uint32_t binding, VulkanImageRef image, vk::DescriptorType type = vk::DescriptorType::eCombinedImageSampler);
+
+	void bindStorageImage(uint32_t binding, VulkanImageRef image) {
 		bindImage(binding, image, vk::DescriptorType::eStorageImage);
 	}
 
