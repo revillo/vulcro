@@ -12,13 +12,18 @@ VulkanSet::VulkanSet(VulkanContextRef ctx, VulkanSetLayoutRef layout) :
 void VulkanSet::bindBuffer(uint32_t binding, VulkanBufferRef buffer)
 {
 
-	auto dbi = buffer->getDBI();
 
 	auto type = buffer->getDescriptorType();
+
+	
 
 	vk::WriteDescriptorSet write;
 
 	if ((type == vk::DescriptorType::eStorageTexelBuffer) || (type == vk::DescriptorType::eUniformTexelBuffer)) {
+
+		auto view = buffer->getView();
+
+
 		write = vk::WriteDescriptorSet(
 			_descriptorSet,
 			binding,
@@ -27,7 +32,7 @@ void VulkanSet::bindBuffer(uint32_t binding, VulkanBufferRef buffer)
 			type,
 			nullptr,
 			nullptr,
-			&buffer->getView()
+			&view
 		);
 	
 		_ctx->getDevice().updateDescriptorSets(
@@ -39,6 +44,9 @@ void VulkanSet::bindBuffer(uint32_t binding, VulkanBufferRef buffer)
 
 	}
 	else {
+		auto dbi = buffer->getDBI();
+
+
 		write = vk::WriteDescriptorSet(
 			_descriptorSet,
 			binding,
