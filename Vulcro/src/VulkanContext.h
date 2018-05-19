@@ -56,6 +56,9 @@ template <class T>
 class vbo;
 
 template <class T>
+class static_vbo;
+
+template <class T>
 class ssbo;
 
 class ibo;
@@ -133,6 +136,12 @@ public:
 		, void* data = nullptr
 	);
 
+	VulkanBufferRef makeFastBuffer(
+		vk::BufferUsageFlags usage,
+		uint64 size,
+		void *data = nullptr
+	);
+
 	VulkanBufferRef makeLocalStorageBuffer(
 		uint64 size
 	);
@@ -173,8 +182,8 @@ public:
 	}
 
 	template <class T>
-	shared_ptr<vbo<T>> makeVBO(temps<vk::Format> fieldFormats, uint32 arrayCount, T * data = nullptr) {
-		return make_shared<vbo<T>>(this, std::move(fieldFormats), arrayCount, data);
+	shared_ptr<static_vbo<T>> makeVBO(temps<vk::Format> fieldFormats, uint32 arrayCount, T * data = nullptr) {
+		return make_shared<static_vbo<T>>(this, std::move(fieldFormats), arrayCount, data);
 	}
 
 	template <class T>
@@ -182,9 +191,10 @@ public:
 		return make_shared<ssbo<T>>(this, arrayCount);
 	}
 
+	shared_ptr<ibo> makeIBO(vk::ArrayProxy<const uint16> indices);
+	
 	vk::Sampler getLinearSampler();
 	vk::Sampler getNearestSampler();
-	shared_ptr<ibo> makeIBO(vector<uint16_t> && indices);
 
 	~VulkanContext();
 

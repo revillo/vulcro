@@ -153,10 +153,41 @@ public:
 typedef shared_ptr<ivbo> vboRef;
 
 template <class T>
-class vbo : public ivbo {
+class static_vbo : public ivbo {
+	
+public: 
+
+	static_vbo(VulkanContext * ctx, temps<vk::Format> fieldFormats, uint32 arrayCount, void * data) {
+		_arrayCount = arrayCount;
+		_layout = ctx->makeVertexLayout(move(fieldFormats));
+		_size = sizeof(T) * arrayCount;
+		_vbr = ctx->makeFastBuffer(vk::BufferUsageFlagBits::eVertexBuffer, _size, data);
+	}
+
+	void bind(vk::CommandBuffer * cmd) override {
+		_vbr->bindVertex(cmd);
+	}
+
+	VulkanVertexLayoutRef getLayout() override {
+		return _layout;
+	}
+
+	uint32 getCount() {
+		return _arrayCount;
+	}
+
+	VulkanBufferRef _vbr;
+	VulkanVertexLayoutRef _layout;
+	uint64 _size;
+	uint32 _arrayCount;
+
+};
+
+template <class T>
+class dynamic_vbo : public ivbo {
 public:
 
-	vbo(VulkanContext * ctx, temps<vk::Format> fieldFormats, uint32 arrayCount = 1, void * data = nullptr) 
+	dynamic_vbo(VulkanContext * ctx, temps<vk::Format> fieldFormats, uint32 arrayCount = 1, void * data = nullptr)
 		: _arrayCount(arrayCount)
 	{
 		values = new T[arrayCount];
@@ -206,7 +237,7 @@ public:
 		return _arrayCount;
 	}
 
-	~vbo() {
+	~dynamic_vbo() {
 		delete values;
 	}
 
@@ -223,13 +254,12 @@ private:
 class ibo {
 
 public:
-	ibo(VulkanContextRef ctx, vector<uint16_t> && indices) {
+	ibo(VulkanContextRef ctx, vk::ArrayProxy<const uint16_t> indices) {
 
-		_vbr = ctx->makeBuffer(
+		_vbr = ctx->makeFastBuffer(
 			vk::BufferUsageFlagBits::eIndexBuffer,
 			sizeof(uint16_t) * indices.size(),
-			VulkanBuffer::CPU_ALOT,
-			&indices[0]
+			(void*)indices.begin()
 		);
 
         _count = static_cast<uint32>(indices.size());

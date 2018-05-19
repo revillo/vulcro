@@ -75,9 +75,9 @@ vk::Sampler VulkanContext::getNearestSampler()
 }
 
 
-shared_ptr<ibo> VulkanContext::makeIBO(vector<uint16_t> && indices)
+shared_ptr<ibo> VulkanContext::makeIBO(vk::ArrayProxy<const uint16> indices)
 {
-	return make_shared<ibo>(this, std::move(indices));
+	return make_shared<ibo>(this, indices);
 	
 }
 
@@ -193,6 +193,30 @@ VulkanShaderRef VulkanContext::makeComputeShader(const char * computePath, vecto
 VulkanBufferRef VulkanContext::makeBuffer(vk::BufferUsageFlags usage, uint64 size, vk::MemoryPropertyFlags flags, void * data)
 {
 	return make_shared<VulkanBuffer>(this, usage, size, flags, data);
+}
+
+VulkanBufferRef VulkanContext::makeFastBuffer(vk::BufferUsageFlags usage, uint64 size, void * data)
+{
+
+	if (data != nullptr) {
+		auto buffer = makeBuffer(usage | vk::BufferUsageFlagBits::eTransferDst, size, VulkanBuffer::CPU_NEVER);
+
+		auto staging = makeBuffer(usage | vk::BufferUsageFlagBits::eTransferSrc, size, VulkanBuffer::CPU_ALOT, data);
+		auto task = makeTask(0);
+
+		auto BufferCopy = vk::BufferCopy(0, 0, size);
+
+		task->record([&](vk::CommandBuffer *cmd) {
+			cmd->copyBuffer(staging->getBuffer(), buffer->getBuffer(), { BufferCopy });
+		});
+
+		task->execute(true);
+		return buffer;
+	}
+	else {
+		return makeBuffer(usage, size, VulkanBuffer::CPU_NEVER);
+	}
+
 }
 
 VulkanBufferRef VulkanContext::makeLocalStorageBuffer(uint64 size)
