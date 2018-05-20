@@ -195,6 +195,7 @@ public:
 	
 	vk::Sampler getLinearSampler();
 	vk::Sampler getNearestSampler();
+	vk::Sampler getShadowSampler();
 
 	~VulkanContext();
 

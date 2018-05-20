@@ -73,7 +73,7 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 		VK_FALSE, //Logic Op
 		vk::LogicOp::eNoOp,
 		static_cast<uint32>(cbas.size()),
-		&cbas[0],
+		cbas.size() > 0 ? &cbas[0] : nullptr,
 		blendConstants
 	);
 

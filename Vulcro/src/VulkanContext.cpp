@@ -53,7 +53,36 @@ VulkanContext::VulkanContext(vk::Instance instance)
 	_queue = _device.getQueue(familyIndex, 0);
 }
 
+vk::Sampler VulkanContext::getShadowSampler() {
+	
+	if (!_shadowSampler) {
 
+		_shadowSampler = getDevice().createSampler(
+			vk::SamplerCreateInfo(
+				vk::SamplerCreateFlags(),
+				vk::Filter::eLinear, //Mag Filter
+				vk::Filter::eLinear, //Min Filter
+				vk::SamplerMipmapMode::eLinear,
+				vk::SamplerAddressMode::eClampToBorder, //U
+				vk::SamplerAddressMode::eClampToBorder,  //V
+				vk::SamplerAddressMode::eClampToBorder, //W
+				0.0, //mip lod bias
+				0, //Anisotropy Enable
+				1.0f,
+				VK_TRUE, //Compare Enable
+				vk::CompareOp::eLessOrEqual,
+				0.0f, //min lod
+				0.0f, //max lod
+				vk::BorderColor::eFloatOpaqueWhite,
+				0 //Unnormalized Coordinates
+
+			)
+		);
+	}
+
+	return _shadowSampler;
+
+}
 
 vk::Sampler VulkanContext::getLinearSampler()
 {		

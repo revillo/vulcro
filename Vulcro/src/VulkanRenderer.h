@@ -17,6 +17,7 @@ public:
 	void createDepthBuffer();
 	void targetSwapcahin(VulkanSwapchainRef swapchain, bool useDepth = true);
 	void targetImages(vector<VulkanImageRef> images, bool useDepth = true);
+	void targetDepth(glm::ivec2 size);
 
 	void setClearColors(vector<std::array<float, 4>> colors) {
 		_clearColors = colors;

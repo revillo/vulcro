@@ -14,7 +14,7 @@ void VulkanRenderer::createDepthBuffer() {
 	
     _depthImage->allocateDeviceMemory();
 	_depthImage->createImageView(vk::ImageAspectFlagBits::eDepth);
-
+	_depthImage->setSampler(_ctx->getShadowSampler());
 }
 
 void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain, bool useDepth)
@@ -191,6 +191,60 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 
 	_renderPassCreated = true;
 
+	createImagesFramebuffer();
+}
+
+void VulkanRenderer::targetDepth(glm::ivec2 size)
+{
+	_useDepth = true;
+	_fullRect.offset.x = 0;
+	_fullRect.offset.y = 0;
+	_fullRect.extent.width = size.x;
+	_fullRect.extent.height = size.y;
+	createDepthBuffer();
+
+	_swapchain = nullptr;
+
+	auto attachment = vk::AttachmentDescription(
+		vk::AttachmentDescriptionFlags(),
+		_depthImage->getFormat(),
+		vk::SampleCountFlagBits::e1,
+		vk::AttachmentLoadOp::eClear,
+		vk::AttachmentStoreOp::eStore,
+		vk::AttachmentLoadOp::eDontCare,
+		vk::AttachmentStoreOp::eStore,
+		vk::ImageLayout::eUndefined,
+		vk::ImageLayout::eDepthStencilAttachmentOptimal);
+
+	vk::AttachmentReference depthRef = vk::AttachmentReference(
+		0,
+		vk::ImageLayout::eDepthStencilAttachmentOptimal
+	);
+
+	vk::SubpassDescription subpass = vk::SubpassDescription(
+		vk::SubpassDescriptionFlags(),
+		vk::PipelineBindPoint::eGraphics,
+		0,
+		nullptr,
+		0,
+		nullptr,
+		nullptr,
+		&depthRef,
+		0,
+		nullptr
+	);
+	_renderPassCreated = true;
+	_renderPass = _ctx->getDevice().createRenderPass(
+		vk::RenderPassCreateInfo(
+			vk::RenderPassCreateFlags(),
+			1,
+			&attachment,
+			1,
+			&subpass,
+			0,
+			nullptr
+		)
+	);
 	createImagesFramebuffer();
 }
 
