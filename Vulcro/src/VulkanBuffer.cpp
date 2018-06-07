@@ -101,7 +101,7 @@ void VulkanBuffer::upload(uint64_t size, void * data, uint32_t offset)
 	unmap();
 }
 
-vk::DescriptorBufferInfo VulkanBuffer::getDBI(uint32_t offset, int64 size)
+vk::DescriptorBufferInfo VulkanBuffer::getDBI(uint32_t offset, int64_t size)
 {
 	return vk::DescriptorBufferInfo(
 		_buffer,
@@ -110,7 +110,7 @@ vk::DescriptorBufferInfo VulkanBuffer::getDBI(uint32_t offset, int64 size)
 	);
 }
 
-void * VulkanBuffer::getMapped(uint32_t offset, int64 size)
+void * VulkanBuffer::getMapped(uint32_t offset, int64_t size)
 {
 
 	void * pData = _ctx->getDevice().mapMemory(

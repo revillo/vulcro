@@ -19,3 +19,5 @@ using std::make_shared;
 using std::function;
 
 using namespace glm;
+
+#define VULCRO_DONT_COPY(type) type(const type&) = delete;

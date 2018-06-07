@@ -62,6 +62,10 @@ public:
 		return _isMouseDown;
 	}
 
+	SDL_Window *getSDLWindow() {
+		return _window;
+	}
+
 	void lockCursor(bool toggle);
 
 	~VulkanWindow();

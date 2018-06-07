@@ -20,6 +20,8 @@ public:
 		vk::MemoryPropertyFlags memFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, 
 		void* data = nullptr);
 
+	VULCRO_DONT_COPY(VulkanBuffer)
+
 	~VulkanBuffer();
 	
 	void bindVertex(vk::CommandBuffer * cmd);
@@ -31,7 +33,7 @@ public:
 	/*
 	* Set size to -1 for full buffer
 	*/
-	vk::DescriptorBufferInfo getDBI(uint32_t offset = 0, int64 size = -1);
+	vk::DescriptorBufferInfo getDBI(uint32_t offset = 0, int64_t size = -1);
 
 	vk::DescriptorType getDescriptorType() {
 		if (_usage & vk::BufferUsageFlagBits::eUniformBuffer) {
@@ -59,7 +61,7 @@ public:
 		return _buffer;
 	}
 
-	void * getMapped(uint32_t offset = 0, int64 size = -1);
+	void * getMapped(uint32_t offset = 0, int64_t size = -1);
 
 	void unmap();
 
@@ -94,9 +96,9 @@ private:
 
 class iubo {
 public:
-
 	virtual vk::DescriptorBufferInfo getDBI() = 0;
 	virtual ~iubo() {};
+
 };
 
 
@@ -118,6 +120,8 @@ public:
 
 		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eUniformBuffer, _size, VulkanBuffer::CPU_ALOT, data);
 	};
+
+	VULCRO_DONT_COPY(ubo)
 
 	T & at(uint32_t i = 0) {
 		return values[i];
@@ -151,7 +155,7 @@ public:
 		return _vbr->getDBI(0, -1);
 	}
 	
-	vk::DescriptorBufferInfo getDBI(uint32_t offset, int64 size) {
+	vk::DescriptorBufferInfo getDBI(uint32_t offset, int64_t size) {
 		return _vbr->getDBI(offset, size);
 	}
 
@@ -173,7 +177,6 @@ class ivbo {
 	
 public:
 	virtual ~ivbo() {};
-
 	virtual void bind(vk::CommandBuffer * cmd) = 0;
 	virtual VulkanVertexLayoutRef getLayout() = 0;
 	virtual uint32_t getCount() = 0;
@@ -198,6 +201,8 @@ public:
 		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eVertexBuffer, _size, VulkanBuffer::CPU_ALOT, data);
 		_layout = ctx->makeVertexLayout(move(fieldFormats));
 	};
+
+	VULCRO_DONT_COPY(vbo)
 
 	T & at(uint32_t i = 0) {
 		return values[i];
@@ -264,6 +269,8 @@ public:
         _count = static_cast<uint32_t>(indices.size());
 	}
 
+	VULCRO_DONT_COPY(ibo)
+
 	void bind(vk::CommandBuffer * cmd) {
 		_vbr->bindIndex(cmd);
 	}
@@ -283,6 +290,7 @@ typedef shared_ptr<ibo> iboRef;
 
 class issbo {
 public:
+
 	virtual VulkanBufferRef getBuffer() = 0;
 	virtual ~issbo() {};
 };
@@ -292,11 +300,15 @@ typedef shared_ptr<issbo> ssboRef;
 template<class T>
 class ssbo : public issbo {
 public:
+
 	ssbo(VulkanContextRef ctx, uint32_t arrayCount) :
 		_arrayCount(arrayCount) 
 	{
 		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eStorageBuffer, sizeof(T) * arrayCount, VulkanBuffer::CPU_ALOT, nullptr);
 	}
+
+	VULCRO_DONT_COPY(ssbo)
+
 
 	T* loadMapped() {
 		return static_cast<T*>(_vbr->getMapped());
