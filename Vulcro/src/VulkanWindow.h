@@ -66,6 +66,12 @@ public:
 		return _window;
 	}
 
+
+	void handleEvents(std::function<void(SDL_Event &event)> eventHandler) {
+		_eventHandler = eventHandler;
+	}
+
+
 	void lockCursor(bool toggle);
 
 	~VulkanWindow();
@@ -75,9 +81,13 @@ private:
 	vk::Instance _vkInstance;
 	SDL_Window* _window = nullptr;
 	
+	void handleEvent(SDL_Event &event);
+
 	shared_ptr<VulkanContext> _vulkanContext = nullptr;
 
 	int initWindow(uint32_t flags);
+
+	std::function<void(SDL_Event &event)> _eventHandler = [](SDL_Event &event) {};
 
 	glm::ivec2 _mousePos;
 	glm::ivec2 _mouseMove;

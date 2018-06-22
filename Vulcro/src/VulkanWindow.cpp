@@ -12,6 +12,24 @@ VulkanWindow::VulkanWindow(int x, int y, int width, int height, uint32_t flags)
 	initWindow(flags);
 }
 
+void VulkanWindow::handleEvent(SDL_Event &event)
+{
+	switch (event.type) {
+
+		case SDL_MOUSEBUTTONDOWN:
+			_isMouseDown = true;
+			break;
+		case SDL_MOUSEBUTTONUP:
+			_isMouseDown = false;
+			break;
+		default:
+			// Do nothing.
+			break;
+	}
+
+	_eventHandler(event);
+}
+
 int VulkanWindow::initWindow(uint32_t flags) {
 	// Create an SDL window that supports Vulkan rendering.
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -98,21 +116,12 @@ void VulkanWindow::run(std::function<void()> update) {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
 
-			switch (event.type) {
-
-			case SDL_QUIT:
+			if (event.type == SDL_QUIT) {
 				stillRunning = false;
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-				_isMouseDown = true;
-				break;
-			case SDL_MOUSEBUTTONUP:
-				_isMouseDown = false;
-				break;
-			default:
-				// Do nothing.
-				break;
+				return;
 			}
+
+			handleEvent(event);
 
 		}
 		
