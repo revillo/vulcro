@@ -72,7 +72,7 @@ public:
 			_buffer,
 			format,
 			0,
-			_size));
+			VK_WHOLE_SIZE));
 	}
 
 	vk::BufferView getView() {
