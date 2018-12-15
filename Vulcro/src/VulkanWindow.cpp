@@ -91,7 +91,7 @@ int VulkanWindow::initWindow(uint32 flags) {
 void VulkanWindow::run(std::function<void()> update) {
 	// Poll for user input.
 	bool stillRunning = true;
-	SDL_GetMouseState(&_mousePos.x, &_mousePos.y);
+	SDL_GetMouseState(&_input.mousePos.x, &_input.mousePos.y);
 
 	while (stillRunning) {
 
@@ -103,8 +103,18 @@ void VulkanWindow::run(std::function<void()> update) {
 			case SDL_QUIT:
 				stillRunning = false;
 				break;
+			case SDL_MOUSEBUTTONDOWN:
+				_input.mouseButtonDown[event.button.button] = true;
+				break;
+			case SDL_MOUSEBUTTONUP:
+				_input.mouseButtonDown[event.button.button] = false;
+				break;
+			case SDL_KEYDOWN:
+				if (_keyHandler) {
+					_keyHandler(event.key.keysym.scancode);
+				}
+				break;
 
-	
 			default:
 				// Do nothing.
 				break;
@@ -114,10 +124,14 @@ void VulkanWindow::run(std::function<void()> update) {
 		
 		_keyStates = SDL_GetKeyboardState(NULL);
 
-		_mouseMove = _mousePos;
-		SDL_GetMouseState(&_mousePos.x, &_mousePos.y);
-		_mouseMove = _mousePos - _mouseMove;
-
+		if (!_relativeMouseMode) {
+			_input.mouseMove = _input.mousePos;
+			SDL_GetMouseState(&_input.mousePos.x, &_input.mousePos.y);
+			_input.mouseMove = _input.mousePos - _input.mouseMove;
+		}
+		else {
+			SDL_GetRelativeMouseState(&_input.mouseMove.x, &_input.mouseMove.y);
+		}
 
 		update();
 
@@ -125,6 +139,18 @@ void VulkanWindow::run(std::function<void()> update) {
 			stillRunning = false;
 		}
 	}
+}
+
+void VulkanWindow::lockPointer(bool toggle)
+{
+	SDL_SetRelativeMouseMode((SDL_bool)toggle);
+
+
+	if (_relativeMouseMode != toggle) {
+		SDL_GetRelativeMouseState(&_input.mouseMove.x, &_input.mouseMove.y);
+		_input.mouseMove = ivec2(0, 0);
+	}
+	_relativeMouseMode = toggle;
 }
 
 VulkanWindow::~VulkanWindow()

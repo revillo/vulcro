@@ -28,6 +28,14 @@ class VulkanWindow
 {
 public:
 
+	struct Input {
+
+		ivec2 mousePos;
+		ivec2 mouseMove;
+		int32 mouseButtonDown[8] = { false, false, false, false, false, false, false, false };
+		int32 keyDown[8] = { false, false, false, false, false, false, false, false };
+	};
+
 	VulkanWindow();
 	VulkanWindow(int x, int y, int width, int height, uint32 flags = SDL_WINDOW_VULKAN);
 
@@ -46,7 +54,11 @@ public:
 	}
 
 	glm::ivec2 getMousePos() {
-		return _mousePos;
+		return _input.mousePos;
+	}
+
+	void handleKeypress(std::function<void(SDL_Scancode code)> keyHandler) {
+		_keyHandler = keyHandler;
 	}
 
 	glm::ivec2 getWindowSize() {
@@ -55,8 +67,15 @@ public:
 	}
 
 	glm::ivec2 getMouseMove() {
-		return _mouseMove;
+		return _input.mouseMove;
 	}
+
+	const Input &getInput() {
+		return _input;
+	}
+
+	void lockPointer(bool toggle);
+
 
 	~VulkanWindow();
 
@@ -68,10 +87,10 @@ private:
 	shared_ptr<VulkanContext> _vulkanContext = nullptr;
 
 	int initWindow(uint32 flags);
+	bool _relativeMouseMode = false;
 
-	glm::ivec2 _mousePos;
-	glm::ivec2 _mouseMove;
-
+	Input _input;
+	std::function<void(SDL_Scancode code)> _keyHandler = nullptr;
 	int _x = 100, _y = 100, _width = 300, _height = 300;
 	const uint8_t * _keyStates;
 };
