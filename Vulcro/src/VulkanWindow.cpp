@@ -6,20 +6,44 @@ VulkanWindow::VulkanWindow()
 	initWindow(SDL_WINDOW_VULKAN);
 }
 
-VulkanWindow::VulkanWindow(int x, int y, int width, int height, uint32 flags)
+VulkanWindow::VulkanWindow(int x, int y, int width, int height, uint32_t flags)
 	:_x(x), _y(y), _width(width), _height(height)
 {
 	initWindow(flags);
 }
 
-int VulkanWindow::initWindow(uint32 flags) {
+void VulkanWindow::handleEvent(SDL_Event &event)
+{
+	switch (event.type) {
+
+        case SDL_MOUSEBUTTONDOWN:
+            _input.mouseButtonDown[event.button.button] = true;
+            break;
+        case SDL_MOUSEBUTTONUP:
+            _input.mouseButtonDown[event.button.button] = false;
+            break;
+        case SDL_KEYDOWN:
+            if (_keyHandler) {
+                _keyHandler(event.key.keysym.scancode);
+            }
+            break;
+
+        default:
+            // Do nothing.
+            break;
+	}
+
+	_eventHandler(event);
+}
+
+int VulkanWindow::initWindow(uint32_t flags) {
 	// Create an SDL window that supports Vulkan rendering.
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		std::cout << "Could not initialize SDL." << std::endl;
 		return 1;
 	}
-	_window = SDL_CreateWindow("Vulkan Window", SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED, _width, _height, flags);
+	_window = SDL_CreateWindow("Vulkan Window", _x,
+		_y, _width, _height, flags);
 	if (_window == NULL) {
 		std::cout << "Could not create SDL window." << std::endl;
 		return 1;
@@ -93,32 +117,18 @@ void VulkanWindow::run(std::function<void()> update) {
 	bool stillRunning = true;
 	SDL_GetMouseState(&_input.mousePos.x, &_input.mousePos.y);
 
+
 	while (stillRunning) {
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
 
-			switch (event.type) {
+            if (event.type == SDL_QUIT) {
+                stillRunning = false;
+                return;
+            }	
 
-			case SDL_QUIT:
-				stillRunning = false;
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-				_input.mouseButtonDown[event.button.button] = true;
-				break;
-			case SDL_MOUSEBUTTONUP:
-				_input.mouseButtonDown[event.button.button] = false;
-				break;
-			case SDL_KEYDOWN:
-				if (_keyHandler) {
-					_keyHandler(event.key.keysym.scancode);
-				}
-				break;
-
-			default:
-				// Do nothing.
-				break;
-			}
+			handleEvent(event);
 
 		}
 		

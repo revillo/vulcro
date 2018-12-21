@@ -8,14 +8,14 @@ class VulkanVertexLayout
 public:
 	VulkanVertexLayout(temps<vk::Format> fields);
 
-	vk::VertexInputBindingDescription getVIBD(uint32 binding);
-	vector<vk::VertexInputAttributeDescription> getVIADS(uint32 binding);
+	vk::VertexInputBindingDescription getVIBD(uint32_t binding);
+	vector<vk::VertexInputAttributeDescription> getVIADS(uint32_t binding);
 
 	~VulkanVertexLayout();
 
 private:
 
-	uint32 _size = 0;
+	uint32_t _size = 0;
 	//vk::VertexInputBindingDescription _vibd;
 	//vector<vk::VertexInputAttributeDescription> _viad;
 

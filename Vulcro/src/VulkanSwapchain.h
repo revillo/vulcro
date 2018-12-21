@@ -21,8 +21,9 @@ public:
 		return _format;
 	}
 
-	uint32 numImages() {
-		return static_cast<uint32>(_images.size());
+
+	uint32_t numImages() {
+		return static_cast<uint32_t>(_images.size());
 	}
 
 	vk::SwapchainKHR &getSwapchain() {
@@ -39,7 +40,7 @@ public:
 		return _semaphore;
 	}
 
-	const uint32 getRenderingIndex() {
+	const uint32_t getRenderingIndex() {
 		return _renderingIndex;
 	}
 
@@ -49,7 +50,7 @@ private:
 
 	void createSemaphore();
 
-	uint32 _renderingIndex;
+	uint32_t _renderingIndex;
 
 	VulkanContextRef _ctx;
 	vk::Semaphore _semaphore;

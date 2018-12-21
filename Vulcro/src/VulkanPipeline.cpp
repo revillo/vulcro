@@ -72,8 +72,8 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 		vk::PipelineColorBlendStateCreateFlags(),
 		VK_FALSE, //Logic Op
 		vk::LogicOp::eNoOp,
-		static_cast<uint32>(cbas.size()),
-		cbas.size() > 0 ? &cbas[0] : nullptr,
+		static_cast<uint32_t>(cbas.size()),
+        cbas.size() > 0 ? &cbas[0] : nullptr,
 		blendConstants
 	);
 
@@ -82,7 +82,7 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 	_pipelineLayout = _ctx->getDevice().createPipelineLayout(
 		vk::PipelineLayoutCreateInfo(
 			vk::PipelineLayoutCreateFlags(),
-			static_cast<uint32>(uniLayouts.size()),
+			static_cast<uint32_t>(uniLayouts.size()),
 			uniLayouts.size() > 0 ? &uniLayouts[0] : nullptr,
 			0,
 			nullptr //Push constant Ranges
@@ -94,7 +94,7 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 		config.patchCount
 	);
 
-	uint32 numShaders = static_cast<uint32>(shader->getStages().size());
+	uint32_t numShaders = static_cast<uint32_t>(shader->getStages().size());
 
 	_pipeline = _ctx->getDevice().createGraphicsPipeline(
 		nullptr,
@@ -129,7 +129,8 @@ void VulkanPipeline::bind(vk::CommandBuffer * cmd)
 
 }
 
-void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanSetRef * sets, uint32 numSets)
+
+void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanSetRef * sets, uint32_t numSets)
 {
 	int skips = 0;
 
@@ -225,7 +226,7 @@ _ctx(ctx)
 	_pipelineLayout = _ctx->getDevice().createPipelineLayout(
 		vk::PipelineLayoutCreateInfo(
 			vk::PipelineLayoutCreateFlags(),
-			static_cast<uint32>(_shader->getDescriptorSetLayouts().size()),
+			static_cast<uint32_t>(_shader->getDescriptorSetLayouts().size()),
 			&_shader->getDescriptorSetLayouts()[0],
 			0, //push
 			nullptr //push constants
@@ -264,7 +265,7 @@ void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<Vulk
 	bindUniformSets(cmd, &sets[0], sets.size());
 }
 
-void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanSetRef * sets, uint32 numSets)
+void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanSetRef * sets, uint32_t numSets)
 {
 	
 	for (int i = 0; i < numSets; i++) {
@@ -281,6 +282,7 @@ void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, const Vulka
 		nullptr
 	);
 }
+
 VulkanComputePipeline::~VulkanComputePipeline()
 {
 	_ctx->getDevice().destroyPipelineLayout(_pipelineLayout);

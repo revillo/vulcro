@@ -11,7 +11,7 @@ VulkanContext::VulkanContext(vk::Instance instance)
 
 	int familyIndex = -1;
 
-	for (uint32 i = 0; i < qfps.size(); i++) {
+	for (uint32_t i = 0; i < qfps.size(); i++) {
 		if (qfps[i].queueFlags & vk::QueueFlagBits::eGraphics) {
 
 			familyIndex = i;
@@ -44,7 +44,7 @@ VulkanContext::VulkanContext(vk::Instance instance)
 			&devQ,
 			0, //Enabled Layers 
 			nullptr, 
-			static_cast<uint32>(extensions.size()), &extensions[0],
+			static_cast<uint32_t>(extensions.size()), &extensions[0],
 			&features //enabled features
 		)
 	);
@@ -54,34 +54,33 @@ VulkanContext::VulkanContext(vk::Instance instance)
 }
 
 vk::Sampler VulkanContext::getShadowSampler() {
-	
-	if (!_shadowSampler) {
 
-		_shadowSampler = getDevice().createSampler(
-			vk::SamplerCreateInfo(
-				vk::SamplerCreateFlags(),
-				vk::Filter::eLinear, //Mag Filter
-				vk::Filter::eLinear, //Min Filter
-				vk::SamplerMipmapMode::eLinear,
-				vk::SamplerAddressMode::eClampToBorder, //U
-				vk::SamplerAddressMode::eClampToBorder,  //V
-				vk::SamplerAddressMode::eClampToBorder, //W
-				0.0, //mip lod bias
-				0, //Anisotropy Enable
-				1.0f,
-				VK_TRUE, //Compare Enable
-				vk::CompareOp::eLessOrEqual,
-				0.0f, //min lod
-				0.0f, //max lod
-				vk::BorderColor::eFloatOpaqueWhite,
-				0 //Unnormalized Coordinates
+    if (!_shadowSampler) {
 
-			)
-		);
-	}
+        _shadowSampler = getDevice().createSampler(
+            vk::SamplerCreateInfo(
+                vk::SamplerCreateFlags(),
+                vk::Filter::eLinear, //Mag Filter
+                vk::Filter::eLinear, //Min Filter
+                vk::SamplerMipmapMode::eLinear,
+                vk::SamplerAddressMode::eClampToBorder, //U
+                vk::SamplerAddressMode::eClampToBorder,  //V
+                vk::SamplerAddressMode::eClampToBorder, //W
+                0.0, //mip lod bias
+                0, //Anisotropy Enable
+                1.0f,
+                VK_TRUE, //Compare Enable
+                vk::CompareOp::eLessOrEqual,
+                0.0f, //min lod
+                0.0f, //max lod
+                vk::BorderColor::eFloatOpaqueWhite,
+                0 //Unnormalized Coordinates
 
-	return _shadowSampler;
+            )
+        );
+    }
 
+    return _shadowSampler;
 }
 
 vk::Sampler VulkanContext::getLinearSampler()
@@ -94,6 +93,7 @@ vk::Sampler VulkanContext::getLinearSampler()
 	
 }
 
+
 vk::Sampler VulkanContext::getNearestSampler()
 {
 	if (!_nearestSampler) {
@@ -104,7 +104,8 @@ vk::Sampler VulkanContext::getNearestSampler()
 }
 
 
-shared_ptr<ibo> VulkanContext::makeIBO(vk::ArrayProxy<const uint16> indices)
+
+shared_ptr<ibo> VulkanContext::makeIBO(vk::ArrayProxy<const uint16_t> indices)
 {
 	return make_shared<ibo>(this, indices);
 	
@@ -152,7 +153,7 @@ vk::Sampler VulkanContext::createSampler2D(vk::Filter filter)
 /// Helpers
 
 
-#include "VulkanUniformSetLayout.h"
+#include "VulkanSetLayout.h"
 shared_ptr<VulkanSetLayout> VulkanContext::makeSetLayout(temps<VulkanUniformLayoutBinding> bindings)
 {
 	return make_shared<VulkanSetLayout>(this, std::move(bindings));
@@ -219,12 +220,12 @@ VulkanShaderRef VulkanContext::makeComputeShader(const char * computePath, vecto
 }
 
 #include "VulkanBuffer.h"
-VulkanBufferRef VulkanContext::makeBuffer(vk::BufferUsageFlags usage, uint64 size, vk::MemoryPropertyFlags flags, void * data)
+VulkanBufferRef VulkanContext::makeBuffer(vk::BufferUsageFlags usage, uint64_t size, vk::MemoryPropertyFlags flags, void * data)
 {
 	return make_shared<VulkanBuffer>(this, usage, size, flags, data);
 }
 
-VulkanBufferRef VulkanContext::makeFastBuffer(vk::BufferUsageFlags usage, uint64 size, void * data)
+VulkanBufferRef VulkanContext::makeFastBuffer(vk::BufferUsageFlags usage, uint64_t size, void * data)
 {
 
 	if (data != nullptr) {
@@ -248,13 +249,13 @@ VulkanBufferRef VulkanContext::makeFastBuffer(vk::BufferUsageFlags usage, uint64
 
 }
 
-VulkanBufferRef VulkanContext::makeLocalStorageBuffer(uint64 size)
+VulkanBufferRef VulkanContext::makeLocalStorageBuffer(uint64_t size)
 {
 	return makeBuffer(VulkanBuffer::STORAGE_BUFFER, size, VulkanBuffer::CPU_NEVER);
 }
 
 
-#include "VulkanUniformSet.h"
+#include "VulkanSet.h"
 VulkanSetRef VulkanContext::makeSet(VulkanSetLayoutRef layout)
 {
 	return make_shared<VulkanSet>(this, layout);
@@ -272,7 +273,7 @@ VulkanSetRef VulkanContext::makeSet(vector<VulkanUniformLayoutBinding>& bindings
 }
 
 #include "VulkanTask.h"
-VulkanTaskRef VulkanContext::makeTask(uint32 poolIndex, bool autoReset)
+VulkanTaskRef VulkanContext::makeTask(uint32_t poolIndex, bool autoReset)
 {
 	if (_pools.count(poolIndex) == 0) {
 		_pools[poolIndex] = _device.createCommandPool(
@@ -283,7 +284,7 @@ VulkanTaskRef VulkanContext::makeTask(uint32 poolIndex, bool autoReset)
 }
 
 #include "VulkanTaskGroup.h"
-VulkanTaskGroupRef VulkanContext::makeTaskGroup(uint32 numTasks, uint32 poolIndex)
+VulkanTaskGroupRef VulkanContext::makeTaskGroup(uint32_t numTasks, uint32_t poolIndex)
 {
 	if (_pools.count(poolIndex) == 0) {
 		_pools[poolIndex] = _device.createCommandPool(

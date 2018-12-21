@@ -57,6 +57,14 @@ public:
 		return _imageView;
 	}
 
+
+	void upload(uint64_t size, void* data);
+
+	void * getMapped();
+
+	void unmap();
+
+
 	virtual void createImage();
 
 protected:
@@ -80,6 +88,7 @@ protected:
 
 	vk::Image _image;
 	glm::ivec2 _size;
+	uint64_t _memorySize;
 };
 
 class VulkanCubeImage : public VulkanImage {

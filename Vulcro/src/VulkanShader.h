@@ -1,6 +1,6 @@
 #pragma once
 #include "VulkanContext.h"
-#include "VulkanUniformSetLayout.h"
+#include "VulkanSetLayout.h"
 #include "VulkanVertexLayout.h"
 
 class VulkanShader

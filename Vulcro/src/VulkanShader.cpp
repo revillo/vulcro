@@ -4,7 +4,8 @@
 
 using std::ifstream;
 
-void readFile(const char * filepath, uint32 &size, uint32 ** data) {
+
+void readFile(const char * filepath, uint32_t &size, uint32_t ** data) {
 
 	ifstream file(filepath, std::ios::in | std::ios::binary);
 	char * memblock;
@@ -12,13 +13,13 @@ void readFile(const char * filepath, uint32 &size, uint32 ** data) {
 	if (file.is_open()) {
 		// get length of file:
 		file.seekg(0, file.end);
-		size = static_cast<uint32>(file.tellg());
+		size = static_cast<uint32_t>(file.tellg());
 		file.seekg(0, file.beg);
 
 		memblock = new char[size];
 		file.read(memblock, size);
 		file.close();
-		*data = (uint32*)memblock;
+		*data = (uint32_t*)memblock;
 	}
 	else {
 		throw new std::system_error(std::error_code(), "Shader not found");
@@ -89,9 +90,10 @@ VulkanShader::VulkanShader(
 
 	_vis = vk::PipelineVertexInputStateCreateInfo(
 		vk::PipelineVertexInputStateCreateFlags(),
-		static_cast<uint32>(_vibds.size()),
+
+		static_cast<uint32_t>(_vibds.size()),
 		_vibds.size() > 0 ? &_vibds[0] : nullptr,
-		static_cast<uint32>(_viads.size()),
+		static_cast<uint32_t>(_viads.size()),
 		_viads.size() > 0 ? &_viads[0] : nullptr
 	);
 	
@@ -194,9 +196,9 @@ VulkanShader::VulkanShader(VulkanContextRef ctx,
 
 	_vis = vk::PipelineVertexInputStateCreateInfo(
 		vk::PipelineVertexInputStateCreateFlags(),
-		static_cast<uint32>(_vibds.size()),
+		static_cast<uint32_t>(_vibds.size()),
 		_vibds.size() > 0 ? &_vibds[0] : nullptr,
-		static_cast<uint32>(_viads.size()),
+		static_cast<uint32_t>(_viads.size()),
 		_viads.size() > 0 ? &_viads[0] : nullptr
 	);
 
@@ -231,8 +233,9 @@ VulkanShader::VulkanShader(VulkanContextRef ctx, const char * computePath, vecto
 
 vk::ShaderModule VulkanShader::loadModule(const char * path)
 {
-	uint32 csize;
-	uint32 *cdata;
+
+	uint32_t csize;
+	uint32_t *cdata;
 	readFile(path, csize, &cdata);
 
 	auto module = _ctx->getDevice().createShaderModule(

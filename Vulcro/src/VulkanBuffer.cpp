@@ -10,7 +10,7 @@ const vk::BufferUsageFlags VulkanBuffer::STORAGE_BUFFER = vk::BufferUsageFlagBit
 const vk::BufferUsageFlags VulkanBuffer::STORAGE_TEXEL_BUFFER = vk::BufferUsageFlagBits::eStorageTexelBuffer;
 
 
-VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, vk::MemoryPropertyFlags memFlags, void * data) :
+VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64_t size, vk::MemoryPropertyFlags memFlags, void * data) :
 	_ctx(ctx),
 	_size(size),
 	_usage(usage)
@@ -31,13 +31,13 @@ VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uin
 		_buffer
 	);
 
-	uint32 memTypeIndex = 1000;
+	uint32_t memTypeIndex = 1000;
 	auto reqBits = memReqs.memoryTypeBits;
 	auto memProps = _ctx->getPhysicalDevice().getMemoryProperties();
 	
 	vk::MemoryPropertyFlags propMask = memFlags;
 	
-	for (uint32 i = 0; i < memProps.memoryTypeCount; i++) {
+	for (uint32_t i = 0; i < memProps.memoryTypeCount; i++) {
 		auto type = memProps.memoryTypes[i];
 		if ((reqBits & (1 << i)) && (type.propertyFlags & propMask) == propMask) {
 
@@ -67,6 +67,10 @@ VulkanBuffer::~VulkanBuffer()
 {
 	_ctx->getDevice().destroyBuffer(_buffer);
 	_ctx->getDevice().freeMemory(_memory);
+
+	if (_view) {
+		_ctx->getDevice().destroyBufferView(_view);
+	}
 }
 
 void VulkanBuffer::bindVertex(vk::CommandBuffer * cmd)
@@ -89,7 +93,7 @@ void VulkanBuffer::bindIndex(vk::CommandBuffer * cmd)
 
 }
 
-void VulkanBuffer::upload(uint64 size, void * data, uint32 offset)
+void VulkanBuffer::upload(uint64_t size, void * data, uint32_t offset)
 {
 
 	auto * pData = getMapped(offset, size);
@@ -99,17 +103,16 @@ void VulkanBuffer::upload(uint64 size, void * data, uint32 offset)
 	unmap();
 }
 
-vk::DescriptorBufferInfo VulkanBuffer::getDBI(uint32 offset, int64 size)
+vk::DescriptorBufferInfo VulkanBuffer::getDBI(uint32_t offset, int64_t size)
 {
 	return vk::DescriptorBufferInfo(
 		_buffer,
 		offset,
-		size == -1 ? _size : static_cast<uint64>(size)
+		size == -1 ? _size : static_cast<uint64_t>(size)
 	);
 }
 
-void * VulkanBuffer::getMapped(uint32 offset, int64 size)
-{
+void * VulkanBuffer::getMapped(uint32_t offset, int64_t size){
 
 	void * pData = _ctx->getDevice().mapMemory(
 		_memory,

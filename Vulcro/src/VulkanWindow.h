@@ -28,6 +28,7 @@ class VulkanWindow
 {
 public:
 
+    //GPU Safe input data
 	struct Input {
 
 		ivec2 mousePos;
@@ -37,7 +38,7 @@ public:
 	};
 
 	VulkanWindow();
-	VulkanWindow(int x, int y, int width, int height, uint32 flags = SDL_WINDOW_VULKAN);
+	VulkanWindow(int x, int y, int width, int height, uint32_t flags = SDL_WINDOW_VULKAN);
 
 	void run(std::function<void()> update);
 
@@ -59,6 +60,7 @@ public:
 
 	void handleKeypress(std::function<void(SDL_Scancode code)> keyHandler) {
 		_keyHandler = keyHandler;
+
 	}
 
 	glm::ivec2 getWindowSize() {
@@ -76,6 +78,19 @@ public:
 
 	void lockPointer(bool toggle);
 
+	bool getMouseDown() {
+		return _isMouseDown;
+	}
+
+	SDL_Window *getSDLWindow() {
+		return _window;
+	}
+
+
+	void handleEvents(std::function<void(SDL_Event &event)> eventHandler) {
+		_eventHandler = eventHandler;
+	}
+
 
 	~VulkanWindow();
 
@@ -84,13 +99,21 @@ private:
 	vk::Instance _vkInstance;
 	SDL_Window* _window = nullptr;
 	
-	shared_ptr<VulkanContext> _vulkanContext = nullptr;
+	void handleEvent(SDL_Event &event);
 
-	int initWindow(uint32 flags);
-	bool _relativeMouseMode = false;
+	shared_ptr<VulkanContext> _vulkanContext = nullptr;
 
 	Input _input;
 	std::function<void(SDL_Scancode code)> _keyHandler = nullptr;
+	int initWindow(uint32_t flags);
+
+	std::function<void(SDL_Event &event)> _eventHandler = [](SDL_Event &event) {};
+
+	glm::ivec2 _mousePos;
+	glm::ivec2 _mouseMove;
+	bool _relativeMouseMode = false;
+	bool _isMouseDown = false;
+
 	int _x = 100, _y = 100, _width = 300, _height = 300;
 	const uint8_t * _keyStates;
 };
