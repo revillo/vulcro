@@ -5,8 +5,10 @@ const vk::MemoryPropertyFlags VulkanBuffer::CPU_ALOT = vk::MemoryPropertyFlagBit
 const vk::MemoryPropertyFlags VulkanBuffer::CPU_NEVER = vk::MemoryPropertyFlagBits::eDeviceLocal;
 
 const vk::BufferUsageFlags VulkanBuffer::UNIFORM_BUFFER = vk::BufferUsageFlagBits::eUniformBuffer;
+const vk::BufferUsageFlags VulkanBuffer::CLEARABLE_STORAGE_BUFFER = vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst;
 const vk::BufferUsageFlags VulkanBuffer::STORAGE_BUFFER = vk::BufferUsageFlagBits::eStorageBuffer;
 const vk::BufferUsageFlags VulkanBuffer::STORAGE_TEXEL_BUFFER = vk::BufferUsageFlagBits::eStorageTexelBuffer;
+
 
 VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, vk::MemoryPropertyFlags memFlags, void * data) :
 	_ctx(ctx),

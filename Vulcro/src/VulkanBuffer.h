@@ -11,6 +11,7 @@ public:
 	
 	static const vk::BufferUsageFlags UNIFORM_BUFFER;
 	static const vk::BufferUsageFlags STORAGE_BUFFER;
+	static const vk::BufferUsageFlags CLEARABLE_STORAGE_BUFFER;
 	static const vk::BufferUsageFlags STORAGE_TEXEL_BUFFER;
 
 	static const vk::MemoryPropertyFlags CPU_ALOT;
