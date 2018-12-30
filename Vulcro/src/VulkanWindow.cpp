@@ -42,8 +42,8 @@ int VulkanWindow::initWindow(uint32_t flags) {
 		std::cout << "Could not initialize SDL." << std::endl;
 		return 1;
 	}
-	_window = SDL_CreateWindow("Vulkan Window", _x,
-		_y, _width, _height, flags);
+	_window = SDL_CreateWindow("Vulkan Window", SDL_WINDOWPOS_CENTERED,
+		SDL_WINDOWPOS_CENTERED, _width, _height, flags);
 	if (_window == NULL) {
 		std::cout << "Could not create SDL window." << std::endl;
 		return 1;
