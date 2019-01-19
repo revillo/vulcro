@@ -32,6 +32,8 @@ VulkanContext::VulkanContext(vk::Instance instance)
 	features.setTessellationShader(true);
 	features.setGeometryShader(true);
 	features.setShaderStorageImageExtendedFormats(true);
+	features.setFragmentStoresAndAtomics(true);
+	features.setVertexPipelineStoresAndAtomics(true);
 
 	float qpriors[1] = { 0.0f };
 
