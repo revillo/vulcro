@@ -102,7 +102,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\Vulcro\src;$(VULKAN_SDK)\Include;$(VULKAN_SDK)\Third-Party\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\Vulcro\src;$(VULKAN_SDK)\Include;$(VULKAN_SDK)\Third-Party\Include</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,7 +143,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\Vulcro\src;$(VULKAN_SDK)\Include;$(VULKAN_SDK)\Third-Party\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\Vulcro\src;$(VULKAN_SDK)\Include;$(VULKAN_SDK)\Third-Party\Include</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -155,37 +157,41 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Vulcro\src\VulkanBuffer.cpp" />
-    <ClCompile Include="..\Vulcro\src\VulkanContext.cpp" />
-    <ClCompile Include="..\Vulcro\src\VulkanImage.cpp" />
-    <ClCompile Include="..\Vulcro\src\VulkanPipeline.cpp" />
-    <ClCompile Include="..\Vulcro\src\VulkanRenderer.cpp" />
-    <ClCompile Include="..\Vulcro\src\VulkanSet.cpp" />
-    <ClCompile Include="..\Vulcro\src\VulkanSetLayout.cpp" />
-    <ClCompile Include="..\Vulcro\src\VulkanShader.cpp" />
-    <ClCompile Include="..\Vulcro\src\VulkanSwapchain.cpp" />
-    <ClCompile Include="..\Vulcro\src\VulkanTask.cpp" />
-    <ClCompile Include="..\Vulcro\src\VulkanTaskGroup.cpp" />
-    <ClCompile Include="..\Vulcro\src\VulkanVertexLayout.cpp" />
-    <ClCompile Include="..\Vulcro\src\VulkanWindow.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\rtx\RTAccelerationStructure.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\rtx\RTPipeline.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\VulkanBuffer.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\VulkanContext.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\VulkanImage.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\VulkanPipeline.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\VulkanRenderer.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\VulkanSet.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\VulkanSetLayout.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\VulkanShader.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\VulkanSwapchain.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\VulkanTask.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\VulkanTaskGroup.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\VulkanVertexLayout.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\VulkanWindow.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Vulcro\src\General.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanBuffer.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanContext.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanImage.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanPipeline.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanRenderer.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanSet.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanSetLayout.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanShader.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanSwapchain.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanTask.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanTaskGroup.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanVertexLayout.h" />
-    <ClInclude Include="..\Vulcro\src\VulkanWindow.h" />
-    <ClInclude Include="..\Vulcro\src\Vulcro.h" />
+    <ClInclude Include="..\..\Vulcro\src\General.h" />
+    <ClInclude Include="..\..\Vulcro\src\rtx\RTAccelerationStructure.h" />
+    <ClInclude Include="..\..\Vulcro\src\rtx\RTPipeline.h" />
+    <ClInclude Include="..\..\Vulcro\src\Vulcro.h" />
+    <ClInclude Include="..\..\Vulcro\src\VulkanBuffer.h" />
+    <ClInclude Include="..\..\Vulcro\src\VulkanContext.h" />
+    <ClInclude Include="..\..\Vulcro\src\VulkanImage.h" />
+    <ClInclude Include="..\..\Vulcro\src\VulkanPipeline.h" />
+    <ClInclude Include="..\..\Vulcro\src\VulkanRenderer.h" />
+    <ClInclude Include="..\..\Vulcro\src\VulkanSet.h" />
+    <ClInclude Include="..\..\Vulcro\src\VulkanSetLayout.h" />
+    <ClInclude Include="..\..\Vulcro\src\VulkanShader.h" />
+    <ClInclude Include="..\..\Vulcro\src\VulkanSwapchain.h" />
+    <ClInclude Include="..\..\Vulcro\src\VulkanTask.h" />
+    <ClInclude Include="..\..\Vulcro\src\VulkanTaskGroup.h" />
+    <ClInclude Include="..\..\Vulcro\src\VulkanVertexLayout.h" />
+    <ClInclude Include="..\..\Vulcro\src\VulkanWindow.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
