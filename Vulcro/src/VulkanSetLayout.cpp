@@ -33,7 +33,8 @@ VulkanSetLayout::VulkanSetLayout(VulkanContextRef ctx, vector<Binding> bindings)
 			vk::DescriptorSetLayoutCreateFlags(),
 			static_cast<uint32_t>(vkbindings.size()),
 			&vkbindings[0]
-		)
+		), nullptr,
+		_ctx->getDynamicDispatch()
 	);
 
 
@@ -44,7 +45,8 @@ VulkanSetLayout::VulkanSetLayout(VulkanContextRef ctx, vector<Binding> bindings)
 
 			static_cast<uint32_t>(poolSizes.size()),
 			&poolSizes[0]
-		)
+		), nullptr,
+		_ctx->getDynamicDispatch()
 	);
 
 }
@@ -56,7 +58,8 @@ vk::DescriptorSet VulkanSetLayout::allocateDescriptorSet() {
 			_pool,
 			1,
 			&_descriptorLayout
-		)
+		),
+		_ctx->getDynamicDispatch()
 	)[0];
 
 	return set;
@@ -66,13 +69,14 @@ void VulkanSetLayout::freeDescriptorSet(vk::DescriptorSet set)
 {
 	_ctx->getDevice().freeDescriptorSets(
 		_pool,
-		{ set }
+		{ set },
+		_ctx->getDynamicDispatch()
 	);
 
 }
 
 VulkanSetLayout::~VulkanSetLayout()
 {
-	_ctx->getDevice().destroyDescriptorSetLayout(_descriptorLayout);
-	_ctx->getDevice().destroyDescriptorPool(_pool);
+	_ctx->getDevice().destroyDescriptorSetLayout(_descriptorLayout, nullptr, _ctx->getDynamicDispatch());
+	_ctx->getDevice().destroyDescriptorPool(_pool, nullptr, _ctx->getDynamicDispatch());
 }

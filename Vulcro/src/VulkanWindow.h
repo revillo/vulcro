@@ -18,9 +18,7 @@
 #include <SDL2/SDL_vulkan.h>
 #include <vulkan/vulkan.hpp>
 
-#include <iostream>
-#include <vector>
-#include <functional>
+#include "General.h"
 
 #include "VulkanContext.h"
 

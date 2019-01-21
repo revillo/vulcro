@@ -14,7 +14,10 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Vulcro">
-      <UniqueIdentifier>{e22ae738-a43a-4b5b-b4f3-eecb12c3e7a5}</UniqueIdentifier>
+      <UniqueIdentifier>{e09564ee-2019-4bc8-b408-cadfaed8aed9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vulcro\rtx">
+      <UniqueIdentifier>{e55c48de-0217-460f-8f8d-3a8988fe64ef}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -45,13 +48,13 @@
     <ClCompile Include="..\..\Vulcro\src\VulkanTask.cpp">
       <Filter>Vulcro</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanTaskGroup.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Vulcro\src\VulkanVertexLayout.cpp">
       <Filter>Vulcro</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Vulcro\src\VulkanWindow.cpp">
-      <Filter>Vulcro</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Vulcro\src\VulkanTaskGroup.cpp">
       <Filter>Vulcro</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Vulcro\src\VulkanSetLayout.cpp">
@@ -59,6 +62,12 @@
     </ClCompile>
     <ClCompile Include="..\..\Vulcro\src\VulkanSet.cpp">
       <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\rtx\RTPipeline.cpp">
+      <Filter>Vulcro\rtx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\rtx\RTAccelerationStructure.cpp">
+      <Filter>Vulcro\rtx</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -92,13 +101,13 @@
     <ClInclude Include="..\..\Vulcro\src\VulkanTask.h">
       <Filter>Vulcro</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanTaskGroup.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Vulcro\src\VulkanVertexLayout.h">
       <Filter>Vulcro</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Vulcro\src\VulkanWindow.h">
-      <Filter>Vulcro</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Vulcro\src\VulkanTaskGroup.h">
       <Filter>Vulcro</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Vulcro\src\VulkanSetLayout.h">
@@ -106,6 +115,12 @@
     </ClInclude>
     <ClInclude Include="..\..\Vulcro\src\VulkanSet.h">
       <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\rtx\RTAccelerationStructure.h">
+      <Filter>Vulcro\rtx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\rtx\RTPipeline.h">
+      <Filter>Vulcro\rtx</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

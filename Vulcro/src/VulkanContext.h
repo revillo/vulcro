@@ -49,6 +49,11 @@ class VulkanTask;
 class VulkanTaskGroup;
 class VulkanImage;
 
+
+class RTScene;
+class RTPipeline;
+class RTShaderBuilder;
+
 template <class T>
 class ubo;
 
@@ -57,6 +62,9 @@ class vbo;
 
 template <class T>
 class static_vbo;
+
+template <class T>
+class dynamic_vbo;
 
 template <class T>
 class ssbo;
@@ -76,13 +84,26 @@ typedef shared_ptr<VulkanImage> VulkanImageRef;
 typedef shared_ptr<VulkanTaskGroup> VulkanTaskGroupRef;
 typedef shared_ptr<VulkanComputePipeline> VulkanComputePipelineRef;
 
+typedef shared_ptr<RTShaderBuilder> RTShaderBuilderRef;
+typedef shared_ptr<RTPipeline> RTPipelineRef;
+typedef shared_ptr<RTScene> RTSceneRef;
 
 class VulkanContext
 {
 public:
 	VulkanContext(vk::Instance instance);
-	vk::Device &getDevice() { return _device; }
-	vk::PhysicalDevice &getPhysicalDevice() { return _physicalDevices[0]; }
+
+	vk::Instance getInstance() {
+		return _instance;
+	}
+
+	
+	const vk::DispatchLoaderDynamic getDynamicDispatch() {
+		return *_dynamicDispatch;
+	}
+
+	const vk::Device &getDevice() { return _device; }
+	const vk::PhysicalDevice &getPhysicalDevice() { return _physicalDevices[0]; }
 
 	vk::Queue &getQueue() {
 		return _queue;
@@ -191,22 +212,35 @@ public:
 	}
 
 	template <class T>
+	shared_ptr<dynamic_vbo<T>> makeDynamicVBO(temps<vk::Format> fieldFormats, uint32_t arrayCount, T * data = nullptr) {
+		return make_shared<dynamic_vbo<T>>(this, std::move(fieldFormats), arrayCount, data);
+	}
+
+	template <class T>
 	shared_ptr<ssbo<T>> makeSSBO(uint32_t arrayCount) {
 		return make_shared<ssbo<T>>(this, arrayCount);
 	}
 
-	shared_ptr<ibo> makeIBO(vk::ArrayProxy<const uint16_t> indices);
+	shared_ptr<ibo> makeIBO(vk::ArrayProxy<const uint32_t> indices);
 	
 	vk::Sampler getLinearSampler();
 	vk::Sampler getNearestSampler();
 	vk::Sampler getShadowSampler();
 
+	shared_ptr<RTShaderBuilder> makeRayTracingShaderBuilder(const char * raygenPath, vector<VulkanSetLayoutRef> && setLayouts);
+	shared_ptr<RTPipeline> makeRayTracingPipeline(RTShaderBuilderRef shader);
+	RTSceneRef makeRayTracingScene();
 
 	~VulkanContext();
+		
+	uint32_t getFamilyIndex() {
+		return _familyIndex;
+	}
 
 private:
 
 	uint32_t _familyIndex;
+	vk::DispatchLoaderDynamic * _dynamicDispatch;
 
 	vk::Instance _instance;
 	vector<vk::PhysicalDevice> _physicalDevices;

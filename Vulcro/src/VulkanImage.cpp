@@ -58,6 +58,35 @@ void VulkanImage::allocateDeviceMemory(vk::MemoryPropertyFlags memFlags)
 
 
 
+void VulkanImage::transitionLayout(vk::CommandBuffer * cmd, vk::ImageLayout layout)
+{
+	vk::ImageMemoryBarrier imgbarr(
+		vk::AccessFlags(),
+		vk::AccessFlags(),
+		vk::ImageLayout::eUndefined,
+		layout,
+		VK_QUEUE_FAMILY_IGNORED,
+		VK_QUEUE_FAMILY_IGNORED,
+		getImage(),
+		vk::ImageSubresourceRange(
+			vk::ImageAspectFlagBits::eColor,
+			0,
+			1,
+			0,
+			1
+		)
+	);
+
+	cmd->pipelineBarrier(
+		vk::PipelineStageFlagBits::eTopOfPipe,
+		vk::PipelineStageFlagBits::eTopOfPipe,
+		vk::DependencyFlags(0),
+		{},
+		{},
+		{ imgbarr }
+	);
+}
+
 void VulkanImage::upload(uint64_t size, void* data)
 {
 	void * pData = _ctx->getDevice().mapMemory(
@@ -163,7 +192,6 @@ vk::DescriptorImageInfo VulkanImage::getDII()
 		layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 	else
 		layout = vk::ImageLayout::eGeneral;
-
 	return vk::DescriptorImageInfo(
 		_sampler,
 		_imageView,

@@ -32,6 +32,8 @@ public:
 		const char * computePath,
 		vector<VulkanSetLayoutRef>&& uniformLayouts = {}
 	);
+
+	static vk::ShaderModule createModule(VulkanContextRef ctx, const char * path);
 		
 	~VulkanShader();
 

@@ -90,11 +90,14 @@ void VulkanTask::waitUntilDone() {
 		res = _ctx->getDevice().waitForFences(1, &_fence, VK_TRUE, 100000000);
 	} while (res == vk::Result::eTimeout);
 
-	
 	_ctx->getDevice().resetFences(
 		1,
 		&_fence
 	);
+
+	if (res != vk::Result::eSuccess) {
+		throw "Device Error";
+	}
 }
 
 VulkanTask::~VulkanTask()

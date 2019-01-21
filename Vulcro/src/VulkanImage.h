@@ -39,6 +39,10 @@ public:
 	vk::Sampler getSampler() {
 		return _sampler;
 	}
+
+	vk::Image getImage() {
+		return _image;
+	}
 	
 	void resize(ivec2 size);
 
@@ -57,6 +61,8 @@ public:
 		return _imageView;
 	}
 
+
+	void transitionLayout(vk::CommandBuffer * cmd, vk::ImageLayout layout = vk::ImageLayout::eGeneral);
 
 	void upload(uint64_t size, void* data);
 

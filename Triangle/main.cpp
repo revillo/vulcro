@@ -30,7 +30,7 @@ int main()
 		//Make the tree triangle vertices, and specify the format of each field
 		int numVerts = 3;
 
-		auto vbuf = vctx->makeVBO<Vertex>(
+		auto vbuf = vctx->makeDynamicVBO<Vertex>(
 			{
 				//Position
 				vk::Format::eR32G32B32A32Sfloat,
@@ -46,14 +46,14 @@ int main()
 
 		//Multiple uniform buffers can be bound to a uniform set at different binding points,
 		//so provide an array of layouts.
-		auto uniformSetLayout = vctx->makeUniformSetLayout({
+		auto uniformSetLayout = vctx->makeSetLayout({
 			ubuf->getLayout()
 		});
 
 		//Shaders take an array of vertex layouts and an array of uniform set layouts 
 		auto shader = vctx->makeShader(
 			"shaders/pos_color_vert.spv",
-			"shaders/uniform_color_frag.spv",
+			"shaders/pos_color_frag.spv",
 			{
 				vbuf->getLayout()
 			},
@@ -62,20 +62,28 @@ int main()
 			}
 		);
 
+
+
 		auto pipeline = vctx->makePipeline(
 			shader,
-			renderer
+			renderer,
+			{
+				vk::PrimitiveTopology::eTriangleList,
+				3,
+				vk::CullModeFlagBits::eBack,
+				vk::FrontFace::eClockwise
+			}
 		);
 
 		//A uniform set is like an instance of a layout. Uniform buffers can bind to it.
-		auto uniformSet = vctx->makeUniformSet(uniformSetLayout);
+		auto uniformSet = vctx->makeSet(uniformSetLayout);
 
 		//Bind ubo at binding point 0
-		uniformSet->bindBuffer(0, ubuf->getDBI());
+		uniformSet->bindBuffer(0, ubuf);
 
 		//Lambda to randomize our triangle buffers
-		auto randomizeTriangle = [=]() {
-
+		auto randomizeTriangle = [&]() {
+			
 			vbuf->at(0) = Vertex({
 				glm::vec4(0, -rand1(), 0.0, 1),
 				glm::vec4(rand1(),rand1(), rand1(), 1)
@@ -92,6 +100,7 @@ int main()
 			});
 			
 			vbuf->sync();
+			
 
 			ubuf->at().color = vec4(rand1(), rand1(), rand1(), 1.0);
 			ubuf->sync();
@@ -99,14 +108,12 @@ int main()
 
 		randomizeTriangle();
 
-		auto triangleTask = vctx->makeTask();
-
 		auto taskGroup = vctx->makeTaskGroup(swapchain->numImages());
 
-		auto recordTasks = [=]() {
-			taskGroup->record([=](vk::CommandBuffer * cmd, glm::uint32 taskNumber) {
+		auto recordTasks = [&]() {
+			taskGroup->record([&](vk::CommandBuffer * cmd, glm::uint32 taskNumber) {
 
-				renderer->record(cmd, [=]() {
+				renderer->record(cmd, [&]() {
 
 					cmd->setViewport(0, 1, &renderer->getFullViewport());
 
@@ -129,7 +136,7 @@ int main()
 
 		recordTasks();
 
-		auto resize = [=]() {
+		auto resize = [&]() {
 			if (!swapchain->resize()) {
 				SDL_Delay(100);
 				return;
@@ -140,7 +147,7 @@ int main()
 		};
 
 		//Main Loop
-		window.run([=]() {
+		window.run([&]() {
 
 			//Randomize Triangle Buffers
 			randomizeTriangle();

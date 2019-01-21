@@ -85,10 +85,10 @@ void VulkanBuffer::bindVertex(vk::CommandBuffer * cmd)
 	);
 }
 
-void VulkanBuffer::bindIndex(vk::CommandBuffer * cmd)
+void VulkanBuffer::bindIndex(vk::CommandBuffer * cmd, vk::IndexType type)
 {
 	cmd->bindIndexBuffer(
-		_buffer, 0, vk::IndexType::eUint16
+		_buffer, 0, type
 	);
 
 }

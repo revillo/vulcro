@@ -1,14 +1,16 @@
 #pragma once
 
 #include "VulkanContext.h"
-
+#include "VulkanVertexLayout.h"
 //Catch all class for non-image buffers
+
 
 class VulkanBuffer
 {
 public:
 
-	
+	typedef uint32_t IndexType;
+
 	static const vk::BufferUsageFlags UNIFORM_BUFFER;
 	static const vk::BufferUsageFlags STORAGE_BUFFER;
 	static const vk::BufferUsageFlags CLEARABLE_STORAGE_BUFFER;
@@ -28,7 +30,7 @@ public:
 	
 	void bindVertex(vk::CommandBuffer * cmd);
 	
-	void bindIndex(vk::CommandBuffer * cmd);
+	void bindIndex(vk::CommandBuffer * cmd, vk::IndexType type = vk::IndexType::eUint32);
 
 	void upload(uint64_t size, void* data, uint32_t offset = 0);
 
@@ -184,6 +186,7 @@ public:
 	virtual void bind(vk::CommandBuffer * cmd) = 0;
 	virtual VulkanVertexLayoutRef getLayout() = 0;
 	virtual uint32_t getCount() = 0;
+	virtual vk::Buffer getBuffer() = 0;
 };
 
 typedef shared_ptr<ivbo> vboRef;
@@ -210,6 +213,10 @@ public:
 
 	uint32 getCount() {
 		return _arrayCount;
+	}
+
+	vk::Buffer getBuffer() override {
+		return _vbr->getBuffer();
 	}
 
 	VulkanBufferRef _vbr;
@@ -275,6 +282,10 @@ public:
 		return _arrayCount;
 	}
 
+	vk::Buffer getBuffer() override {
+		return _vbr->getBuffer();
+	}
+
 	~dynamic_vbo() {
 		delete values;
 	}
@@ -292,11 +303,11 @@ private:
 class ibo {
 
 public:
-	ibo(VulkanContextRef ctx, vk::ArrayProxy<const uint16_t> indices) {
+	ibo(VulkanContextRef ctx, vk::ArrayProxy<const VulkanBuffer::IndexType> indices) {
 
 		_vbr = ctx->makeFastBuffer(
 			vk::BufferUsageFlagBits::eIndexBuffer,
-			sizeof(uint16_t) * indices.size(),
+			sizeof(VulkanBuffer::IndexType) * indices.size(),
 			(void*)indices.begin()
 		);
 
@@ -313,6 +324,14 @@ public:
     uint32_t getCount() {
         return _count;
     }
+
+	vk::Buffer getBuffer() {
+		return _vbr->getBuffer();
+	}
+
+	vk::IndexType getType() {
+		return vk::IndexType::eUint16;
+	}
 
 private:
 

@@ -5,6 +5,8 @@ using namespace vk;
 VulkanContext::VulkanContext(vk::Instance instance)
 	:_instance(instance)
 {
+	//vk::HackyGlobalInstance = (VkInstance)instance;
+
 	_physicalDevices = _instance.enumeratePhysicalDevices();
 
 	auto qfps = _physicalDevices[0].getQueueFamilyProperties();
@@ -23,8 +25,24 @@ VulkanContext::VulkanContext(vk::Instance instance)
 
 	std::vector<const char*> extensions;
 
-	extensions.push_back("VK_KHR_swapchain");
-	//extensions.push_back("VK_KHR_win32_surface");
+	auto es = _physicalDevices[0].enumerateDeviceExtensionProperties();
+	std::unordered_map<std::string, bool> extensionLookup;
+
+	for (auto & e : es) {
+		//std::cout << e.extensionName << std::endl;
+		extensionLookup[e.extensionName] = true;
+	}
+
+
+	auto addExtensionSafe = [&](const char * extensionName) {
+		if (extensionLookup[extensionName]) {
+			extensions.push_back(extensionName);
+		}
+	};
+
+	addExtensionSafe("VK_KHR_swapchain");
+	addExtensionSafe("VK_KHR_get_memory_requirements2");
+	addExtensionSafe("VK_NV_ray_tracing");
 
 
 	auto features = vk::PhysicalDeviceFeatures();
@@ -51,7 +69,7 @@ VulkanContext::VulkanContext(vk::Instance instance)
 		)
 	);
 
-
+	_dynamicDispatch = new vk::DispatchLoaderDynamic(_instance, _device);
 	_queue = _device.getQueue(familyIndex, 0);
 }
 
@@ -85,6 +103,8 @@ vk::Sampler VulkanContext::getShadowSampler() {
     return _shadowSampler;
 }
 
+
+
 vk::Sampler VulkanContext::getLinearSampler()
 {		
 	if (!_linearSampler) {
@@ -107,11 +127,6 @@ vk::Sampler VulkanContext::getNearestSampler()
 
 
 
-shared_ptr<ibo> VulkanContext::makeIBO(vk::ArrayProxy<const uint16_t> indices)
-{
-	return make_shared<ibo>(this, indices);
-	
-}
 
 VulkanContext::~VulkanContext()
 {
@@ -123,6 +138,8 @@ VulkanContext::~VulkanContext()
 	if (_shadowSampler) getDevice().destroySampler(_shadowSampler);
 
 	_device.destroy();
+	
+	delete _dynamicDispatch;
 
 }
 
@@ -222,6 +239,13 @@ VulkanShaderRef VulkanContext::makeComputeShader(const char * computePath, vecto
 }
 
 #include "VulkanBuffer.h"
+
+shared_ptr<ibo> VulkanContext::makeIBO(vk::ArrayProxy<const VulkanBuffer::IndexType> indices)
+{
+	return make_shared<ibo>(this, indices);
+
+}
+
 VulkanBufferRef VulkanContext::makeBuffer(vk::BufferUsageFlags usage, uint64_t size, vk::MemoryPropertyFlags flags, void * data)
 {
 	return make_shared<VulkanBuffer>(this, usage, size, flags, data);
@@ -308,4 +332,22 @@ VulkanImageRef VulkanContext::makeImage(vk::ImageUsageFlags usage, glm::ivec2 si
 VulkanImageRef VulkanContext::makeImage(vk::Image image, glm::ivec2 size, vk::Format format)
 {
 	return make_shared<VulkanImage>(this, image, size, format);
+}
+
+#include "rtx/RTPipeline.h"
+#include "rtx/RTAccelerationStructure.h"
+
+shared_ptr<RTShaderBuilder> VulkanContext::makeRayTracingShaderBuilder(const char * raygenPath, vector<VulkanSetLayoutRef>&& setLayouts)
+{
+	return make_shared<RTShaderBuilder>(this, raygenPath, move(setLayouts));
+}
+
+shared_ptr<RTPipeline> VulkanContext::makeRayTracingPipeline(RTShaderBuilderRef shader)
+{
+	return make_shared<RTPipeline>(this, shader);
+}
+
+shared_ptr<RTScene> VulkanContext::makeRayTracingScene()
+{
+	return make_shared<RTScene>(this);
 }

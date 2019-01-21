@@ -74,9 +74,27 @@ int VulkanWindow::initWindow(uint32_t flags) {
 		.setApplicationVersion(1)
 		.setPEngineName("LunarG SDK")
 		.setEngineVersion(1)
-		.setApiVersion(VK_API_VERSION_1_0);
+		.setApiVersion(VK_API_VERSION_1_1);
 	// vk::InstanceCreateInfo is where the programmer specifies the layers and/or extensions that
 	// are needed.
+	
+	auto es = vk::enumerateInstanceExtensionProperties();
+	std::unordered_map<std::string, bool> extensionLookup;
+
+	//std::cout << "Instance props:" << std::endl;
+	for (auto & e : es) {
+		//std::cout << e.extensionName << std::endl;
+		extensionLookup[e.extensionName] = true;
+	}
+
+	auto addExtensionSafe = [&](const char * extensionName) {
+		if (extensionLookup[extensionName]) {
+			extensions.push_back(extensionName);
+		}
+	};
+
+	addExtensionSafe("VK_KHR_get_physical_device_properties2");
+		
 	vk::InstanceCreateInfo instInfo = vk::InstanceCreateInfo()
 		.setFlags(vk::InstanceCreateFlags())
 		.setPApplicationInfo(&appInfo)

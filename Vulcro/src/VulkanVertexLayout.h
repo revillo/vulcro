@@ -11,6 +11,14 @@ public:
 	vk::VertexInputBindingDescription getVIBD(uint32_t binding);
 	vector<vk::VertexInputAttributeDescription> getVIADS(uint32_t binding);
 
+	const vector<vk::Format> getFields() {
+		return _fields;
+	}
+
+	const uint32_t getSize() {
+		return _size;
+	}
+
 	~VulkanVertexLayout();
 
 private:

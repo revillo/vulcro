@@ -5,6 +5,8 @@
 #include "VulkanPipeline.h"
 #include "VulkanTaskGroup.h"
 #include "VulkanSwapchain.h"
+#include "rtx/RTAccelerationStructure.h"
+#include "rtx/RTPipeline.h"
 
 //TODO Move outside
 #include "glm\gtc\matrix_transform.inl"

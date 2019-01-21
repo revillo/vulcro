@@ -229,11 +229,31 @@ VulkanShader::VulkanShader(VulkanContextRef ctx, const char * computePath, vecto
 	}
 }
 
+vk::ShaderModule VulkanShader::createModule(VulkanContextRef ctx, const char * path)
+{
+	uint32_t csize;
+	uint32_t *cdata;
+	readFile(path, csize, &cdata);
+
+	auto module = ctx->getDevice().createShaderModule(
+		vk::ShaderModuleCreateInfo(
+			vk::ShaderModuleCreateFlags(),
+			csize,
+			cdata
+		), nullptr,
+		ctx->getDynamicDispatch()
+	);
+
+	delete cdata;
+
+	return module;
+}
+
 
 
 vk::ShaderModule VulkanShader::loadModule(const char * path)
 {
-
+	/*
 	uint32_t csize;
 	uint32_t *cdata;
 	readFile(path, csize, &cdata);
@@ -247,8 +267,9 @@ vk::ShaderModule VulkanShader::loadModule(const char * path)
 	);
 
 	delete cdata;
-	
-	return module;
+	*/
+
+	return VulkanShader::createModule(_ctx, path);
 }
 
 VulkanShader::~VulkanShader()

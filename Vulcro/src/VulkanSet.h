@@ -28,16 +28,17 @@ public:
 		bindImage(binding, image, vk::DescriptorType::eStorageImage);
 	}
 
+	void bindRTScene(uint32_t binding, RTSceneRef rtscene);
 
 	void bindImages(vector<VulkanImageRef> _images, vk::DescriptorType type = vk::DescriptorType::eCombinedImageSampler);
 
 	void update();
 
-	vk::DescriptorSet &getDescriptorSet() {
+	vk::DescriptorSet getDescriptorSet() const {
 		return _descriptorSet;
 	}
 
-	VulkanSetLayoutRef getLayout() {
+	VulkanSetLayoutRef getLayout() const {
 		return _layout;
 	}
 

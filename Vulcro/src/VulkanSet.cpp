@@ -1,6 +1,7 @@
 #include "VulkanSet.h"
 
 #include "VulkanSetLayout.h"
+#include "rtx/RTAccelerationStructure.h"
 
 VulkanSet::VulkanSet(VulkanContextRef ctx, VulkanSetLayoutRef layout) :
 	_ctx(ctx),
@@ -145,6 +146,33 @@ void VulkanSet::bindImage(uint32_t binding, VulkanImageRef image, vk::Descriptor
 
 }
 
+
+void VulkanSet::bindRTScene(uint32_t binding, RTSceneRef rtscene)
+{
+
+	auto writeas = rtscene->getWriteDescriptor();
+
+	auto write = vk::WriteDescriptorSet(
+		_descriptorSet,
+		binding,
+		0,
+		1,
+		vk::DescriptorType::eAccelerationStructureNV,
+		nullptr,
+		nullptr,
+		nullptr
+	);
+
+	write.setPNext(&writeas);
+
+	_ctx->getDevice().updateDescriptorSets(
+		1,
+		&write,
+		0,
+		nullptr,
+		_ctx->getDynamicDispatch()
+	);
+}
 
 void VulkanSet::bindImages(vector<VulkanImageRef> images, vk::DescriptorType type)
 {
