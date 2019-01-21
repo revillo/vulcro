@@ -1,12 +1,19 @@
 #include "VulkanBuffer.h"
 
 
+const vk::MemoryPropertyFlags VulkanBuffer::CPU_ALOT = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
+const vk::MemoryPropertyFlags VulkanBuffer::CPU_NEVER = vk::MemoryPropertyFlagBits::eDeviceLocal;
+
+const vk::BufferUsageFlags VulkanBuffer::UNIFORM_BUFFER = vk::BufferUsageFlagBits::eUniformBuffer;
+const vk::BufferUsageFlags VulkanBuffer::CLEARABLE_STORAGE_BUFFER = vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst;
+const vk::BufferUsageFlags VulkanBuffer::STORAGE_BUFFER = vk::BufferUsageFlagBits::eStorageBuffer;
+const vk::BufferUsageFlags VulkanBuffer::STORAGE_TEXEL_BUFFER = vk::BufferUsageFlagBits::eStorageTexelBuffer;
 
 
-
-VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64 size, void * data) :
+VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64_t size, vk::MemoryPropertyFlags memFlags, void * data) :
 	_ctx(ctx),
-	_size(size)
+	_size(size),
+	_usage(usage)
 {
 
 	_buffer = _ctx->getDevice().createBuffer(
@@ -24,14 +31,13 @@ VulkanBuffer::VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uin
 		_buffer
 	);
 
-	uint32 memTypeIndex = 1000;
+	uint32_t memTypeIndex = 1000;
 	auto reqBits = memReqs.memoryTypeBits;
 	auto memProps = _ctx->getPhysicalDevice().getMemoryProperties();
 	
-	vk::MemoryPropertyFlags propMask = vk::MemoryPropertyFlagBits::eHostVisible;
-	propMask |= vk::MemoryPropertyFlagBits::eHostCoherent;
+	vk::MemoryPropertyFlags propMask = memFlags;
 	
-	for (uint32 i = 0; i < memProps.memoryTypeCount; i++) {
+	for (uint32_t i = 0; i < memProps.memoryTypeCount; i++) {
 		auto type = memProps.memoryTypes[i];
 		if ((reqBits & (1 << i)) && (type.propertyFlags & propMask) == propMask) {
 
@@ -61,6 +67,10 @@ VulkanBuffer::~VulkanBuffer()
 {
 	_ctx->getDevice().destroyBuffer(_buffer);
 	_ctx->getDevice().freeMemory(_memory);
+
+	if (_view) {
+		_ctx->getDevice().destroyBufferView(_view);
+	}
 }
 
 void VulkanBuffer::bindVertex(vk::CommandBuffer * cmd)
@@ -75,51 +85,47 @@ void VulkanBuffer::bindVertex(vk::CommandBuffer * cmd)
 	);
 }
 
-void VulkanBuffer::bindIndex(vk::CommandBuffer * cmd)
+void VulkanBuffer::bindIndex(vk::CommandBuffer * cmd, vk::IndexType type)
 {
 	cmd->bindIndexBuffer(
-		_buffer, 0, vk::IndexType::eUint16
+		_buffer, 0, type
 	);
 
 }
 
-void VulkanBuffer::upload(uint64 size, void * data, uint32 offset)
+void VulkanBuffer::upload(uint64_t size, void * data, uint32_t offset)
 {
-	void * pData;
 
-	pData = _ctx->getDevice().mapMemory(
-		_memory,
-		offset,
-		size
-	);
+	auto * pData = getMapped(offset, size);
 
 	memcpy(pData, data, size);
 
-	
-	_ctx->getDevice().unmapMemory(
-		_memory
-	);
+	unmap();
 }
 
-vk::DescriptorBufferInfo VulkanBuffer::getDBI(uint32 offset, int64 size)
+vk::DescriptorBufferInfo VulkanBuffer::getDBI(uint32_t offset, int64_t size)
 {
 	return vk::DescriptorBufferInfo(
 		_buffer,
 		offset,
-		size == -1 ? _size : static_cast<uint64>(size)
+		size == -1 ? _size : static_cast<uint64_t>(size)
 	);
 }
 
-void * VulkanBuffer::getData()
-{
+void * VulkanBuffer::getMapped(uint32_t offset, int64_t size){
 
 	void * pData = _ctx->getDevice().mapMemory(
 		_memory,
-		0,
-		96,
+		offset,
+		size < 0 ? _size : size,
 		vk::MemoryMapFlags()
 	);
 
 	return pData;
 }
 
+void VulkanBuffer::unmap() {
+	_ctx->getDevice().unmapMemory(
+		_memory
+	);
+}

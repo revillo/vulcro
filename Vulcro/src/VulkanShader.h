@@ -1,6 +1,6 @@
 #pragma once
 #include "VulkanContext.h"
-#include "VulkanUniformSetLayout.h"
+#include "VulkanSetLayout.h"
 #include "VulkanVertexLayout.h"
 
 class VulkanShader
@@ -12,13 +12,32 @@ public:
 		VulkanContextRef ctx,
 		const char * vertPath,
 		const char * fragPath,
-		vector<VulkanVertexLayoutRef> vertexLayouts = {},
-		vector<VulkanUniformSetLayoutRef> uniformLayouts = {}
+		vector<VulkanVertexLayoutRef>&& vertexLayouts = {},
+		vector<VulkanSetLayoutRef>&& uniformLayouts = {}
 	);
+
+	VulkanShader(
+		VulkanContextRef ctx,
+		const char * vertPath,
+		const char * tessControlPath,
+		const char * tessEvalPath,
+		const char * tessGeomPath,
+		const char * fragPath,
+		vector<VulkanVertexLayoutRef>&& vertexLayouts = {},
+		vector<VulkanSetLayoutRef>&& uniformLayouts = {}
+	);
+
+	VulkanShader(
+		VulkanContextRef ctx,
+		const char * computePath,
+		vector<VulkanSetLayoutRef>&& uniformLayouts = {}
+	);
+
+	static vk::ShaderModule createModule(VulkanContextRef ctx, const char * path);
 		
 	~VulkanShader();
 
-	vector<vk::PipelineShaderStageCreateInfo> getStages() {
+	const vector<vk::PipelineShaderStageCreateInfo> & getStages() {
 		return _stages;
 	}
 
@@ -26,17 +45,19 @@ public:
 		return _vis;
 	}
 
-	vector<VulkanUniformSetLayoutRef> &getUniformLayouts() {
+	const vector<VulkanSetLayoutRef> &getUniformLayouts() {
 		return _uniformLayouts;
 	}
 
-	vector<vk::DescriptorSetLayout> &getDescriptorSetLayouts() {
+	const vector<vk::DescriptorSetLayout> &getDescriptorSetLayouts() {
 		return _descriptorSetLayouts;
 	}
 
 private:
 
-	vector<VulkanUniformSetLayoutRef> _uniformLayouts;
+	vk::ShaderModule loadModule(const char* path);
+
+	vector<VulkanSetLayoutRef> _uniformLayouts;
 	vector<VulkanVertexLayoutRef> _vertexLayouts;
 
 	vk::PipelineVertexInputStateCreateInfo _vis;
@@ -47,7 +68,7 @@ private:
 
 	VulkanContextRef _ctx;
 	vector<vk::PipelineShaderStageCreateInfo> _stages;
-	vk::ShaderModule _vertModule, _fragModule;
+	vector<vk::ShaderModule> _modules;
 
 	bool layoutCreated = false;
 };

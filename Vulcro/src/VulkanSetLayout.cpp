@@ -1,7 +1,8 @@
-#include "VulkanUniformSetLayout.h"
+#include "VulkanSetLayout.h"
 
+#define TEMP_SET_MAX 1
 
-VulkanUniformSetLayout::VulkanUniformSetLayout(VulkanContextRef ctx, vector<Binding> bindings) :
+VulkanSetLayout::VulkanSetLayout(VulkanContextRef ctx, vector<Binding> bindings) :
 	_ctx(ctx),
 	_bindings(bindings)
 {
@@ -12,17 +13,17 @@ VulkanUniformSetLayout::VulkanUniformSetLayout(VulkanContextRef ctx, vector<Bind
 
 	for (auto &binding : bindings) {
 		vkbindings.push_back(vk::DescriptorSetLayoutBinding(
-			vkbindings.size(),
+			static_cast<uint32_t>(vkbindings.size()),
 			binding.type,
 			binding.arrayCount,
-			vk::ShaderStageFlagBits::eAllGraphics,
+			vk::ShaderStageFlagBits::eAll,
 			binding.samplers
 		));
 
 		poolSizes.push_back(
 			vk::DescriptorPoolSize(
 				binding.type,
-				10
+				TEMP_SET_MAX
 			)
 		);
 	}
@@ -30,47 +31,52 @@ VulkanUniformSetLayout::VulkanUniformSetLayout(VulkanContextRef ctx, vector<Bind
 	_descriptorLayout = _ctx->getDevice().createDescriptorSetLayout(
 		vk::DescriptorSetLayoutCreateInfo(
 			vk::DescriptorSetLayoutCreateFlags(),
-			vkbindings.size(),
+			static_cast<uint32_t>(vkbindings.size()),
 			&vkbindings[0]
-		)
+		), nullptr,
+		_ctx->getDynamicDispatch()
 	);
 
 
 	_pool = _ctx->getDevice().createDescriptorPool(
 		vk::DescriptorPoolCreateInfo(
 			vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
-			10, // todo
-			poolSizes.size(),
+			TEMP_SET_MAX, // todo
+
+			static_cast<uint32_t>(poolSizes.size()),
 			&poolSizes[0]
-		)
+		), nullptr,
+		_ctx->getDynamicDispatch()
 	);
 
 }
 
-vk::DescriptorSet VulkanUniformSetLayout::allocateDescriptorSet() {
+vk::DescriptorSet VulkanSetLayout::allocateDescriptorSet() {
 
 	auto set = _ctx->getDevice().allocateDescriptorSets(
 		vk::DescriptorSetAllocateInfo(
 			_pool,
 			1,
 			&_descriptorLayout
-		)
+		),
+		_ctx->getDynamicDispatch()
 	)[0];
 
 	return set;
 }
 
-void VulkanUniformSetLayout::freeDescriptorSet(vk::DescriptorSet set)
+void VulkanSetLayout::freeDescriptorSet(vk::DescriptorSet set)
 {
 	_ctx->getDevice().freeDescriptorSets(
 		_pool,
-		{ set }
+		{ set },
+		_ctx->getDynamicDispatch()
 	);
 
 }
 
-VulkanUniformSetLayout::~VulkanUniformSetLayout()
+VulkanSetLayout::~VulkanSetLayout()
 {
-	_ctx->getDevice().destroyDescriptorSetLayout(_descriptorLayout);
-	_ctx->getDevice().destroyDescriptorPool(_pool);
+	_ctx->getDevice().destroyDescriptorSetLayout(_descriptorLayout, nullptr, _ctx->getDynamicDispatch());
+	_ctx->getDevice().destroyDescriptorPool(_pool, nullptr, _ctx->getDynamicDispatch());
 }

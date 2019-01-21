@@ -8,13 +8,13 @@ VulkanRenderer::VulkanRenderer(VulkanContextRef ctx) :
 }
 
 void VulkanRenderer::createDepthBuffer() {
-	
-	_depthImage = _ctx->makeImage(vk::ImageUsageFlagBits::eDepthStencilAttachment, 
+
+	_depthImage = _ctx->makeImage(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
         glm::ivec2(_fullRect.extent.width, _fullRect.extent.height), vk::Format::eD32Sfloat);
 	
     _depthImage->allocateDeviceMemory();
 	_depthImage->createImageView(vk::ImageAspectFlagBits::eDepth);
-
+	_depthImage->setSampler(_ctx->getShadowSampler());
 }
 
 void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain, bool useDepth)
@@ -118,7 +118,7 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 	vector<vk::AttachmentReference> colorRefs;
 
 
-	uint32 attachment = 0;
+	uint32_t attachment = 0;
 
 	for (auto &image : images) {
 		
@@ -169,7 +169,7 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 		vk::PipelineBindPoint::eGraphics,
 		0,
 		nullptr,
-		colorRefs.size(),
+		static_cast<uint32_t>(colorRefs.size()),
 		&colorRefs[0],
 		nullptr,
 		_useDepth ? &depthRef : nullptr,
@@ -180,7 +180,7 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 	_renderPass = _ctx->getDevice().createRenderPass(
 		vk::RenderPassCreateInfo(
 			vk::RenderPassCreateFlags(),
-			attachments.size(),
+			static_cast<uint32_t>(attachments.size()),
 			&attachments[0],
 			1,
 			&subpass,
@@ -191,6 +191,60 @@ void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
 
 	_renderPassCreated = true;
 
+	createImagesFramebuffer();
+}
+
+void VulkanRenderer::targetDepth(glm::ivec2 size)
+{
+	_useDepth = true;
+	_fullRect.offset.x = 0;
+	_fullRect.offset.y = 0;
+	_fullRect.extent.width = size.x;
+	_fullRect.extent.height = size.y;
+	createDepthBuffer();
+
+	_swapchain = nullptr;
+
+	auto attachment = vk::AttachmentDescription(
+		vk::AttachmentDescriptionFlags(),
+		_depthImage->getFormat(),
+		vk::SampleCountFlagBits::e1,
+		vk::AttachmentLoadOp::eClear,
+		vk::AttachmentStoreOp::eStore,
+		vk::AttachmentLoadOp::eDontCare,
+		vk::AttachmentStoreOp::eStore,
+		vk::ImageLayout::eUndefined,
+		vk::ImageLayout::eDepthStencilAttachmentOptimal);
+
+	vk::AttachmentReference depthRef = vk::AttachmentReference(
+		0,
+		vk::ImageLayout::eDepthStencilAttachmentOptimal
+	);
+
+	vk::SubpassDescription subpass = vk::SubpassDescription(
+		vk::SubpassDescriptionFlags(),
+		vk::PipelineBindPoint::eGraphics,
+		0,
+		nullptr,
+		0,
+		nullptr,
+		nullptr,
+		&depthRef,
+		0,
+		nullptr
+	);
+	_renderPassCreated = true;
+	_renderPass = _ctx->getDevice().createRenderPass(
+		vk::RenderPassCreateInfo(
+			vk::RenderPassCreateFlags(),
+			1,
+			&attachment,
+			1,
+			&subpass,
+			0,
+			nullptr
+		)
+	);
 	createImagesFramebuffer();
 }
 
@@ -206,8 +260,11 @@ void VulkanRenderer::record(vk::CommandBuffer * cmd, function<void()> commands, 
 
 void VulkanRenderer::begin(vk::CommandBuffer * cmd, int32 whichFramebuffer) {
 
-	uint32 framebufferIndex = 0;
-	const std::array<float, 4> clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+	uint32_t framebufferIndex = 0;
+	const std::array<float, 4> clearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	//todo avoid vector
 	std::vector<vk::ClearValue> clears;
 
 	if (_swapchain != nullptr) {
@@ -230,7 +287,7 @@ void VulkanRenderer::begin(vk::CommandBuffer * cmd, int32 whichFramebuffer) {
 	}
 
 	if (whichFramebuffer >= 0) {
-		framebufferIndex = whichFramebuffer;
+		framebufferIndex = whichFramebuffer % _framebuffers.size();
 	}
 
 	if (_useDepth) {
@@ -242,7 +299,7 @@ void VulkanRenderer::begin(vk::CommandBuffer * cmd, int32 whichFramebuffer) {
 			_renderPass,
 			_framebuffers[framebufferIndex],
 			_fullRect,
-			clears.size(),
+			static_cast<uint32_t>(clears.size()),
 			&clears[0]
 		),
 
@@ -307,7 +364,7 @@ void VulkanRenderer::createImagesFramebuffer() {
 			vk::FramebufferCreateInfo(
 				vk::FramebufferCreateFlags(),
 				_renderPass,
-				fbAttachments.size(),
+				static_cast<uint32_t>(fbAttachments.size()),
 				&fbAttachments[0],
 				_fullRect.extent.width,
 				_fullRect.extent.height,

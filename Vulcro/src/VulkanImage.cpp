@@ -1,35 +1,50 @@
 #include "VulkanImage.h"
 
+
+vk::ImageUsageFlags VulkanImage::SAMPLED_STORAGE = vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled;
+vk::ImageUsageFlags VulkanImage::SAMPLED_COLOR_ATTACHMENT = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled;
+
 VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format)
 	:_ctx(ctx),
 	_format(format),
 	_size(size),
 	_usage(usage)
 {
-	createImage();
+
 
 }
 
-void VulkanImage::allocateDeviceMemory()
+VulkanImage::VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format)
+	:_ctx(ctx),
+	_format(format),
+	_size(size),
+	_image(image)
+{
+	createSampler();
+
+}
+
+void VulkanImage::allocateDeviceMemory(vk::MemoryPropertyFlags memFlags)
 {
 	auto memProps = _ctx->getPhysicalDevice().getMemoryProperties();
 
 
 	auto req = _ctx->getDevice().getImageMemoryRequirements(_image);
 
-	uint32 memTypeIndex = 1000;
+	uint32_t memTypeIndex = 1000;
 	auto reqBits = req.memoryTypeBits;
-	auto p = vk::MemoryPropertyFlagBits::eDeviceLocal;
+	auto p = memFlags;
 
-	for (uint32 i = 0; i < memProps.memoryTypeCount; i++) {
+	for (uint32_t i = 0; i < memProps.memoryTypeCount; i++) {
 		auto type = memProps.memoryTypes[i];
-		if ((reqBits && (1 << i)) && (type.propertyFlags & p) == p) {
+		if ((reqBits & (1 << i)) && ((type.propertyFlags & p) == p)) {
 
 			memTypeIndex = i;
 			break;
 		}
 	}
 
+	_memorySize = req.size;
 
 	_memory = _ctx->getDevice().allocateMemory(
 		vk::MemoryAllocateInfo(req.size, memTypeIndex)
@@ -41,13 +56,71 @@ void VulkanImage::allocateDeviceMemory()
 	_memoryAllocated = true;
 }
 
-VulkanImage::VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format)
-	:_ctx(ctx),
-	_format(format),
-	_size(size),
-	_image(image)
+
+
+void VulkanImage::transitionLayout(vk::CommandBuffer * cmd, vk::ImageLayout layout)
 {
-	
+	vk::ImageMemoryBarrier imgbarr(
+		vk::AccessFlags(),
+		vk::AccessFlags(),
+		vk::ImageLayout::eUndefined,
+		layout,
+		VK_QUEUE_FAMILY_IGNORED,
+		VK_QUEUE_FAMILY_IGNORED,
+		getImage(),
+		vk::ImageSubresourceRange(
+			vk::ImageAspectFlagBits::eColor,
+			0,
+			1,
+			0,
+			1
+		)
+	);
+
+	cmd->pipelineBarrier(
+		vk::PipelineStageFlagBits::eTopOfPipe,
+		vk::PipelineStageFlagBits::eTopOfPipe,
+		vk::DependencyFlags(0),
+		{},
+		{},
+		{ imgbarr }
+	);
+}
+
+void VulkanImage::upload(uint64_t size, void* data)
+{
+	void * pData = _ctx->getDevice().mapMemory(
+		_memory,
+		0,
+		_memorySize,
+		vk::MemoryMapFlags()
+	);
+
+
+	memcpy(pData, data, size);
+
+	_ctx->getDevice().unmapMemory(
+		_memory
+	);
+
+	//return pData;
+}
+
+void * VulkanImage::getMapped()
+{
+	return  _ctx->getDevice().mapMemory(
+		_memory,
+		0,
+		_memorySize,
+		vk::MemoryMapFlags()
+	);
+}
+
+void VulkanImage::unmap()
+{
+	_ctx->getDevice().unmapMemory(
+		_memory
+	);
 }
 
 void VulkanImage::createImage()
@@ -103,37 +176,38 @@ void VulkanImage::createImageView(vk::ImageAspectFlags aspectFlags) {
 
 void VulkanImage::createSampler()
 {
-	_sampler = _ctx->getDevice().createSampler(
-		vk::SamplerCreateInfo(
-			vk::SamplerCreateFlags(),
-			vk::Filter::eLinear, //Mag Filter
-			vk::Filter::eLinear, //Min Filter
-			vk::SamplerMipmapMode::eLinear,
-			vk::SamplerAddressMode::eRepeat, //U
-			vk::SamplerAddressMode::eRepeat,  //V
-			vk::SamplerAddressMode::eRepeat, //W
-			0.0, //mip lod bias
-			0, //Anisotropy Enable
-			1.0f,
-			0, //Compare Enable
-			vk::CompareOp::eAlways,
-			0.0f, //min lod
-			0.0f, //max lod
-			vk::BorderColor::eFloatOpaqueBlack,
-			0 //Unnormalized Coordinates
-
-		)
-	);
+	_sampler = _ctx->getNearestSampler();
 }
+
+
 
 vk::DescriptorImageInfo VulkanImage::getDII()
 {
+
+	vk::ImageLayout layout;
+
+	if (_usage & vk::ImageUsageFlagBits::eColorAttachment)
+		layout = vk::ImageLayout::eColorAttachmentOptimal;
+	else if (_usage & vk::ImageUsageFlagBits::eDepthStencilAttachment)
+		layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+	else
+		layout = vk::ImageLayout::eGeneral;
 	return vk::DescriptorImageInfo(
 		_sampler,
 		_imageView,
-		vk::ImageLayout::eColorAttachmentOptimal
+		layout
 	);
 }
+
+vk::DescriptorType VulkanImage::getDescriptorType()
+{
+	if (_usage & vk::ImageUsageFlagBits::eSampled) {
+		return vk::DescriptorType::eCombinedImageSampler;
+	}
+	else if (_usage & vk::ImageUsageFlagBits::eStorage) {
+		return vk::DescriptorType::eStorageImage;
+	}
+};
 
 VulkanImage::~VulkanImage()
 {
@@ -142,7 +216,7 @@ VulkanImage::~VulkanImage()
 	if (_imageCreated) _ctx->getDevice().destroyImage(_image);
 	if (_memoryAllocated) _ctx->getDevice().freeMemory(_memory);
 
-	if (_sampler) _ctx->getDevice().destroySampler(_sampler);
+	//if (_sampler) _ctx->getDevice().destroySampler(_sampler);
 
 }
 
@@ -158,4 +232,62 @@ void VulkanImage::resize(ivec2 size)
 	if (_memoryAllocated) allocateDeviceMemory();
 	if (_viewCreated) createImageView();
 
+}
+
+
+void VulkanCubeImage::createImage()
+{
+	_image = _ctx->getDevice().createImage(
+		vk::ImageCreateInfo(vk::ImageCreateFlagBits::eCubeCompatible,
+			vk::ImageType::e2D,
+			_format,
+			vk::Extent3D(_size.x, _size.y, 1),
+			1, //Mip Levels
+			6, //Layers
+			vk::SampleCountFlagBits::e1,
+			vk::ImageTiling::eOptimal,
+			_usage,
+			vk::SharingMode::eExclusive,
+			0,
+			nullptr,
+			vk::ImageLayout::eUndefined
+		)
+	);
+
+	_imageCreated = true;
+}
+
+VulkanCubeImage::VulkanCubeImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format) :
+	VulkanImage(ctx, usage, size, format)
+{
+	//_sampler = _ctx->getLinearSampler();
+}
+
+void VulkanCubeImage::createImageView(vk::ImageAspectFlags aspectFlags)
+{
+	vk::ComponentMapping cmap;
+	cmap.r = vk::ComponentSwizzle::eR;
+	cmap.g = vk::ComponentSwizzle::eG;
+	cmap.b = vk::ComponentSwizzle::eB;
+	cmap.a = vk::ComponentSwizzle::eA;
+
+	vk::ImageSubresourceRange irange;
+	irange.baseMipLevel = 0;
+	irange.levelCount = 1;
+	irange.setBaseArrayLayer(0);
+	irange.layerCount = 6;
+	irange.aspectMask = aspectFlags;
+
+	_imageView = _ctx->getDevice().createImageView(
+		vk::ImageViewCreateInfo(
+			vk::ImageViewCreateFlags(),
+			_image,
+			vk::ImageViewType::eCube,
+			_format,
+			cmap,
+			irange
+		)
+	);
+
+	_viewCreated = true;
 }

@@ -1,6 +1,6 @@
 #include "VulkanVertexLayout.h"
 
-uint32 getSizeOf(vk::Format format) {
+uint32_t getSizeOf(vk::Format format) {
 	switch (format) {
 		case (vk::Format::eR32G32B32A32Sfloat) :
 			return 16;
@@ -10,11 +10,11 @@ uint32 getSizeOf(vk::Format format) {
 			return 8;
 	}
 
-	cout << "VVertexLayout Format unrecognized";
+	std::cout << "VertexLayout Format unrecognized";
 	return 0;
 }
 
-VulkanVertexLayout::VulkanVertexLayout(vector<vk::Format> fields) :
+VulkanVertexLayout::VulkanVertexLayout(temps<vk::Format> fields) :
 	_fields(fields)
 {
 
@@ -26,7 +26,7 @@ VulkanVertexLayout::VulkanVertexLayout(vector<vk::Format> fields) :
 
 }
 
-vk::VertexInputBindingDescription VulkanVertexLayout::getVIBD(uint32 binding)
+vk::VertexInputBindingDescription VulkanVertexLayout::getVIBD(uint32_t binding)
 {
 	return vk::VertexInputBindingDescription(
 		binding,
@@ -35,12 +35,12 @@ vk::VertexInputBindingDescription VulkanVertexLayout::getVIBD(uint32 binding)
 	);
 }
 
-vector<vk::VertexInputAttributeDescription> VulkanVertexLayout::getVIADS(uint32 binding)
+vector<vk::VertexInputAttributeDescription> VulkanVertexLayout::getVIADS(uint32_t binding)
 {
 	vector<vk::VertexInputAttributeDescription> viads;
 
-	uint32 location = 0;
-	uint32 offset = 0;
+	uint32_t location = 0;
+	uint32_t offset = 0;
 	for (auto &field : _fields) {
 		viads.push_back(
 			vk::VertexInputAttributeDescription(

@@ -33,8 +33,8 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 		VK_FALSE, // DEPTH CLAMP
 		VK_FALSE, // DISCARD
 		vk::PolygonMode::eFill,
-		vk::CullModeFlagBits::eNone,
-		vk::FrontFace::eCounterClockwise,
+		config.cullFlags,
+		config.frontFace,
 		VK_FALSE, //DEPTH BIAS
 		0,
 		0,
@@ -72,8 +72,8 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 		vk::PipelineColorBlendStateCreateFlags(),
 		VK_FALSE, //Logic Op
 		vk::LogicOp::eNoOp,
-		cbas.size(),
-		&cbas[0],
+		static_cast<uint32_t>(cbas.size()),
+        cbas.size() > 0 ? &cbas[0] : nullptr,
 		blendConstants
 	);
 
@@ -82,24 +82,29 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 	_pipelineLayout = _ctx->getDevice().createPipelineLayout(
 		vk::PipelineLayoutCreateInfo(
 			vk::PipelineLayoutCreateFlags(),
-			uniLayouts.size(),
+			static_cast<uint32_t>(uniLayouts.size()),
 			uniLayouts.size() > 0 ? &uniLayouts[0] : nullptr,
 			0,
 			nullptr //Push constant Ranges
 		)
 	);
 
-	//_layoutCreated = true;
+	auto tsci = vk::PipelineTessellationStateCreateInfo(
+		vk::PipelineTessellationStateCreateFlags(),
+		config.patchCount
+	);
+
+	uint32_t numShaders = static_cast<uint32_t>(shader->getStages().size());
 
 	_pipeline = _ctx->getDevice().createGraphicsPipeline(
 		nullptr,
 		vk::GraphicsPipelineCreateInfo(
 			vk::PipelineCreateFlags(),
-			2,
+			numShaders,
 			&shader->getStages()[0],
 			&vis,
 			&ias,
-			nullptr, //Tesselation State
+			numShaders > 2 ? &tsci : nullptr, //Tesselation State
 			&vps,
 			&rs,
 			&mss,
@@ -124,24 +129,38 @@ void VulkanPipeline::bind(vk::CommandBuffer * cmd)
 
 }
 
-void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanUniformSetRef> sets)
-{
-	vector<vk::DescriptorSet> dsets;
-	dsets.reserve(sets.size());
 
-	for (auto &set : sets) {
-		dsets.push_back(set->getDescriptorSet());
+void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanSetRef * sets, uint32_t numSets)
+{
+	int skips = 0;
+
+	for (int i = 0; i < numSets; i++) {
+		if (sets[i] != nullptr) 
+			_descriptorSets[i] = sets[i]->getDescriptorSet();
+		else ++skips;
 	}
+
+	numSets -= skips;
 
 	cmd->bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics,
 		_pipelineLayout,
 		0,
-		dsets.size(),
-		dsets.size() > 0 ? &dsets[0] :nullptr,
+		numSets,
+		numSets > 0 ? _descriptorSets : nullptr,
 		0,
 		nullptr
 	);
+}
+
+void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, temps<VulkanSetRef> sets)
+{
+	bindUniformSets(cmd, sets.begin(), sets.size());
+}
+
+void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanSetRef>& sets)
+{
+	bindUniformSets(cmd, &sets[0], sets.size());
 }
 
 VulkanPipeline::~VulkanPipeline() {
@@ -197,4 +216,75 @@ vk::PipelineDepthStencilStateCreateInfo VulkanPipeline::configureDepthTest()
         0, //Min Depth Bounds
         1.0 //Max Depth Bounds
     );
+}
+
+VulkanComputePipeline::VulkanComputePipeline(VulkanContextRef ctx, VulkanShaderRef shader) :
+_shader(shader),
+_ctx(ctx)
+{
+	
+	_pipelineLayout = _ctx->getDevice().createPipelineLayout(
+		vk::PipelineLayoutCreateInfo(
+			vk::PipelineLayoutCreateFlags(),
+			static_cast<uint32_t>(_shader->getDescriptorSetLayouts().size()),
+			&_shader->getDescriptorSetLayouts()[0],
+			0, //push
+			nullptr //push constants
+		)
+	);
+	
+	_pipeline = _ctx->getDevice().createComputePipeline(
+		nullptr, //cache
+		vk::ComputePipelineCreateInfo(
+			vk::PipelineCreateFlags(),
+			_shader->getStages()[0],
+			_pipelineLayout,
+			nullptr,
+			0
+		)
+	);
+
+
+}
+
+void VulkanComputePipeline::bind(vk::CommandBuffer * cmd)
+{
+	cmd->bindPipeline(
+		vk::PipelineBindPoint::eCompute,
+		_pipeline
+	);
+}
+
+void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, temps<VulkanSetRef> sets)
+{
+	bindUniformSets(cmd, sets.begin(), sets.size());
+}
+
+void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanSetRef>& sets)
+{
+	bindUniformSets(cmd, &sets[0], sets.size());
+}
+
+void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanSetRef * sets, uint32_t numSets)
+{
+	
+	for (int i = 0; i < numSets; i++) {
+		_descriptorSets[i] = sets[i]->getDescriptorSet();
+	}
+
+	cmd->bindDescriptorSets(
+		vk::PipelineBindPoint::eCompute,
+		_pipelineLayout,
+		0,
+		numSets,
+		numSets > 0 ? _descriptorSets : nullptr,
+		0,
+		nullptr
+	);
+}
+
+VulkanComputePipeline::~VulkanComputePipeline()
+{
+	_ctx->getDevice().destroyPipelineLayout(_pipelineLayout);
+	_ctx->getDevice().destroyPipeline(_pipeline);
 }

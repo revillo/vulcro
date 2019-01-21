@@ -7,7 +7,7 @@
 #include "VulkanShader.h"
 #include "VulkanBuffer.h"
 #include "VulkanTask.h"
-#include "VulkanUniformSet.h"
+#include "VulkanSet.h"
 
 class VulkanRenderer
 {
@@ -17,6 +17,7 @@ public:
 	void createDepthBuffer();
 	void targetSwapcahin(VulkanSwapchainRef swapchain, bool useDepth = true);
 	void targetImages(vector<VulkanImageRef> images, bool useDepth = true);
+	void targetDepth(glm::ivec2 size);
 
 	void setClearColors(vector<std::array<float, 4>> colors) {
 		_clearColors = colors;
@@ -40,19 +41,19 @@ public:
 		return vk::Viewport(
 			0,
 			0,
-			_fullRect.extent.width,
-			_fullRect.extent.height,
+			(float)_fullRect.extent.width,
+			(float)_fullRect.extent.height,
 			0.0,
 			1.0
 		);
 	}
 
-    uint32 getNumTargets() {
+    uint32_t getNumTargets() {
         if (_swapchain != nullptr) {
             return 1;
         }
         else {
-            return _images.size();
+            return static_cast<uint32_t>(_images.size());
         }
     }
 
@@ -63,6 +64,11 @@ public:
 	vk::RenderPass getRenderPass() {
 		return _renderPass;
 	}
+
+	VulkanImageRef getDepthBuffer() {
+		return _depthImage;
+	}
+	
 	~VulkanRenderer();
 
 private:

@@ -5,6 +5,7 @@
 
 #define SCENE_TASK_POOL 0
 #define FINAL_TASK_POOL 1
+#define UPSAMPLE_FACTOR 2
 
 float rand1() {
 	return (float)rand() / RAND_MAX;
@@ -46,17 +47,17 @@ int main()
 
 		VulkanImageRef colorTarget, emissiveTarget;
 
-		auto sceneSize = windowSize;
+		auto sceneSize = windowSize * UPSAMPLE_FACTOR;
 
 		colorTarget = vctx->makeImage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, sceneSize, vk::Format::eR8G8B8A8Unorm);
 		colorTarget->allocateDeviceMemory();
 		colorTarget->createImageView();
-		colorTarget->createSampler();
+		colorTarget->setSampler(vctx->getLinearSampler());
 
 		emissiveTarget = vctx->makeImage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, sceneSize, vk::Format::eR8G8B8A8Unorm);
 		emissiveTarget->allocateDeviceMemory();
 		emissiveTarget->createImageView();
-		emissiveTarget->createSampler();
+		emissiveTarget->setSampler(vctx->getLinearSampler());
 
 		sceneRenderer->targetImages({
 			colorTarget,
@@ -76,7 +77,7 @@ int main()
 		{
 			auto &usb = sceneUBO->at(0);
 
-			usb.perspective = vulcro::glProjFixYZ * perspective(
+			usb.perspective = VULCRO_glProjFixYZ * perspective(
 				radians(60.0f), 
 				(float)windowSize.x / (float)windowSize.y, 
 				1.0f, 100.0f);
@@ -87,11 +88,12 @@ int main()
 			sceneUBO->sync();
 		}
 		
-		auto startMS = chrono::system_clock::now();
+
+		auto startMS = std::chrono::system_clock::now();
 
 		auto rotateCam = [&sceneUBO, &startMS, &sceneSize]() {
 
-			chrono::duration<double> nowS = chrono::system_clock::now() - startMS;
+			std::chrono::duration<double> nowS = std::chrono::system_clock::now() - startMS;
 			double now = nowS.count();
 
 			float rate = now * 0.05 + 1.0;
@@ -104,7 +106,7 @@ int main()
 			sceneUBO->at(0).view = lookAt(pos, vec3(0.0, 12.0, 0.0), vec3(0.0, 1.0, 0.0));
 			sceneUBO->at(0).time.x = now;
 			sceneUBO->sync();
-			sceneUBO->at(0).perspective = vulcro::glProjFixYZ * perspective(
+			sceneUBO->at(0).perspective = VULCRO_glProjFixYZ * perspective(
 				radians(60.0f),
 				(float)sceneSize.x / (float)sceneSize.y,
 				1.0f, 100.0f);
@@ -115,11 +117,11 @@ int main()
 
 		//uboScene->at(0).perspective = fixer * glm::perspectiveFovRH(PI / 3.0f, );
 		
-		auto uSceneLayout = vctx->makeUniformSetLayout({
+		auto uSceneLayout = vctx->makeSetLayout({
 			sceneUBO->getLayout()
 			});
 
-		auto uSceneSet = vctx->makeUniformSet(uSceneLayout);
+		auto uSceneSet = vctx->makeSet(uSceneLayout);
 
 		uSceneSet->bindBuffer(0, sceneUBO->getDBI());
 		uSceneSet->update();
@@ -128,7 +130,7 @@ int main()
 		int grassLevels = 14;
 
 
-		auto grassVBO = vctx->makeVBO<Vertex>({
+		auto grassVBO = vctx->makeDynamicVBO<Vertex>({
 			vk::Format::eR32G32B32A32Sfloat,
 			}, grassLevels * 2);
 
@@ -161,7 +163,7 @@ int main()
 		auto grassPipeline = vctx->makePipeline(
 			grassShader,
 			sceneRenderer,
-			{ vk::PrimitiveTopology::eTriangleStrip }
+			{ vk::PrimitiveTopology::eTriangleStrip, 3, vk::CullModeFlagBits::eNone }
 		);
 
 
@@ -183,12 +185,12 @@ int main()
 			0, 1, 2, 1, 3, 2
 			});
 
-		auto blitUniformLayout = vctx->makeUniformSetLayout({
+		auto blitUniformLayout = vctx->makeSetLayout({
 			ULB(1, vk::DescriptorType::eCombinedImageSampler, &colorTarget->getSampler()),
 			ULB(1, vk::DescriptorType::eCombinedImageSampler, &emissiveTarget->getSampler())
 			});
 
-		auto blitUniformSet = vctx->makeUniformSet(blitUniformLayout);
+		auto blitUniformSet = vctx->makeSet(blitUniformLayout);
 
 		blitUniformSet->bindImage(0, colorTarget);
 		blitUniformSet->bindImage(1, emissiveTarget);
@@ -212,14 +214,14 @@ int main()
 		auto sceneTask = vctx->makeTask(SCENE_TASK_POOL);
 		auto finalTask = vctx->makeTask(FINAL_TASK_POOL);
 
-		auto recordTasks = [=]() {
-			sceneTask->record([=](vk::CommandBuffer * cmd) {
+		auto recordTasks = [&]() {
+			sceneTask->record([&](vk::CommandBuffer * cmd) {
 
 				cmd->setViewport(0, 1, &sceneRenderer->getFullViewport());
 
 				cmd->setScissor(0, 1, &sceneRenderer->getFullRect());
 
-				sceneRenderer->record(cmd, [=]() {
+				sceneRenderer->record(cmd, [&]() {
 
 					grassPipeline->bind(cmd);
 
@@ -240,7 +242,7 @@ int main()
 		vk::Semaphore sceneSemaphore = vctx->getDevice().createSemaphore(vk::SemaphoreCreateInfo());
 
 
-		auto resize2 = [=, &sceneSize, &windowSize]() {
+		auto resize = [&]() {
 			if (!swapchain->resize()) {
 				SDL_Delay(100);
 				return;
@@ -249,7 +251,7 @@ int main()
 			auto rect = swapchain->getRect();
 			windowSize.x = rect.extent.width;
 			windowSize.y = rect.extent.height;
-			sceneSize = windowSize;
+			sceneSize = windowSize * UPSAMPLE_FACTOR;
 
 			colorTarget->resize(sceneSize);
 			emissiveTarget->resize(sceneSize);
@@ -266,27 +268,27 @@ int main()
 		};
 
 		//Main Loop
-		window.run([=]() {
+		window.run([&]() {
 
 			//Wait for next available frame
 			if (!swapchain->nextFrame()) {
-				resize2();
+				resize();
 				return;
 			}
 
 			rotateCam();
 
-			auto tStart = chrono::system_clock::now();
+			auto tStart = std::chrono::system_clock::now();
 
 			sceneTask->execute(false, {}, { sceneSemaphore });
 
 			//Record to command buffer
-			finalTask->record([=](vk::CommandBuffer * cmd) {
+			finalTask->record([&](vk::CommandBuffer * cmd) {
 
 				cmd->setViewport(0, 1, &finalRenderer->getFullViewport());
 				cmd->setScissor(0, 1, &finalRenderer->getFullRect());
 
-				finalRenderer->record(cmd, [=]() {
+				finalRenderer->record(cmd, [&]() {
 
 					blitPipeline->bind(cmd);
 
@@ -311,13 +313,13 @@ int main()
 
 			//Present current frame to screen
 			if (!swapchain->present()) {
-				resize2();
+				resize();
 				return;
 			}
 
-			auto tStop = chrono::system_clock::now();
-			chrono::duration<double> dt = tStop - tStart;
-			cout << "FPS: " << 1.0 / dt.count() << endl;
+			auto tStop = std::chrono::system_clock::now();
+			std::chrono::duration<double> dt = tStop - tStart;
+			std::cout << "FPS: " << 1.0 / dt.count() << std::endl;
 
 
 			SDL_Delay(10);

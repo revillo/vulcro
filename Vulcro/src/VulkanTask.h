@@ -7,8 +7,8 @@
 class VulkanTask
 {
 public:
-	VulkanTask(VulkanContextRef ctx, vk::CommandPool pool);
-	VulkanTask(VulkanContextRef ctx, vk::CommandBuffer &cb);
+	VulkanTask(VulkanContextRef ctx, vk::CommandPool pool, bool autoReset = false);
+	VulkanTask(VulkanContextRef ctx, vk::CommandBuffer &cb, bool autoReset = false);
 
 	~VulkanTask();
 
@@ -18,13 +18,15 @@ public:
 	void begin();
 	void end();
 	
-	void execute(bool blockUntilFinished = false, vector<vk::Semaphore> inSems = {}, vector<vk::Semaphore> outSems = {});
+	void execute(bool blockUntilFinished = false, temps<vk::Semaphore> inSems = {}, temps<vk::Semaphore> outSems = {});
 
 	vk::CommandBuffer &cmdb() {
 		return _commandBuffer;
 	}
 
-private:
+protected:
+
+	bool _autoReset;
 
 	void waitUntilDone();
 

@@ -8,16 +8,23 @@
 class VulkanImage
 {
 public:
+
+	static vk::ImageUsageFlags SAMPLED_STORAGE;
+	static vk::ImageUsageFlags SAMPLED_COLOR_ATTACHMENT;
+
 	VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
+	
 	VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format);
 
-	void createImage();
-	void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor);
-	void createSampler();
+	virtual void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor);
+	virtual void createSampler();
+	void setSampler(vk::Sampler sampler) { _sampler = sampler; }
+
 
 	vk::DescriptorImageInfo getDII();
+	vk::DescriptorType getDescriptorType();
 
-	void allocateDeviceMemory();
+	void allocateDeviceMemory(vk::MemoryPropertyFlags memFlags = vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 	vk::Format getFormat() {
 		return _format;
@@ -31,6 +38,10 @@ public:
 
 	vk::Sampler getSampler() {
 		return _sampler;
+	}
+
+	vk::Image getImage() {
+		return _image;
 	}
 	
 	void resize(ivec2 size);
@@ -50,7 +61,22 @@ public:
 		return _imageView;
 	}
 
-private:
+
+	void transitionLayout(vk::CommandBuffer * cmd, vk::ImageLayout layout = vk::ImageLayout::eGeneral);
+
+	void upload(uint64_t size, void* data);
+
+	void * getMapped();
+
+	void unmap();
+
+
+	virtual void createImage();
+
+protected:
+
+	VulkanImage() {};
+
 
 	VulkanContextRef _ctx;
 
@@ -68,4 +94,19 @@ private:
 
 	vk::Image _image;
 	glm::ivec2 _size;
+	uint64_t _memorySize;
+};
+
+class VulkanCubeImage : public VulkanImage {
+
+public:
+
+	VulkanCubeImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
+
+	
+	void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor) override;
+	
+	void createImage() override;
+
+
 };

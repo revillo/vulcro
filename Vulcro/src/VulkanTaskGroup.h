@@ -5,11 +5,11 @@
 class VulkanTaskGroup {
 
 public:
-	VulkanTaskGroup(VulkanContextRef ctx, uint32 numTasks, vk::CommandPool pool);
+	VulkanTaskGroup(VulkanContextRef ctx, uint32_t numTasks, vk::CommandPool pool);
 
-	void record(function<void(vk::CommandBuffer *, uint32 taskNumber)> commands);
+	void record(function<void(vk::CommandBuffer *, uint32_t taskNumber)> commands);
 
-	VulkanTaskRef at(uint32 taskNumber) {
+	VulkanTaskRef at(uint32_t taskNumber) {
 		return _tasks[taskNumber];
 	}
 

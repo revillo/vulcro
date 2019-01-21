@@ -1,6 +1,6 @@
 #include "VulkanTaskGroup.h"
 
-VulkanTaskGroup::VulkanTaskGroup(VulkanContextRef ctx, uint32 numTasks, vk::CommandPool pool) :
+VulkanTaskGroup::VulkanTaskGroup(VulkanContextRef ctx, uint32_t numTasks, vk::CommandPool pool) :
 	_ctx(ctx),
 	_pool(pool)
 {
@@ -14,9 +14,9 @@ VulkanTaskGroup::VulkanTaskGroup(VulkanContextRef ctx, uint32 numTasks, vk::Comm
 	
 }
 
-void VulkanTaskGroup::record(function<void(vk::CommandBuffer*, uint32 taskNumber)> commands)
+void VulkanTaskGroup::record(function<void(vk::CommandBuffer*, uint32_t taskNumber)> commands)
 {
-	for (uint32 i = 0; i < _tasks.size(); i++) {
+	for (uint32_t i = 0; i < _tasks.size(); i++) {
 		_tasks[i]->begin();
 		commands(&_tasks[i]->cmdb(), i);
 		_tasks[i]->end();
@@ -29,7 +29,7 @@ VulkanTaskGroup::~VulkanTaskGroup()
 
 	_ctx->getDevice().freeCommandBuffers(
 		_pool,
-		_commandBuffers.size(),
+		static_cast<uint32_t>(_commandBuffers.size()),
 		&_commandBuffers[0]
 	);
 }

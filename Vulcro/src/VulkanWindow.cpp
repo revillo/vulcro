@@ -6,13 +6,37 @@ VulkanWindow::VulkanWindow()
 	initWindow(SDL_WINDOW_VULKAN);
 }
 
-VulkanWindow::VulkanWindow(int x, int y, int width, int height, uint32 flags)
+VulkanWindow::VulkanWindow(int x, int y, int width, int height, uint32_t flags)
 	:_x(x), _y(y), _width(width), _height(height)
 {
 	initWindow(flags);
 }
 
-int VulkanWindow::initWindow(uint32 flags) {
+void VulkanWindow::handleEvent(SDL_Event &event)
+{
+	switch (event.type) {
+
+        case SDL_MOUSEBUTTONDOWN:
+            _input.mouseButtonDown[event.button.button] = true;
+            break;
+        case SDL_MOUSEBUTTONUP:
+            _input.mouseButtonDown[event.button.button] = false;
+            break;
+        case SDL_KEYDOWN:
+            if (_keyHandler) {
+                _keyHandler(event.key.keysym.scancode);
+            }
+            break;
+
+        default:
+            // Do nothing.
+            break;
+	}
+
+	_eventHandler(event);
+}
+
+int VulkanWindow::initWindow(uint32_t flags) {
 	// Create an SDL window that supports Vulkan rendering.
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		std::cout << "Could not initialize SDL." << std::endl;
@@ -50,9 +74,27 @@ int VulkanWindow::initWindow(uint32 flags) {
 		.setApplicationVersion(1)
 		.setPEngineName("LunarG SDK")
 		.setEngineVersion(1)
-		.setApiVersion(VK_API_VERSION_1_0);
+		.setApiVersion(VK_API_VERSION_1_1);
 	// vk::InstanceCreateInfo is where the programmer specifies the layers and/or extensions that
 	// are needed.
+	
+	auto es = vk::enumerateInstanceExtensionProperties();
+	std::unordered_map<std::string, bool> extensionLookup;
+
+	//std::cout << "Instance props:" << std::endl;
+	for (auto & e : es) {
+		//std::cout << e.extensionName << std::endl;
+		extensionLookup[e.extensionName] = true;
+	}
+
+	auto addExtensionSafe = [&](const char * extensionName) {
+		if (extensionLookup[extensionName]) {
+			extensions.push_back(extensionName);
+		}
+	};
+
+	addExtensionSafe("VK_KHR_get_physical_device_properties2");
+		
 	vk::InstanceCreateInfo instInfo = vk::InstanceCreateInfo()
 		.setFlags(vk::InstanceCreateFlags())
 		.setPApplicationInfo(&appInfo)
@@ -91,35 +133,52 @@ int VulkanWindow::initWindow(uint32 flags) {
 void VulkanWindow::run(std::function<void()> update) {
 	// Poll for user input.
 	bool stillRunning = true;
-	bool minimized = false;
+	SDL_GetMouseState(&_input.mousePos.x, &_input.mousePos.y);
+
 
 	while (stillRunning) {
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
 
-			switch (event.type) {
+            if (event.type == SDL_QUIT) {
+                stillRunning = false;
+                return;
+            }	
 
-			case SDL_QUIT:
-				stillRunning = false;
-				break;
-
-	
-			default:
-				// Do nothing.
-				break;
-			}
+			handleEvent(event);
 
 		}
+		
+		_keyStates = SDL_GetKeyboardState(NULL);
 
-		if (!minimized)
-			update();
+		if (!_relativeMouseMode) {
+			_input.mouseMove = _input.mousePos;
+			SDL_GetMouseState(&_input.mousePos.x, &_input.mousePos.y);
+			_input.mouseMove = _input.mousePos - _input.mouseMove;
+		}
+		else {
+			SDL_GetRelativeMouseState(&_input.mouseMove.x, &_input.mouseMove.y);
+		}
 
-		const Uint8 *state = SDL_GetKeyboardState(NULL);
-		if (state[SDL_SCANCODE_ESCAPE]) {
+		update();
+
+		if (_keyStates[SDL_SCANCODE_ESCAPE]) {
 			stillRunning = false;
 		}
 	}
+}
+
+void VulkanWindow::lockPointer(bool toggle)
+{
+	SDL_SetRelativeMouseMode((SDL_bool)toggle);
+
+
+	if (_relativeMouseMode != toggle) {
+		SDL_GetRelativeMouseState(&_input.mouseMove.x, &_input.mouseMove.y);
+		_input.mouseMove = ivec2(0, 0);
+	}
+	_relativeMouseMode = toggle;
 }
 
 VulkanWindow::~VulkanWindow()
