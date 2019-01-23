@@ -1,20 +1,21 @@
 #version 460
 #extension GL_NV_ray_tracing : require
 #extension GL_GOOGLE_include_directive : require
+#include "common.h"
 
 layout (set = 0, binding = 0) uniform accelerationStructureNV RayScene;
-layout (set = 1, binding = 0, rgba8) uniform image2D RayImage;
+layout (set = 0, binding = 1, rgba8) uniform image2D RayImage;
 
-#include "common.h"
 layout(location = RAY_LOCATION) rayPayloadNV RayPayload PrimaryRay;
 
 void main() {
 
-    PrimaryRay.color = vec4(1.0, 0.0, 0.0, 1.0);
+    PrimaryRay.color = vec3(0.0, 0.0, 0.0);
+    PrimaryRay.hitDistance = 0.0;
   
     vec3 origin = vec3(0.0, 0.0, -3.0);
     
-    vec2 uv = gl_LaunchIDNV.xy / vec2(511.0, 511.0);
+    vec2 uv = gl_LaunchIDNV.xy / vec2(gl_LaunchSizeNV.xy - 1);
     
     vec3 direction = normalize(vec3(uv - vec2(0.5), 1.0));
     
@@ -23,7 +24,6 @@ void main() {
     
     float tmin = 0.0;
     float tmax = 10.0;
-      
       
     traceNV(
        RayScene,
@@ -38,8 +38,16 @@ void main() {
        tmax,
         RAY_LOCATION);
     
+    vec4 checker = vec4(0.6, 0.6, 0.6, 1.0);
+    if (mod(uv.x, 0.1) < 0.05 ^^ mod(uv.y, 0.1) < 0.05) {
+      checker = vec4(0.3, 0.3, 0.3, 1.0);
+    }  
     
-    imageStore(RayImage, ivec2(gl_LaunchIDNV.xy), PrimaryRay.color);
+    if (PrimaryRay.hitDistance < 0.0) {
+      imageStore(RayImage, ivec2(gl_LaunchIDNV.xy), checker);
+    } else {
+      imageStore(RayImage, ivec2(gl_LaunchIDNV.xy), vec4(PrimaryRay.color, 1.0));
+    }
     //imageStore(RayImage, ivec2(gl_LaunchIDNV.xy), vec4(uv, 1.0, 1.0));
 
 }

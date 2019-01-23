@@ -29,6 +29,10 @@ public:
 		return _accelStruct;
 	}
 
+	void setNumInstances(uint32_t numInstances) {
+		_info.instanceCount = numInstances;
+	}
+
 	vk::AccelerationStructureInfoNV getInfo() {
 		return _info;
 	}

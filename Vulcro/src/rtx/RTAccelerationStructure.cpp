@@ -10,7 +10,7 @@ RTAccelerationStructure::RTAccelerationStructure(VulkanContextRef ctx, uint32_t 
 	_info = vk::AccelerationStructureInfoNV(
 		vk::AccelerationStructureTypeNV::eTopLevel,
 		flags, //flags
-		numInstances,  //InstanceCount
+		numInstances,  //InstanceCount -- does this even matter? Just overwritten later...
 		0,  //GeometryCount
 		nullptr //Geometry
 	);
@@ -122,13 +122,13 @@ RTGeometry::RTGeometry(iboRef ibuf, vboRef vbuf)
 	vk::GeometryTrianglesNV triangles;
 	triangles.setIndexCount(ibuf->getCount());
 	triangles.setIndexData(ibuf->getBuffer());
-	triangles.setIndexOffset(0); //todo
+	triangles.setIndexOffset(ibuf->getOffset()); //todo
 	triangles.setIndexType(vk::IndexType::eUint32);
 	
 	triangles.setVertexCount(vbuf->getCount());
 	triangles.setVertexData(vbuf->getBuffer());
 	triangles.setVertexFormat(vbuf->getLayout()->getFields()[0]);
-	triangles.setVertexOffset(0); //todo
+	triangles.setVertexOffset(vbuf->getOffset());
 	triangles.setVertexStride(vbuf->getLayout()->getSize());
 	
 	triangles.setTransformData(nullptr);
@@ -219,17 +219,20 @@ void RTScene::build(vk::CommandBuffer * cmd)
 
 	}
 
+	int id = 0;
 	for (auto &bs : _bottomStructs) {
 		VkGeometryInstance instanceData;
-		instanceData.instanceId = 0;
+		instanceData.instanceId = id++;
 		instanceData.instanceOffset = 0;
 		instanceData.mask = 0xff;
 		instanceData.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE_BIT_NV;
 		instanceData.accelerationStructureHandle = bs->getHandle();
 		_instanceData.push_back(instanceData);
 	}
-	_instanceBuffer = _ctx->makeBuffer(vk::BufferUsageFlagBits::eRayTracingNV, sizeof(VkGeometryInstance), VulkanBuffer::CPU_ALOT, _instanceData.data());
+	_instanceBuffer = _ctx->makeBuffer(vk::BufferUsageFlagBits::eRayTracingNV, sizeof(VkGeometryInstance) * _instanceData.size(), VulkanBuffer::CPU_ALOT, _instanceData.data());
 	
+	_topStruct->setNumInstances(_instanceData.size());
+
 	cmd->buildAccelerationStructureNV(
 		_topStruct->getInfo(),
 		_instanceBuffer->getBuffer(),
@@ -241,8 +244,6 @@ void RTScene::build(vk::CommandBuffer * cmd)
 		vk::DeviceSize(scratchSize),
 		_ctx->getDynamicDispatch()
 	);
-
-
 	
 	vkCmdPipelineBarrier(*cmd, VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_NV, VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_NV, 0, 1, &memoryBarrier, 0, 0, 0, 0);
 }

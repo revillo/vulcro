@@ -212,6 +212,11 @@ public:
 	}
 
 	template <class T>
+	shared_ptr<static_vbo<T>> makeVBO(shared_ptr<static_vbo<T>> sourceBuffer, uint32_t vertOffset, uint32_t numVerts) {
+		return make_shared<static_vbo<T>>(sourceBuffer, vertOffset, numVerts);
+	}
+
+	template <class T>
 	shared_ptr<dynamic_vbo<T>> makeDynamicVBO(temps<vk::Format> fieldFormats, uint32_t arrayCount, T * data = nullptr) {
 		return make_shared<dynamic_vbo<T>>(this, std::move(fieldFormats), arrayCount, data);
 	}
@@ -222,6 +227,8 @@ public:
 	}
 
 	shared_ptr<ibo> makeIBO(vk::ArrayProxy<const uint32_t> indices);
+
+	shared_ptr<ibo> makeIBO(shared_ptr<ibo> sourceIbo, uint32_t indexOffset, uint32_t numIndices);
 	
 	vk::Sampler getLinearSampler();
 	vk::Sampler getNearestSampler();

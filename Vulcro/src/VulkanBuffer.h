@@ -28,7 +28,7 @@ public:
 
 	~VulkanBuffer();
 	
-	void bindVertex(vk::CommandBuffer * cmd);
+	void bindVertex(vk::CommandBuffer * cmd, vk::DeviceSize offset = 0);
 	
 	void bindIndex(vk::CommandBuffer * cmd, vk::IndexType type = vk::IndexType::eUint32);
 
@@ -37,21 +37,9 @@ public:
 	/*
 	* Set size to -1 for full buffer
 	*/
-	vk::DescriptorBufferInfo getDBI(uint32_t offset = 0, int64_t size = -1);
+	vk::DescriptorBufferInfo getDBI(vk::DeviceSize offset = 0, vk::DeviceSize size = 0);
 
-	vk::DescriptorType getDescriptorType() {
-		if (_usage & vk::BufferUsageFlagBits::eUniformBuffer) {
-			return vk::DescriptorType::eUniformBuffer;
-		}
-		else if (_usage & vk::BufferUsageFlagBits::eStorageBuffer) {
-			return vk::DescriptorType::eStorageBuffer;
-		}
-		else if (_usage & vk::BufferUsageFlagBits::eStorageTexelBuffer) {
-			return vk::DescriptorType::eStorageTexelBuffer;
-		} else { 
-			throw "Unsupported buffer as descriptor";
-		}
-	};
+	vk::DescriptorType getDescriptorType();
 
 
 	VulkanUniformLayoutBinding getBinding() {
@@ -70,15 +58,7 @@ public:
 
 	void unmap();
 
-	void createView(vk::Format format) {
-		
-		_view = _ctx->getDevice().createBufferView(vk::BufferViewCreateInfo(
-			vk::BufferViewCreateFlags(),
-			_buffer,
-			format,
-			0,
-			VK_WHOLE_SIZE));
-	}
+	void createView(vk::Format format);
 
 	vk::BufferView getView() {
 		return _view;
@@ -87,7 +67,7 @@ public:
 
 private:
 
-	uint64_t _size;
+	vk::DeviceSize _size;
 
 	VulkanContextRef _ctx;
 	vk::BufferUsageFlags _usage;
@@ -99,11 +79,33 @@ private:
 };
 
 
+class VulkanBufferWindow {
+
+	VulkanBufferWindow(VulkanBufferRef buffer, vk::DeviceSize offset, vk::DeviceSize size);
+
+	VulkanBufferRef getBuffer() {
+		return _buffer;
+	}
+
+	const vk::DeviceSize getOffset() {
+		return _offset;
+	}
+	
+	const vk::DeviceSize getSize() {
+		return _size;
+	}
+
+
+protected:
+
+	VulkanBufferRef _buffer;
+	vk::DeviceSize _offset, _size;
+};
+
 class iubo {
 public:
 	virtual vk::DescriptorBufferInfo getDBI() = 0;
 	virtual ~iubo() {};
-
 };
 
 
@@ -187,6 +189,8 @@ public:
 	virtual VulkanVertexLayoutRef getLayout() = 0;
 	virtual uint32_t getCount() = 0;
 	virtual vk::Buffer getBuffer() = 0;
+	virtual vk::DeviceSize getOffset() = 0;
+	virtual VulkanBufferRef getSharedBuffer() = 0;
 };
 
 typedef shared_ptr<ivbo> vboRef;
@@ -196,33 +200,50 @@ class static_vbo : public ivbo {
 	
 public: 
 
-	static_vbo(VulkanContext * ctx, temps<vk::Format> fieldFormats, uint32_t arrayCount, void * data) {
-		_arrayCount = arrayCount;
+	static_vbo(VulkanContext * ctx, temps<vk::Format> fieldFormats, uint32_t numVerts, void * data) {
+		_typeCount = numVerts;
 		_layout = ctx->makeVertexLayout(move(fieldFormats));
-		_size = sizeof(T) * arrayCount;
-		_vbr = ctx->makeFastBuffer(vk::BufferUsageFlagBits::eVertexBuffer, _size, data);
+		_size = sizeof(T) * numVerts;
+		_vbr = ctx->makeFastBuffer(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eStorageBuffer, _size, data);
+		_offset = 0;
+	}
+
+	static_vbo(vboRef vBuf, uint32_t vertOffset, uint32_t numVerts) {
+		_offset = vertOffset * sizeof(T) + vBuf->getOffset();
+		_size = numVerts * sizeof(T);
+		_typeCount = numVerts;
+		_vbr = vBuf->getSharedBuffer();
+		_layout = vBuf->getLayout();
 	}
 
 	void bind(vk::CommandBuffer * cmd) override {
-		_vbr->bindVertex(cmd);
+		_vbr->bindVertex(cmd, _offset);
 	}
 
 	VulkanVertexLayoutRef getLayout() override {
 		return _layout;
 	}
 
-	uint32 getCount() {
-		return _arrayCount;
+	uint32 getCount() override {
+		return _typeCount;
+	}
+
+	vk::DeviceSize getOffset() override {
+		return _offset;
 	}
 
 	vk::Buffer getBuffer() override {
 		return _vbr->getBuffer();
 	}
 
+	VulkanBufferRef getSharedBuffer() override {
+		return _vbr;
+	}
+
 	VulkanBufferRef _vbr;
 	VulkanVertexLayoutRef _layout;
-	uint64 _size;
-	uint32 _arrayCount;
+	vk::DeviceSize _size, _offset;
+	uint32_t _typeCount;
 
 };
 
@@ -278,12 +299,20 @@ public:
 		return _layout;
 	}
 
-	uint32_t getCount() {
+	uint32_t getCount() override {
 		return _arrayCount;
 	}
 
 	vk::Buffer getBuffer() override {
 		return _vbr->getBuffer();
+	}
+
+	vk::DeviceSize getOffset() {
+		return 0;
+	}
+
+	VulkanBufferRef getSharedBuffer() {
+		return _vbr;
 	}
 
 	~dynamic_vbo() {
@@ -312,7 +341,14 @@ public:
 		);
 
         _count = static_cast<uint32>(indices.size());
+		_offset = 0;
         
+	}
+
+	ibo(shared_ptr<ibo> iBuf, uint32_t indexOffset, uint32_t numIndices) {
+		_count = numIndices;
+		_vbr = iBuf->getSharedBuffer();
+		_offset = indexOffset * sizeof(VulkanBuffer::IndexType) + iBuf->getOffset();
 	}
 
 	VULCRO_DONT_COPY(ibo)
@@ -325,8 +361,16 @@ public:
         return _count;
     }
 
+	vk::DeviceSize getOffset() {
+		return _offset;
+	}
+
 	vk::Buffer getBuffer() {
 		return _vbr->getBuffer();
+	}
+
+	VulkanBufferRef getSharedBuffer() {
+		return _vbr;
 	}
 
 	vk::IndexType getType() {
@@ -337,6 +381,7 @@ private:
 
     uint32_t _count = 0;
 	VulkanBufferRef _vbr;
+	vk::DeviceSize _offset;
 
 };
 

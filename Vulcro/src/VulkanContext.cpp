@@ -246,6 +246,11 @@ shared_ptr<ibo> VulkanContext::makeIBO(vk::ArrayProxy<const VulkanBuffer::IndexT
 
 }
 
+shared_ptr<ibo> VulkanContext::makeIBO(shared_ptr<ibo> sourceIbo, uint32_t indexOffset, uint32_t numIndices)
+{
+	return make_shared<ibo>(sourceIbo, indexOffset, numIndices);
+}
+
 VulkanBufferRef VulkanContext::makeBuffer(vk::BufferUsageFlags usage, uint64_t size, vk::MemoryPropertyFlags flags, void * data)
 {
 	return make_shared<VulkanBuffer>(this, usage, size, flags, data);
