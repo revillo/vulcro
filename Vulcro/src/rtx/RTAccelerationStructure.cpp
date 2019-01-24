@@ -169,32 +169,11 @@ void RTScene::addGeometry(RTGeometry geom) {
 
 void RTScene::build(vk::CommandBuffer * cmd)
 {
-	uint64_t scratchSize = 0;
 
-	auto memReqs = _ctx->getDevice().getAccelerationStructureMemoryRequirementsNV(
-		vk::AccelerationStructureMemoryRequirementsInfoNV(
-			vk::AccelerationStructureMemoryRequirementsTypeNV::eBuildScratch,
-			_topStruct->getAccelerationStruct()
-		), _ctx->getDynamicDispatch()
-	);
-
-    scratchSize = memReqs.memoryRequirements.size;
-
-	for (auto &bs : _bottomStructs) {
-		
-		auto memReqs = _ctx->getDevice().getAccelerationStructureMemoryRequirementsNV(
-			vk::AccelerationStructureMemoryRequirementsInfoNV(
-				vk::AccelerationStructureMemoryRequirementsTypeNV::eBuildScratch,
-				bs->getAccelerationStruct()
-			), _ctx->getDynamicDispatch()
-		);
-
-
-		scratchSize = glm::max<uint64_t>(scratchSize, memReqs.memoryRequirements.size);
+	if (!_built) {
+		makeScratchBuffer();
 	}
 
-
-	_scratchBuffer = _ctx->makeBuffer(vk::BufferUsageFlagBits::eRayTracingNV, scratchSize * 2, VulkanBuffer::CPU_NEVER);
 	VkMemoryBarrier memoryBarrier;
 	memoryBarrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
 	memoryBarrier.pNext = nullptr;
@@ -208,9 +187,9 @@ void RTScene::build(vk::CommandBuffer * cmd)
 			bs->getInfo(),
 			nullptr,
 			vk::DeviceSize(0),
-			VK_FALSE,
+			_built,
 			bs->getAccelerationStruct(),
-			nullptr,
+			_built ? bs->getAccelerationStruct() : nullptr,
 			_scratchBuffer->getBuffer(), 
 			vk::DeviceSize(0),
 			_ctx->getDynamicDispatch()
@@ -237,11 +216,11 @@ void RTScene::build(vk::CommandBuffer * cmd)
 		_topStruct->getInfo(),
 		_instanceBuffer->getBuffer(),
 		vk::DeviceSize(0),
-		VK_FALSE,
+		_built,
 		_topStruct->getAccelerationStruct(),
-		nullptr,
+		_built ? _topStruct->getAccelerationStruct() : nullptr,
 		_scratchBuffer->getBuffer(),
-		vk::DeviceSize(scratchSize),
+		vk::DeviceSize(0),
 		_ctx->getDynamicDispatch()
 	);
 	
@@ -256,4 +235,35 @@ vk::WriteDescriptorSetAccelerationStructureNV RTScene::getWriteDescriptor()
 	return vk::WriteDescriptorSetAccelerationStructureNV(
 		1, &_topStruct->getAccelerationStruct()
 	);
+}
+
+void RTScene::makeScratchBuffer()
+{
+	uint64_t scratchSize = 0;
+
+	auto memReqs = _ctx->getDevice().getAccelerationStructureMemoryRequirementsNV(
+		vk::AccelerationStructureMemoryRequirementsInfoNV(
+			vk::AccelerationStructureMemoryRequirementsTypeNV::eBuildScratch,
+			_topStruct->getAccelerationStruct()
+		), _ctx->getDynamicDispatch()
+	);
+
+	scratchSize = memReqs.memoryRequirements.size;
+
+	for (auto &bs : _bottomStructs) {
+
+		auto memReqs = _ctx->getDevice().getAccelerationStructureMemoryRequirementsNV(
+			vk::AccelerationStructureMemoryRequirementsInfoNV(
+				vk::AccelerationStructureMemoryRequirementsTypeNV::eBuildScratch,
+				bs->getAccelerationStruct()
+			), _ctx->getDynamicDispatch()
+		);
+
+
+		scratchSize = glm::max<uint64_t>(scratchSize, memReqs.memoryRequirements.size);
+	}
+
+
+	_scratchBuffer = _ctx->makeBuffer(vk::BufferUsageFlagBits::eRayTracingNV, scratchSize, VulkanBuffer::CPU_NEVER);
+
 }

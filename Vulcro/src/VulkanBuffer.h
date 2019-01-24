@@ -200,9 +200,9 @@ class static_vbo : public ivbo {
 	
 public: 
 
-	static_vbo(VulkanContext * ctx, temps<vk::Format> fieldFormats, uint32_t numVerts, void * data) {
+	static_vbo(VulkanContext * ctx, vk::ArrayProxy<const vk::Format> fieldFormats, uint32_t numVerts, void * data) {
 		_typeCount = numVerts;
-		_layout = ctx->makeVertexLayout(move(fieldFormats));
+		_layout = ctx->makeVertexLayout(fieldFormats);
 		_size = sizeof(T) * numVerts;
 		_vbr = ctx->makeFastBuffer(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eStorageBuffer, _size, data);
 		_offset = 0;
@@ -251,7 +251,7 @@ template <class T>
 class dynamic_vbo : public ivbo {
 public:
 
-	dynamic_vbo(VulkanContext * ctx, temps<vk::Format> fieldFormats, uint32_t arrayCount = 1, void * data = nullptr)
+	dynamic_vbo(VulkanContext * ctx, vk::ArrayProxy<const vk::Format> fieldFormats, uint32_t arrayCount = 1, void * data = nullptr)
 		: _arrayCount(arrayCount)
 	{
 		values = new T[arrayCount];
@@ -262,7 +262,7 @@ public:
 		}
 
 		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eVertexBuffer, _size, VulkanBuffer::CPU_ALOT, data);
-		_layout = ctx->makeVertexLayout(move(fieldFormats));
+		_layout = ctx->makeVertexLayout(fieldFormats);
 	};
 
 	VULCRO_DONT_COPY(dynamic_vbo)

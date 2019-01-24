@@ -33,14 +33,14 @@ VulkanShader::VulkanShader(
 	VulkanContextRef ctx, 
 	const char * vertPath, 
 	const char * fragPath, 
-	vector<VulkanVertexLayoutRef>&& vertexLayouts,
-	vector<VulkanSetLayoutRef>&& uniformLayouts)
+	vk::ArrayProxy<const VulkanVertexLayoutRef> vertexLayouts,
+	vk::ArrayProxy<const VulkanSetLayoutRef> setLayouts)
 	
 	:
 	_ctx(ctx),
-	_vertexLayouts(vertexLayouts),
-	_uniformLayouts(uniformLayouts)
-{ 
+	_vertexLayouts((VulkanVertexLayoutRef*)vertexLayouts.begin(), (VulkanVertexLayoutRef*)vertexLayouts.end()),
+	_uniformLayouts((VulkanSetLayoutRef*)setLayouts.begin(), (VulkanSetLayoutRef*)setLayouts.end())
+{
 
 	
 	_modules.push_back(loadModule(vertPath));
@@ -102,10 +102,11 @@ VulkanShader::VulkanShader(
 VulkanShader::VulkanShader(VulkanContextRef ctx, 
 	const char * vertPath, const char * tessControlPath, const char * tessEvalPath,
 	const char * tessGeomPath, const char * fragPath, 
-	vector<VulkanVertexLayoutRef>&& vertexLayouts, vector<VulkanSetLayoutRef>&& uniformLayouts)
+	vk::ArrayProxy<const VulkanVertexLayoutRef> vertexLayouts,
+	vk::ArrayProxy<const VulkanSetLayoutRef> setLayouts)
 	:_ctx(ctx),
-	_vertexLayouts(vertexLayouts),
-	_uniformLayouts(uniformLayouts)
+	_vertexLayouts((VulkanVertexLayoutRef*)vertexLayouts.begin(), (VulkanVertexLayoutRef*)vertexLayouts.end()),
+	_uniformLayouts((VulkanSetLayoutRef*)setLayouts.begin(), (VulkanSetLayoutRef*)setLayouts.end())
 {
 
 	_modules.push_back(loadModule(vertPath));
@@ -206,9 +207,9 @@ VulkanShader::VulkanShader(VulkanContextRef ctx,
 
 }
 
-VulkanShader::VulkanShader(VulkanContextRef ctx, const char * computePath, vector<VulkanSetLayoutRef>&& uniformLayouts)
+VulkanShader::VulkanShader(VulkanContextRef ctx, const char * computePath, vk::ArrayProxy<const VulkanSetLayoutRef> setLayouts)
 	: _ctx(ctx)
-	, _uniformLayouts(uniformLayouts)
+	, _uniformLayouts((VulkanSetLayoutRef*)setLayouts.begin(), (VulkanSetLayoutRef*)setLayouts.end())
 {
 	
 	_modules.push_back(loadModule(computePath));

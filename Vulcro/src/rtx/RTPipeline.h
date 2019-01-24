@@ -5,7 +5,7 @@ class RTShaderBuilder {
 
 public:
 
-	RTShaderBuilder(VulkanContextRef ctx, const char * raygenPath, vector<VulkanSetLayoutRef> && setLayouts);
+	RTShaderBuilder(VulkanContextRef ctx, const char * raygenPath, vk::ArrayProxy<const VulkanSetLayoutRef> setLayouts);
 	~RTShaderBuilder();
 
 	//void addGroup(vk::ArrayProxy<StageBuilder> stages);
@@ -51,7 +51,7 @@ public:
 	vk::Pipeline getPipeline() {
 		return _pipeline;
 	}
-	void bindSets(vk::CommandBuffer * cmd, vector<VulkanSetRef> && sets);
+	void bindSets(vk::CommandBuffer * cmd, vk::ArrayProxy<const VulkanSetRef> sets);
 	void traceRays(vk::CommandBuffer * cmd, glm::uvec2 resolution);
 
 protected:

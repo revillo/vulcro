@@ -14,8 +14,8 @@ uint32_t getSizeOf(vk::Format format) {
 	return 0;
 }
 
-VulkanVertexLayout::VulkanVertexLayout(temps<vk::Format> fields) :
-	_fields(fields)
+VulkanVertexLayout::VulkanVertexLayout(vk::ArrayProxy<const vk::Format> fields) :
+	_fields((vk::Format*)fields.begin(), (vk::Format*)fields.end())
 {
 
 	for (auto &field : fields) {

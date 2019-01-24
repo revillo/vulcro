@@ -2,9 +2,9 @@
 
 #define TEMP_SET_MAX 1
 
-VulkanSetLayout::VulkanSetLayout(VulkanContextRef ctx, vector<Binding> bindings) :
+VulkanSetLayout::VulkanSetLayout(VulkanContextRef ctx, vk::ArrayProxy<const Binding> bindings) :
 	_ctx(ctx),
-	_bindings(bindings)
+	_bindings((ULB*)bindings.begin(), (ULB*)bindings.end())
 {
 
 	vector<vk::DescriptorSetLayoutBinding> vkbindings;

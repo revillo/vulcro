@@ -82,10 +82,14 @@ public:
 	vk::WriteDescriptorSetAccelerationStructureNV getWriteDescriptor();
 
 protected:
+
+	void makeScratchBuffer();
+
 	VulkanContextRef _ctx;
 	RTAccelStructRef _topStruct;
 	std::vector<RTAccelStructRef> _bottomStructs;
 	VulkanBufferRef _scratchBuffer;
 	VulkanBufferRef _instanceBuffer;
 	vector< VkGeometryInstance> _instanceData;
+	bool _built = false;
 };

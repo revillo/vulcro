@@ -5,6 +5,12 @@
 
 layout (set = 0, binding = 0) uniform accelerationStructureNV RayScene;
 layout (set = 0, binding = 1, rgba8) uniform image2D RayImage;
+layout (set = 0, binding = 2) buffer VertexList {
+  
+  Vertex v[];
+
+} VertexData;
+
 
 layout(location = RAY_LOCATION) rayPayloadNV RayPayload PrimaryRay;
 
@@ -36,7 +42,8 @@ void main() {
        tmin,
        direction,
        tmax,
-        RAY_LOCATION);
+        RAY_LOCATION
+    );
     
     vec4 checker = vec4(0.6, 0.6, 0.6, 1.0);
     if (mod(uv.x, 0.1) < 0.05 ^^ mod(uv.y, 0.1) < 0.05) {
@@ -48,6 +55,4 @@ void main() {
     } else {
       imageStore(RayImage, ivec2(gl_LaunchIDNV.xy), vec4(PrimaryRay.color, 1.0));
     }
-    //imageStore(RayImage, ivec2(gl_LaunchIDNV.xy), vec4(uv, 1.0, 1.0));
-
 }

@@ -125,7 +125,7 @@ int main()
 
 					pipeline->bind(cmd);
 
-					pipeline->bindUniformSets(cmd, { uniformSet });
+					pipeline->bindSets(cmd, { uniformSet });
 
 					cmd->drawIndexed(vbuf->getCount(), 1, 0, 0, 0);
 

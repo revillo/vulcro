@@ -16,6 +16,9 @@
     <Filter Include="Vulcro">
       <UniqueIdentifier>{e22ae738-a43a-4b5b-b4f3-eecb12c3e7a5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Vulcro\rtx">
+      <UniqueIdentifier>{1d0b551e-8704-4fab-9f98-1e03d7ba545f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -59,6 +62,12 @@
     </ClCompile>
     <ClCompile Include="..\..\Vulcro\src\VulkanSet.cpp">
       <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\rtx\RTAccelerationStructure.cpp">
+      <Filter>Vulcro\rtx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\rtx\RTPipeline.cpp">
+      <Filter>Vulcro\rtx</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -106,6 +115,12 @@
     </ClInclude>
     <ClInclude Include="..\..\Vulcro\src\VulkanSet.h">
       <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\rtx\RTAccelerationStructure.h">
+      <Filter>Vulcro\rtx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\rtx\RTPipeline.h">
+      <Filter>Vulcro\rtx</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

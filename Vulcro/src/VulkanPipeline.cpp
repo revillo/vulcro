@@ -129,9 +129,11 @@ void VulkanPipeline::bind(vk::CommandBuffer * cmd)
 
 }
 
-
-void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanSetRef * sets, uint32_t numSets)
+void VulkanPipeline::bindSets(vk::CommandBuffer * cmd, vk::ArrayProxy<const VulkanSetRef> descriptorSets)
 {
+	int numSets = descriptorSets.size();
+	const VulkanSetRef * sets = descriptorSets.begin();
+
 	int skips = 0;
 
 	for (int i = 0; i < numSets; i++) {
@@ -151,16 +153,23 @@ void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanSetRef
 		0,
 		nullptr
 	);
-}
+	for (int i = 0; i < numSets; i++) {
+		if (sets[i] != nullptr)
+			_descriptorSets[i] = sets[i]->getDescriptorSet();
+		else ++skips;
+	}
 
-void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, temps<VulkanSetRef> sets)
-{
-	bindUniformSets(cmd, sets.begin(), sets.size());
-}
+	numSets -= skips;
 
-void VulkanPipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanSetRef>& sets)
-{
-	bindUniformSets(cmd, &sets[0], sets.size());
+	cmd->bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics,
+		_pipelineLayout,
+		0,
+		numSets,
+		numSets > 0 ? _descriptorSets : nullptr,
+		0,
+		nullptr
+	);
 }
 
 VulkanPipeline::~VulkanPipeline() {
@@ -255,22 +264,20 @@ void VulkanComputePipeline::bind(vk::CommandBuffer * cmd)
 	);
 }
 
-void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, temps<VulkanSetRef> sets)
+void VulkanComputePipeline::bindSets(vk::CommandBuffer * cmd, vk::ArrayProxy<const VulkanSetRef> descriptorSets)
 {
-	bindUniformSets(cmd, sets.begin(), sets.size());
-}
+	int numSets = descriptorSets.size();
+	const VulkanSetRef * sets = descriptorSets.begin();
 
-void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, vector<VulkanSetRef>& sets)
-{
-	bindUniformSets(cmd, &sets[0], sets.size());
-}
+	int skips = 0;
 
-void VulkanComputePipeline::bindUniformSets(vk::CommandBuffer * cmd, const VulkanSetRef * sets, uint32_t numSets)
-{
-	
 	for (int i = 0; i < numSets; i++) {
-		_descriptorSets[i] = sets[i]->getDescriptorSet();
+		if (sets[i] != nullptr)
+			_descriptorSets[i] = sets[i]->getDescriptorSet();
+		else ++skips;
 	}
+
+	numSets -= skips;
 
 	cmd->bindDescriptorSets(
 		vk::PipelineBindPoint::eCompute,

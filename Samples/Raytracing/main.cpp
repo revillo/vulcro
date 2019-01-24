@@ -142,7 +142,7 @@ int main()
 		renderer->record(cmd, [&] {
 			
 			finalPipeline->bind(cmd);
-			finalPipeline->bindUniformSets(cmd, { finalSet });
+			finalPipeline->bindSets(cmd, { finalSet });
 			cmd->draw(4, 1, 0, 0);
 
 		}, taskNumber);
@@ -150,6 +150,7 @@ int main()
 	});
 
 	window.run([&] {
+
 		if (!swapchain->nextFrame()) {
 			//resize();
 			return;

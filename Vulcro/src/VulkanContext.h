@@ -118,7 +118,7 @@ public:
 
 	}
 
-	VulkanVertexLayoutRef makeVertexLayout(temps<vk::Format> fields);
+	VulkanVertexLayoutRef makeVertexLayout(vk::ArrayProxy<const vk::Format> fields);
 	VulkanRendererRef makeRenderer();
 
 	VulkanPipelineRef makePipeline(VulkanShaderRef shader, VulkanRendererRef renderer, PipelineConfig config = PipelineConfig(),
@@ -126,14 +126,14 @@ public:
 	);
 
 	VulkanComputePipelineRef makeComputePipeline(VulkanShaderRef shader);
-	VulkanComputePipelineRef makeComputePipeline(const char * shaderPath, vector<VulkanSetLayoutRef> && setLayouts );
+	VulkanComputePipelineRef makeComputePipeline(const char * shaderPath, vk::ArrayProxy<const VulkanSetLayoutRef> setLayouts );
 
 	VulkanSwapchainRef makeSwapchain(vk::SurfaceKHR surface);
 
 	VulkanShaderRef makeShader(const char * vertPath,
 		const char * fragPath,
-		vector<VulkanVertexLayoutRef>&& vertexLayouts,
-		vector<VulkanSetLayoutRef>&& setLayouts = {});
+		vk::ArrayProxy<const VulkanVertexLayoutRef> vertexLayouts,
+		vk::ArrayProxy<const VulkanSetLayoutRef> setLayouts = {});
 
 	VulkanShaderRef makeTessShader(
 		const char * vertPath,
@@ -141,13 +141,13 @@ public:
 		const char * tessEvalPath,
 		const char * tessGeomPath,
 		const char * fragPath,
-		vector<VulkanVertexLayoutRef>&& vertexLayouts = {},
-		vector<VulkanSetLayoutRef>&& setLayouts = {}
+		vk::ArrayProxy<const VulkanVertexLayoutRef> vertexLayouts = {},
+		vk::ArrayProxy<const VulkanSetLayoutRef> setLayouts = {}
 	);
 
 	VulkanShaderRef makeComputeShader(
 		const char * computePath,
-		vector<VulkanSetLayoutRef>&& setLayouts = {}
+		vk::ArrayProxy<const VulkanSetLayoutRef> setLayouts = {}
 	);
 
 	VulkanBufferRef makeBuffer(
@@ -171,20 +171,14 @@ public:
 		uint64_t size
 	);
 
-	VulkanSetLayoutRef makeSetLayout(temps<VulkanUniformLayoutBinding> bindings);
-
-	VulkanSetLayoutRef makeSetLayout(vector<VulkanUniformLayoutBinding> & bindings);
+	VulkanSetLayoutRef makeSetLayout(vk::ArrayProxy<const VulkanUniformLayoutBinding> bindings);
 
 	VulkanSetRef makeSet(
 		VulkanSetLayoutRef layout
 	);
 
 	VulkanSetRef makeSet(
-		temps<VulkanUniformLayoutBinding> && bindings
-	);
-
-	VulkanSetRef makeSet(
-		vector<VulkanUniformLayoutBinding> & bindings
+		vk::ArrayProxy<const VulkanUniformLayoutBinding> bindings
 	);
 
 	VulkanTaskRef makeTask(uint32_t poolIndex = 0, bool autoReset = false);
@@ -207,8 +201,8 @@ public:
 	}
 
 	template <class T>
-	shared_ptr<static_vbo<T>> makeVBO(temps<vk::Format> fieldFormats, uint32_t arrayCount, T * data = nullptr) {
-		return make_shared<static_vbo<T>>(this, std::move(fieldFormats), arrayCount, data);
+	shared_ptr<static_vbo<T>> makeVBO(vk::ArrayProxy<const vk::Format> fieldFormats, uint32_t arrayCount, T * data = nullptr) {
+		return make_shared<static_vbo<T>>(this, fieldFormats, arrayCount, data);
 	}
 
 	template <class T>
@@ -217,8 +211,8 @@ public:
 	}
 
 	template <class T>
-	shared_ptr<dynamic_vbo<T>> makeDynamicVBO(temps<vk::Format> fieldFormats, uint32_t arrayCount, T * data = nullptr) {
-		return make_shared<dynamic_vbo<T>>(this, std::move(fieldFormats), arrayCount, data);
+	shared_ptr<dynamic_vbo<T>> makeDynamicVBO(vk::ArrayProxy<const vk::Format> fieldFormats, uint32_t arrayCount, T * data = nullptr) {
+		return make_shared<dynamic_vbo<T>>(this, fieldFormats, arrayCount, data);
 	}
 
 	template <class T>
@@ -234,7 +228,7 @@ public:
 	vk::Sampler getNearestSampler();
 	vk::Sampler getShadowSampler();
 
-	shared_ptr<RTShaderBuilder> makeRayTracingShaderBuilder(const char * raygenPath, vector<VulkanSetLayoutRef> && setLayouts);
+	shared_ptr<RTShaderBuilder> makeRayTracingShaderBuilder(const char * raygenPath, vk::ArrayProxy<const VulkanSetLayoutRef> setLayouts);
 	shared_ptr<RTPipeline> makeRayTracingPipeline(RTShaderBuilderRef shader);
 	RTSceneRef makeRayTracingScene();
 
