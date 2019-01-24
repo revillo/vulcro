@@ -76,9 +76,9 @@ int main()
 	//Setup raytracing shaders and pipeline
 
 	auto rtSet = vctx->makeSet({
-		ULB(1, vk::DescriptorType::eAccelerationStructureNV),
-		ULB(1, vk::DescriptorType::eStorageImage),
-		ULB(1, vk::DescriptorType::eStorageBuffer)
+		{1, vk::DescriptorType::eAccelerationStructureNV},
+		{1, vk::DescriptorType::eStorageImage},
+		{1, vk::DescriptorType::eStorageBuffer}
 	});
 
 	auto rtShader = vctx->makeRayTracingShaderBuilder("shaders/ray_gen.spv", {

@@ -70,9 +70,6 @@ int main()
 			{ 0.0f, 0.0f, 0.0f, 0.0f}
 		});
 
-	
-
-
 		auto sceneUBO = vctx->makeUBO<uSceneGlobals>(1);
 		{
 			auto &usb = sceneUBO->at(0);
@@ -186,9 +183,9 @@ int main()
 			});
 
 		auto blitUniformLayout = vctx->makeSetLayout({
-			ULB(1, vk::DescriptorType::eCombinedImageSampler, &colorTarget->getSampler()),
-			ULB(1, vk::DescriptorType::eCombinedImageSampler, &emissiveTarget->getSampler())
-			});
+			{1, vk::DescriptorType::eCombinedImageSampler, &colorTarget->getSampler()},
+			{1, vk::DescriptorType::eCombinedImageSampler, &emissiveTarget->getSampler()}
+		});
 
 		auto blitUniformSet = vctx->makeSet(blitUniformLayout);
 

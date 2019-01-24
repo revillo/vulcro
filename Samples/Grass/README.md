@@ -67,7 +67,7 @@ int z = gl_InstanceIndex % gridSize;
 Premultiply the glm projection matrices by the included fix to get OpenGL clipping coordinates into Vulkan coordinates.
 
 ```c++
-usb.perspective = vulcro::glProjFixYZ * glm::perspective(
+usb.perspective = VULCRO_glProjFixYZ * glm::perspective(
 				radians(60.0f), 
 				(float)windowSize.x / (float)windowSize.y, 
 				1.0f, 100.0f);
