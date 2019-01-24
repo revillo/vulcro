@@ -6,5 +6,5 @@
 layout(location = RAY_LOCATION) rayPayloadInNV RayPayload PrimaryRay;
 
 void main() {
-  PrimaryRay.color = vec4(0.0, 1.0, 0.0, 1.0);
+  PrimaryRay.hitDistance = -1.0;
 }

@@ -73,9 +73,9 @@ VulkanBuffer::~VulkanBuffer()
 	}
 }
 
-void VulkanBuffer::bindVertex(vk::CommandBuffer * cmd)
+void VulkanBuffer::bindVertex(vk::CommandBuffer * cmd, vk::DeviceSize offset)
 {
-	vk::DeviceSize offsets[1] = { 0 };
+	vk::DeviceSize offsets[1] = { offset };
 
 	cmd->bindVertexBuffers(
 		0,
@@ -103,13 +103,29 @@ void VulkanBuffer::upload(uint64_t size, void * data, uint32_t offset)
 	unmap();
 }
 
-vk::DescriptorBufferInfo VulkanBuffer::getDBI(uint32_t offset, int64_t size)
+vk::DescriptorBufferInfo VulkanBuffer::getDBI(vk::DeviceSize offset, vk::DeviceSize size)
 {
 	return vk::DescriptorBufferInfo(
 		_buffer,
 		offset,
-		size == -1 ? _size : static_cast<uint64_t>(size)
+		size == 0 ? _size : static_cast<uint64_t>(size)
 	);
+}
+
+vk::DescriptorType VulkanBuffer::getDescriptorType()
+{
+	if (_usage & vk::BufferUsageFlagBits::eUniformBuffer) {
+		return vk::DescriptorType::eUniformBuffer;
+	}
+	else if (_usage & vk::BufferUsageFlagBits::eStorageBuffer) {
+		return vk::DescriptorType::eStorageBuffer;
+	}
+	else if (_usage & vk::BufferUsageFlagBits::eStorageTexelBuffer) {
+		return vk::DescriptorType::eStorageTexelBuffer;
+	}
+	else {
+		throw "Unsupported buffer as descriptor";
+	}
 }
 
 void * VulkanBuffer::getMapped(uint32_t offset, int64_t size){
@@ -128,4 +144,20 @@ void VulkanBuffer::unmap() {
 	_ctx->getDevice().unmapMemory(
 		_memory
 	);
+}
+
+void VulkanBuffer::createView(vk::Format format)
+{
+	_view = _ctx->getDevice().createBufferView(vk::BufferViewCreateInfo(
+		vk::BufferViewCreateFlags(),
+		_buffer,
+		format,
+		0,
+		VK_WHOLE_SIZE));
+}
+
+VulkanBufferWindow::VulkanBufferWindow(VulkanBufferRef buffer, vk::DeviceSize offset, vk::DeviceSize size) :
+	_buffer(buffer), _size(size), _offset(offset)
+{
+
 }

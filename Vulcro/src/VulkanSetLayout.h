@@ -9,7 +9,7 @@ class VulkanSetLayout
 
 public:
 
-	VulkanSetLayout(VulkanContextRef ctx, vector<Binding> bindings);
+	VulkanSetLayout(VulkanContextRef ctx, vk::ArrayProxy<const Binding> bindings);
 
 	~VulkanSetLayout();
 

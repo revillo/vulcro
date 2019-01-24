@@ -78,7 +78,7 @@ void RTPipeline::bind(vk::CommandBuffer * cmd)
 
 }
 
-void RTPipeline::bindSets(vk::CommandBuffer * cmd, vector<VulkanSetRef> && sets)
+void RTPipeline::bindSets(vk::CommandBuffer * cmd, vk::ArrayProxy<const VulkanSetRef> sets)
 {
 	int i = 0;
 
@@ -128,9 +128,9 @@ void RTPipeline::traceRays(vk::CommandBuffer * cmd, glm::uvec2 resolution)
 
 
 
-RTShaderBuilder::RTShaderBuilder(VulkanContextRef ctx, const char * raygenPath, vector<VulkanSetLayoutRef> && setLayouts)
+RTShaderBuilder::RTShaderBuilder(VulkanContextRef ctx, const char * raygenPath, vk::ArrayProxy<const VulkanSetLayoutRef> setLayouts)
 	:_ctx(ctx),
-	_setLayouts(setLayouts),
+	_setLayouts((VulkanSetLayoutRef*)setLayouts.begin(), (VulkanSetLayoutRef*)setLayouts.end()),
 	_numHitGroups(0)
 {
 	vk::RayTracingShaderGroupCreateInfoNV groupInfo;

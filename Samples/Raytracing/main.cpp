@@ -1,9 +1,8 @@
 #include "Vulcro.h"
 #include <iostream>
 #include <vector>
-struct Vertex {
-	glm::vec4 position;
-};
+
+#include "shaders/common.h"
 
 #define BUILD_SCENE_POOL 1
 #define RENDER_POOL 2
@@ -27,27 +26,42 @@ int main()
 
 	//Make buffers for a triangle and add to a ray tracing scene
 
+	glm::vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
+	glm::vec4 blue = vec4(0.0, 0.0, 1.0, 1.0);
+	glm::vec4 green = vec4(0.0, 1.0, 0.0, 1.0);
+
+	glm::vec4 purple = vec4(1.0, 0.0, 1.0, 1.0);
+	glm::vec4 yellow = vec4(1.0, 1.0, 0.0, 1.0);
+	glm::vec4 cyan = vec4(0.0, 1.0, 1.0, 1.0);
+
 	std::vector<Vertex> verts = std::vector<Vertex>({
-		{glm::vec4(0.0, -1.0, 0.0, 1.0)},
-		{glm::vec4(1.0, 1.0, 0.0, 1.0)},
-		{glm::vec4(-1.0, 1.0, 0.0, 1.0)}
+		{glm::vec4(0.0, -1.0, 0.0, 1.0), red},
+		{glm::vec4(1.0, 0.0, 0.0, 1.0), blue},
+		{glm::vec4(-1.0, 0.0, 0.0, 1.0), green},
+
+		{glm::vec4(0.0, 1.0, 0.0, 1.0), purple},
+		{glm::vec4(1.0, 0.0, 0.0, 1.0), yellow},
+		{glm::vec4(-1.0, 0.0, 0.0, 1.0), cyan}
 	});
 
 	auto vbuf = vctx->makeVBO<Vertex>(
 		{
-			//Position
-			vk::Format::eR32G32B32A32Sfloat
+			vk::Format::eR32G32B32A32Sfloat, //Position
+			vk::Format::eR32G32B32A32Sfloat  //Color
 		}
-	, 3, verts.data());
+	, verts.size(), verts.data());
 
 	auto ibuf = vctx->makeIBO({
 		0, 1, 2
 	});
 
-	RTGeometry triangle(ibuf, vbuf);
+	auto topTriangleVB = vctx->makeVBO(vbuf, 0, 3);
+	auto bottomTriangleVB = vctx->makeVBO(vbuf, 3, 3);
 
 	auto rayScene = vctx->makeRayTracingScene();
-	rayScene->addGeometry(triangle);
+
+	rayScene->addGeometry(RTGeometry(ibuf, topTriangleVB));
+	rayScene->addGeometry(RTGeometry(ibuf, bottomTriangleVB));
 
 	auto buildSceneTask = vctx->makeTask(BUILD_SCENE_POOL, false);
 
@@ -60,34 +74,25 @@ int main()
 
 
 	//Setup raytracing shaders and pipeline
-	/*
-	auto set = vctx->makeSet({
+
+	auto rtSet = vctx->makeSet({
 		ULB(1, vk::DescriptorType::eAccelerationStructureNV),
-		ULB(1, vk::DescriptorType::eStorageImage)
-	});
-	*/
-
-	auto sceneSet = vctx->makeSet({
-		ULB(1, vk::DescriptorType::eAccelerationStructureNV)
+		ULB(1, vk::DescriptorType::eStorageImage),
+		ULB(1, vk::DescriptorType::eStorageBuffer)
 	});
 
-	auto imgSet = vctx->makeSet({
-		ULB(1, vk::DescriptorType::eStorageImage)
+	auto rtShader = vctx->makeRayTracingShaderBuilder("shaders/ray_gen.spv", {
+		rtSet->getLayout()
 	});
 
-	auto rtShaderBuilder = vctx->makeRayTracingShaderBuilder("shaders/raygen.spv", {
-		sceneSet->getLayout(),
-		imgSet->getLayout()
-	});
+	rtShader->addHitGroup("shaders/ray_chit.spv", nullptr);
+	rtShader->addMissGroup("shaders/ray_miss.spv");
 
-	rtShaderBuilder->addHitGroup("shaders/ray_chit.spv", nullptr);
-	rtShaderBuilder->addMissGroup("shaders/ray_miss.spv");
+	auto rtPipeline = vctx->makeRayTracingPipeline(rtShader);
 
-	auto rtPipeline = vctx->makeRayTracingPipeline(rtShaderBuilder);
-
-	sceneSet->bindRTScene(0, rayScene);
-	imgSet->bindStorageImage(0, colorTarget);
-
+	rtSet->bindRTScene(0, rayScene);
+	rtSet->bindStorageImage(1, colorTarget);
+	rtSet->bindBuffer(2, vbuf->getSharedBuffer());
 	
 	auto rtTask = vctx->makeTask(BUILD_SCENE_POOL, false);
 
@@ -96,7 +101,7 @@ int main()
 		colorTarget->transitionLayout(cmd, vk::ImageLayout::eGeneral);
 
 		rtPipeline->bind(cmd);
-		rtPipeline->bindSets(cmd, { sceneSet, imgSet });
+		rtPipeline->bindSets(cmd, { rtSet });
 		rtPipeline->traceRays(cmd, glm::uvec2(512, 512));
 	
 	});
@@ -127,14 +132,9 @@ int main()
 		}
 	);
 
-
-
 	auto finalTasks = vctx->makeTaskGroup(swapchain->numImages(), RENDER_POOL);
 
 	finalTasks->record([&](vk::CommandBuffer * cmd, uint32_t taskNumber) {
-
-		
-		
 
 		cmd->setViewport(0, 1, &renderer->getFullViewport());
 		cmd->setScissor(0, 1, &renderer->getFullRect());
@@ -142,15 +142,15 @@ int main()
 		renderer->record(cmd, [&] {
 			
 			finalPipeline->bind(cmd);
-			finalPipeline->bindUniformSets(cmd, { finalSet });
+			finalPipeline->bindSets(cmd, { finalSet });
 			cmd->draw(4, 1, 0, 0);
 
 		}, taskNumber);
 
 	});
 
-
 	window.run([&] {
+
 		if (!swapchain->nextFrame()) {
 			//resize();
 			return;

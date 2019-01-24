@@ -227,9 +227,9 @@ int main()
 
 					grassVBO->bind(cmd);
 
-					grassPipeline->bindUniformSets(cmd, {
+					grassPipeline->bindSets(cmd, {
 						uSceneSet
-						});
+					});
 
 					cmd->draw(verticesPerBlade, 160000, 0, 0);
 
@@ -296,7 +296,7 @@ int main()
 
 					blitIBO->bind(cmd);
 
-					blitPipeline->bindUniformSets(cmd, {
+					blitPipeline->bindSets(cmd, {
 						blitUniformSet
 						});
 

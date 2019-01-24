@@ -6,7 +6,7 @@
 class VulkanVertexLayout
 {
 public:
-	VulkanVertexLayout(temps<vk::Format> fields);
+	VulkanVertexLayout(vk::ArrayProxy<const vk::Format> fields);
 
 	vk::VertexInputBindingDescription getVIBD(uint32_t binding);
 	vector<vk::VertexInputAttributeDescription> getVIADS(uint32_t binding);

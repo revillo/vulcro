@@ -161,6 +161,8 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Vulcro\src\rtx\RTAccelerationStructure.cpp" />
+    <ClCompile Include="..\..\Vulcro\src\rtx\RTPipeline.cpp" />
     <ClCompile Include="..\..\Vulcro\src\VulkanBuffer.cpp" />
     <ClCompile Include="..\..\Vulcro\src\VulkanContext.cpp" />
     <ClCompile Include="..\..\Vulcro\src\VulkanImage.cpp" />
@@ -178,6 +180,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Vulcro\src\General.h" />
+    <ClInclude Include="..\..\Vulcro\src\rtx\RTAccelerationStructure.h" />
+    <ClInclude Include="..\..\Vulcro\src\rtx\RTPipeline.h" />
     <ClInclude Include="..\..\Vulcro\src\Vulcro.h" />
     <ClInclude Include="..\..\Vulcro\src\VulkanBuffer.h" />
     <ClInclude Include="..\..\Vulcro\src\VulkanContext.h" />

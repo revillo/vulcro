@@ -12,8 +12,8 @@ public:
 		VulkanContextRef ctx,
 		const char * vertPath,
 		const char * fragPath,
-		vector<VulkanVertexLayoutRef>&& vertexLayouts = {},
-		vector<VulkanSetLayoutRef>&& uniformLayouts = {}
+		vk::ArrayProxy<const VulkanVertexLayoutRef> vertexLayouts = {},
+		vk::ArrayProxy<const VulkanSetLayoutRef> uniformLayouts = {}
 	);
 
 	VulkanShader(
@@ -23,14 +23,14 @@ public:
 		const char * tessEvalPath,
 		const char * tessGeomPath,
 		const char * fragPath,
-		vector<VulkanVertexLayoutRef>&& vertexLayouts = {},
-		vector<VulkanSetLayoutRef>&& uniformLayouts = {}
+		vk::ArrayProxy<const VulkanVertexLayoutRef> vertexLayouts = {},
+		vk::ArrayProxy<const VulkanSetLayoutRef> uniformLayouts = {}
 	);
 
 	VulkanShader(
 		VulkanContextRef ctx,
 		const char * computePath,
-		vector<VulkanSetLayoutRef>&& uniformLayouts = {}
+		vk::ArrayProxy<const VulkanSetLayoutRef> uniformLayouts = {}
 	);
 
 	static vk::ShaderModule createModule(VulkanContextRef ctx, const char * path);
