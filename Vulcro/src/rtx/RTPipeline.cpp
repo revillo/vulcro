@@ -24,9 +24,9 @@ RTPipeline::RTPipeline(VulkanContextRef ctx, RTShaderBuilderRef shader):
 
 	auto createInfo = vk::RayTracingPipelineCreateInfoNV(
 		vk::PipelineCreateFlags(),
-		shader->getStages().size(),
+		static_cast<uint32_t>(shader->getStages().size()),
 		shader->getStages().data(),
-		shader->getGroups().size(),
+		static_cast<uint32_t>(shader->getGroups().size()),
 		shader->getGroups().data(),
 		1,
 		_pipelineLayout,
@@ -52,7 +52,7 @@ RTPipeline::RTPipeline(VulkanContextRef ctx, RTShaderBuilderRef shader):
 
 	auto ptr = _sbtBuffer->getMapped();
 
-	vk::Result res = _ctx->getDevice().getRayTracingShaderGroupHandlesNV(_pipeline, 0, shader->getGroups().size(), size, ptr, _ctx->getDynamicDispatch());
+	vk::Result res = _ctx->getDevice().getRayTracingShaderGroupHandlesNV(_pipeline, 0, static_cast<uint32_t>(shader->getGroups().size()), size, ptr, _ctx->getDynamicDispatch());
 
 	uint16_t* up = (uint16_t*)ptr;
 
@@ -185,7 +185,7 @@ void RTShaderBuilder::addMissGroup(const char * missPath)
 	stage.setModule(module);
 
 	_stages.push_back(stage);
-	groupInfo.setGeneralShader(_stages.size() - 1);
+	groupInfo.setGeneralShader(static_cast<uint32_t>(_stages.size()) - 1);
 
 	_groups.push_back(groupInfo);
 }
@@ -212,7 +212,7 @@ void RTShaderBuilder::addHitGroup(const char * closestHitPath, const char * anyH
 		stage.setModule(module);
 
 		_stages.push_back(stage);
-		groupInfo.setClosestHitShader(_stages.size() - 1);
+		groupInfo.setClosestHitShader(static_cast<uint32_t>(_stages.size()) - 1);
 
 	}
 
@@ -226,7 +226,7 @@ void RTShaderBuilder::addHitGroup(const char * closestHitPath, const char * anyH
 		stage.setModule(module);
 
 		_stages.push_back(stage);
-		groupInfo.setAnyHitShader(_stages.size() - 1);
+		groupInfo.setAnyHitShader(static_cast<uint32_t>(_stages.size()) - 1);
 	}
 	_groups.push_back(groupInfo);
 

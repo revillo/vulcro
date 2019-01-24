@@ -42,7 +42,7 @@ RTAccelerationStructure::RTAccelerationStructure(VulkanContextRef ctx, RTGeometr
 		vk::AccelerationStructureTypeNV::eBottomLevel,
 		flags, //flags
 		0,  //InstanceCount
-		_geometries.size(),  //GeometryCount
+		static_cast<uint32_t>(_geometries.size()),  //GeometryCount
 		_geometries.data() //Geometry
 	);
 
@@ -210,7 +210,7 @@ void RTScene::build(vk::CommandBuffer * cmd)
 	}
 	_instanceBuffer = _ctx->makeBuffer(vk::BufferUsageFlagBits::eRayTracingNV, sizeof(VkGeometryInstance) * _instanceData.size(), VulkanBuffer::CPU_ALOT, _instanceData.data());
 	
-	_topStruct->setNumInstances(_instanceData.size());
+	_topStruct->setNumInstances(static_cast<uint32_t>(_instanceData.size()));
 
 	cmd->buildAccelerationStructureNV(
 		_topStruct->getInfo(),
