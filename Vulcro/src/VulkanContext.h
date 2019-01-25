@@ -192,8 +192,14 @@ public:
 	VulkanTaskRef makeTask(uint32_t poolIndex = 0, bool autoReset = false);
 	VulkanTaskGroupRef makeTaskGroup(uint32_t numTasks, uint32_t poolIndex = 0);
 
-	VulkanImage2DRef makeImage2D(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
-	VulkanImage2DRef makeImage2D(vk::Image image, glm::ivec2 size, vk::Format format);
+	VulkanImage1DRef makeImage1D(vk::ImageUsageFlags usage, vk::Format format, float size);
+	VulkanImage1DRef makeImage1D(vk::Image image, vk::Format format, float size);
+
+	VulkanImage2DRef makeImage2D(vk::ImageUsageFlags usage, vk::Format format, glm::ivec2 size);
+	VulkanImage2DRef makeImage2D(vk::Image image, vk::Format format, glm::ivec2 size);
+
+	VulkanImage3DRef makeImage3D(vk::ImageUsageFlags usage, vk::Format format, glm::ivec3 size);
+	VulkanImage3DRef makeImage3D(vk::Image image, vk::Format format, glm::ivec3 size);
 	
 	template <class T>
 	VulkanImage2DRef makeImageTyped(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format) {

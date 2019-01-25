@@ -63,7 +63,7 @@ bool VulkanSwapchain::init(vk::SurfaceKHR surface) {
 	
 	for (auto &swapImage : swapImages)
 	{
-		auto vi = _ctx->makeImage2D(swapImage, ivec2(surfCap.currentExtent.width, surfCap.currentExtent.height), _format);
+		auto vi = _ctx->makeImage2D(swapImage, _format, ivec2(surfCap.currentExtent.width, surfCap.currentExtent.height));
 		vi->createImageView(vk::ImageAspectFlagBits::eColor);
 		_images.push_back(vi);
 	}

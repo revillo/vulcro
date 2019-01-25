@@ -1,7 +1,7 @@
 #pragma once
 
 #include "VulkanContext.h"
-#include "VulkanImage2D.h"
+#include "VulkanImage.h"
 #include "VulkanSwapchain.h"
 
 #include "VulkanShader.h"

@@ -4,7 +4,6 @@
 #include "General.h"
 #include "VulkanContext.h"
 
-
 class VulkanImage
 {
 public:
@@ -20,9 +19,9 @@ public:
 	//// Constructors / Descructor
 	/////////////////////////
 
-	VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, vk::Format format);
+	VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, vk::Format format, glm::ivec3 size, vk::ImageType imageType);
 	
-	VulkanImage(VulkanContextRef ctx, vk::Image image, vk::Format format);
+	VulkanImage(VulkanContextRef ctx, vk::Image image, vk::Format format, glm::ivec3 size, vk::ImageType imageType);
 
 	~VulkanImage();
 
@@ -31,8 +30,7 @@ public:
 	/////////////////////////
 
 	virtual void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor) = 0;
-	virtual void createImage() = 0;
-
+	void createImage();
 
 	void allocateDeviceMemory(vk::MemoryPropertyFlags memFlags = vk::MemoryPropertyFlagBits::eDeviceLocal);
 
@@ -80,9 +78,17 @@ public:
 		return _imageView;
 	}
 
+	inline ivec3 getSize()
+	{
+		return mSize;
+	}
+
+
 protected:
 
 	void *mMemoryMapping = nullptr;
+	vk::ImageType mImageType;
+	glm::ivec3 mSize;
 
 	VulkanContextRef _ctx;
 
@@ -101,4 +107,110 @@ protected:
 	vk::Image _image;
 	
 	uint64_t _memorySize;
+};
+
+
+/**************************************************
+ * 1D
+ * ************************************************/
+
+class VulkanImage1D : public VulkanImage
+{
+public:
+
+	//////////////////////////
+	//// Constructors / Descructor
+	/////////////////////////
+
+	VulkanImage1D(VulkanContextRef ctx, vk::ImageUsageFlags usage, vk::Format format, float size);
+
+	VulkanImage1D(VulkanContextRef ctx, vk::Image image, vk::Format format, int size);
+
+	//////////////////////////
+	//// Functions
+	/////////////////////////
+
+	void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor) override;
+
+	void resize(float size);
+};
+
+
+/**************************************************
+ * 2D
+ * ************************************************/
+
+class VulkanImage2D : public VulkanImage
+{
+public:
+
+	//////////////////////////
+	//// Constructors / Descructor
+	/////////////////////////
+
+	VulkanImage2D(VulkanContextRef ctx, vk::ImageUsageFlags usage, vk::Format format, glm::ivec2 size);
+
+	VulkanImage2D(VulkanContextRef ctx, vk::Image image, vk::Format format, glm::ivec2 size);
+
+	//////////////////////////
+	//// Functions
+	/////////////////////////
+
+	void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor) override;
+
+	void resize(ivec2 size);
+
+	//////////////////////////
+	//// Getters / Setters
+	/////////////////////////
+
+	inline vk::Rect2D getFullRect()
+	{
+		return vk::Rect2D(vk::Offset2D(0, 0), vk::Extent2D(mSize.x, mSize.y));
+	}
+};
+
+/**************************************************
+ * 3D
+ * ************************************************/
+
+class VulkanImage3D : public VulkanImage
+{
+public:
+
+	//////////////////////////
+	//// Constructors / Descructor
+	/////////////////////////
+
+	VulkanImage3D(VulkanContextRef ctx, vk::ImageUsageFlags usage, vk::Format format, glm::ivec3 size);
+
+	VulkanImage3D(VulkanContextRef ctx, vk::Image image, vk::Format format, glm::ivec3 size);
+
+	//////////////////////////
+	//// Functions
+	/////////////////////////
+
+	void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor) override;
+
+};
+
+/**************************************************
+ * Cube
+ * ************************************************/
+
+class VulkanImageCube : public VulkanImage
+{
+public:
+
+	//////////////////////////
+	//// Constructors / Descructor
+	/////////////////////////
+
+	VulkanImageCube(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
+
+	//////////////////////////
+	//// Functions
+	/////////////////////////
+
+	void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor) override;
 };

@@ -69,15 +69,6 @@
     <ClCompile Include="..\..\Vulcro\src\VulkanPipeline.cpp">
       <Filter>Vulcro</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Vulcro\src\VulkanImage1D.cpp">
-      <Filter>Vulcro\images</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Vulcro\src\VulkanImage2D.cpp">
-      <Filter>Vulcro\images</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Vulcro\src\VulkanImageCube.cpp">
-      <Filter>Vulcro\images</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Vulcro\src\VulkanRenderer.h">
@@ -130,18 +121,6 @@
     </ClInclude>
     <ClInclude Include="..\..\Vulcro\src\VulkanPipeline.h">
       <Filter>Vulcro</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Vulcro\src\VulkanImage1D.h">
-      <Filter>Vulcro\images</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Vulcro\src\VulkanImage2D.h">
-      <Filter>Vulcro\images</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Vulcro\src\VulkanImage3D.h">
-      <Filter>Vulcro\images</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Vulcro\src\VulkanImageCube.h">
-      <Filter>Vulcro\images</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

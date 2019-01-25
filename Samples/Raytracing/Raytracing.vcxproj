@@ -162,9 +162,6 @@
     <ClCompile Include="..\..\Vulcro\src\VulkanBuffer.cpp" />
     <ClCompile Include="..\..\Vulcro\src\VulkanContext.cpp" />
     <ClCompile Include="..\..\Vulcro\src\VulkanImage.cpp" />
-    <ClCompile Include="..\..\Vulcro\src\VulkanImage1D.cpp" />
-    <ClCompile Include="..\..\Vulcro\src\VulkanImage2D.cpp" />
-    <ClCompile Include="..\..\Vulcro\src\VulkanImageCube.cpp" />
     <ClCompile Include="..\..\Vulcro\src\VulkanPipeline.cpp" />
     <ClCompile Include="..\..\Vulcro\src\VulkanRenderer.cpp" />
     <ClCompile Include="..\..\Vulcro\src\VulkanSet.cpp" />
@@ -185,10 +182,6 @@
     <ClInclude Include="..\..\Vulcro\src\VulkanBuffer.h" />
     <ClInclude Include="..\..\Vulcro\src\VulkanContext.h" />
     <ClInclude Include="..\..\Vulcro\src\VulkanImage.h" />
-    <ClInclude Include="..\..\Vulcro\src\VulkanImage1D.h" />
-    <ClInclude Include="..\..\Vulcro\src\VulkanImage2D.h" />
-    <ClInclude Include="..\..\Vulcro\src\VulkanImage3D.h" />
-    <ClInclude Include="..\..\Vulcro\src\VulkanImageCube.h" />
     <ClInclude Include="..\..\Vulcro\src\VulkanPipeline.h" />
     <ClInclude Include="..\..\Vulcro\src\VulkanRenderer.h" />
     <ClInclude Include="..\..\Vulcro\src\VulkanSet.h" />
