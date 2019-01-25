@@ -317,18 +317,18 @@ VulkanTaskGroupRef VulkanContext::makeTaskGroup(uint32_t numTasks, uint32_t pool
 	return make_shared<VulkanTaskGroup>(this, numTasks, _pools[poolIndex]);
 }
 
-#include "VulkanImage.h"
-VulkanImageRef VulkanContext::makeImage(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format)
+#include "VulkanImage2D.h"
+VulkanImage2DRef VulkanContext::makeImage2D(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format)
 {
-	auto r = make_shared<VulkanImage>(this, usage, size, format);
+	auto r = make_shared<VulkanImage2D>(this, usage, format, size);
 	r->createImage();
 	r->setSampler(getNearestSampler());
 	return r;
 }
 
-VulkanImageRef VulkanContext::makeImage(vk::Image image, glm::ivec2 size, vk::Format format)
+VulkanImage2DRef VulkanContext::makeImage2D(vk::Image image, glm::ivec2 size, vk::Format format)
 {
-	return make_shared<VulkanImage>(this, image, size, format);
+	return make_shared<VulkanImage2D>(this, image, format, size);
 }
 
 #include "rtx/RTPipeline.h"

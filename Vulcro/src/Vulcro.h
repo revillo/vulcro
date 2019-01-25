@@ -26,3 +26,17 @@ const glm::mat4 VULCRO_glProjFixY = mat4(
 	0.0f, 0.0f, 1.0f, 0.0f,
 	0.0f, 0.0f, 0.0f, 1.0f
 );
+
+using VulcroResult = uint32_t;
+
+class Vulcro
+{
+public:
+	static const VulcroResult RESULT_ERROR = 0x1;
+	static const VulcroResult MEMORY_ALLOCATED = 0x2;
+
+	inline static bool check(VulcroResult result)
+	{
+		return result & Vulcro::RESULT_ERROR == 0;
+	}
+};

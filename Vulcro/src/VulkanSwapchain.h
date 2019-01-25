@@ -1,21 +1,35 @@
 #pragma once
 
 #include "VulkanContext.h"
-#include "VulkanImage.h"
+#include "VulkanImage2D.h"
 
 class VulkanSwapchain
 {
 public:
 
+
+	//////////////////////////
+	//// Constructors / Descructor
+	/////////////////////////
+
 	VulkanSwapchain(VulkanContextRef ctx, vk::SurfaceKHR surface);
 	~VulkanSwapchain();
 
-	bool init(vk::SurfaceKHR surface);
+	//////////////////////////
+	//// Functions
+	/////////////////////////
 
+	bool init(vk::SurfaceKHR surface);
 
 	bool nextFrame();
 
 	bool present(vector<vk::Semaphore> inSems = {});
+
+	bool resize();
+
+	//////////////////////////
+	//// Getters / Setters
+	/////////////////////////
 
 	vk::Format getFormat() {
 		return _format;
@@ -30,12 +44,11 @@ public:
 		return _swapchain;
 	}
 
-	vector<VulkanImageRef> getImages() {
+	vector<VulkanImage2DRef> getImages() {
 		return _images;
 	}
 
-	bool resize();
-
+	
 	vk::Semaphore &getSemaphore() {
 		return _semaphore;
 	}
@@ -58,7 +71,7 @@ private:
 	vk::SwapchainKHR _swapchain;
 	vk::Format _format;
 
-	vector<VulkanImageRef> _images;
+	vector<VulkanImage2DRef> _images;
 
 	bool swapchainInited = false;
 	bool _frameFailed = false;

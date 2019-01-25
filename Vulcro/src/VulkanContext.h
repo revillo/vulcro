@@ -48,6 +48,10 @@ class VulkanSet;
 class VulkanTask;
 class VulkanTaskGroup;
 class VulkanImage;
+class VulkanImage1D;
+class VulkanImage2D;
+class VulkanImage3D;
+class VulkanImageCube;
 
 
 class RTScene;
@@ -81,6 +85,10 @@ typedef shared_ptr<VulkanBuffer> VulkanBufferRef;
 typedef shared_ptr<VulkanSet> VulkanSetRef;
 typedef shared_ptr<VulkanTask> VulkanTaskRef;
 typedef shared_ptr<VulkanImage> VulkanImageRef;
+typedef shared_ptr<VulkanImage1D> VulkanImage1DRef;
+typedef shared_ptr<VulkanImage2D> VulkanImage2DRef;
+typedef shared_ptr<VulkanImage3D> VulkanImage3DRef;
+typedef shared_ptr<VulkanImageCube> VulkanImageCubeRef;
 typedef shared_ptr<VulkanTaskGroup> VulkanTaskGroupRef;
 typedef shared_ptr<VulkanComputePipeline> VulkanComputePipelineRef;
 
@@ -184,11 +192,11 @@ public:
 	VulkanTaskRef makeTask(uint32_t poolIndex = 0, bool autoReset = false);
 	VulkanTaskGroupRef makeTaskGroup(uint32_t numTasks, uint32_t poolIndex = 0);
 
-	VulkanImageRef makeImage(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
-	VulkanImageRef makeImage(vk::Image image, glm::ivec2 size, vk::Format format);
+	VulkanImage2DRef makeImage2D(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
+	VulkanImage2DRef makeImage2D(vk::Image image, glm::ivec2 size, vk::Format format);
 	
 	template <class T>
-	VulkanImageRef makeImageTyped(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format) {
+	VulkanImage2DRef makeImageTyped(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format) {
 		auto r = make_shared<T>(this, usage, size, format);
 		r->createImage();
 		r->setSampler(getNearestSampler());

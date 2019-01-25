@@ -9,7 +9,7 @@ VulkanRenderer::VulkanRenderer(VulkanContextRef ctx) :
 
 void VulkanRenderer::createDepthBuffer() {
 
-	_depthImage = _ctx->makeImage(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
+	_depthImage = _ctx->makeImage2D(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
         glm::ivec2(_fullRect.extent.width, _fullRect.extent.height), vk::Format::eD32Sfloat);
 	
     _depthImage->allocateDeviceMemory();
@@ -94,7 +94,7 @@ void VulkanRenderer::targetSwapcahin(VulkanSwapchainRef swapchain, bool useDepth
 	createSwapchainFramebuffers(swapchain);
 }
 
-void VulkanRenderer::targetImages(vector<VulkanImageRef> images, bool useDepth)
+void VulkanRenderer::targetImages(vector<VulkanImage2DRef> images, bool useDepth)
 {
 	_useDepth = useDepth;
 
@@ -376,7 +376,7 @@ void VulkanRenderer::createImagesFramebuffer() {
 
 void VulkanRenderer::createSwapchainFramebuffers(VulkanSwapchainRef swapchain)
 {
-	vector<VulkanImageRef> swapImages = swapchain->getImages();
+	vector<VulkanImage2DRef> swapImages = swapchain->getImages();
 
 	for (auto img : swapImages) {
 

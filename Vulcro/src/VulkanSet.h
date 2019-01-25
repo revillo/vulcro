@@ -11,7 +11,6 @@ public:
 	
 	VulkanSet(VulkanContextRef ctx, VulkanSetLayoutRef layout);
 
-
 	void bindBuffer(uint32_t binding, VulkanBufferRef buffer);
 
 	void bindBuffer(uint32_t binding, ssboRef buffer) {

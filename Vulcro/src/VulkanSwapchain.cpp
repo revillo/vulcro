@@ -6,7 +6,6 @@ VulkanSwapchain::VulkanSwapchain(VulkanContextRef ctx, vk::SurfaceKHR surface) :
 {
 	init(surface);
 	createSemaphore();
-
 }
 
 bool VulkanSwapchain::init(vk::SurfaceKHR surface) {
@@ -35,7 +34,6 @@ bool VulkanSwapchain::init(vk::SurfaceKHR surface) {
 		}
 	}
 
-
 	vk::SwapchainKHR oldSwapchain = swapchainInited ? _swapchain : vk::SwapchainKHR();
 
 	_swapchain = _ctx->getDevice().createSwapchainKHR(
@@ -59,19 +57,19 @@ bool VulkanSwapchain::init(vk::SurfaceKHR surface) {
 		)
 	);
 
-
 	_images.clear();
-
 
 	auto swapImages = _ctx->getDevice().getSwapchainImagesKHR(_swapchain);
 	
-	for (auto &swapImage : swapImages) {
-		auto vi = _ctx->makeImage(swapImage, ivec2(surfCap.currentExtent.width, surfCap.currentExtent.height), _format);
+	for (auto &swapImage : swapImages)
+	{
+		auto vi = _ctx->makeImage2D(swapImage, ivec2(surfCap.currentExtent.width, surfCap.currentExtent.height), _format);
 		vi->createImageView(vk::ImageAspectFlagBits::eColor);
 		_images.push_back(vi);
 	}
 
-	if (swapchainInited) {
+	if (swapchainInited)
+	{
 		_ctx->getDevice().destroySwapchainKHR(oldSwapchain);
 	}
 
