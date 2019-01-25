@@ -121,12 +121,40 @@ void VulkanImage::upload(uint64_t size, void* data)
 	memcpy(mMemoryMapping, data, size);
 }
 
-
-
 void VulkanImage::createSampler()
 {
 	_sampler = _ctx->getNearestSampler();
 }
+
+void VulkanImage::createImageView(vk::ImageAspectFlags aspectFlags)
+{
+	vk::ComponentMapping cmap;
+	cmap.r = vk::ComponentSwizzle::eR;
+	cmap.g = vk::ComponentSwizzle::eG;
+	cmap.b = vk::ComponentSwizzle::eB;
+	cmap.a = vk::ComponentSwizzle::eA;
+
+	vk::ImageSubresourceRange irange;
+	irange.baseMipLevel = 0;
+	irange.levelCount = 1;
+	irange.setBaseArrayLayer(0);
+	irange.layerCount = 6;
+	irange.aspectMask = aspectFlags;
+
+	_imageView = _ctx->getDevice().createImageView(
+		vk::ImageViewCreateInfo(
+			vk::ImageViewCreateFlags(),
+			_image,
+			vk::ImageViewType::eCube,
+			_format,
+			cmap,
+			irange
+		)
+	);
+
+	_viewCreated = true;
+}
+
 
 vk::DescriptorImageInfo VulkanImage::getDII()
 {
