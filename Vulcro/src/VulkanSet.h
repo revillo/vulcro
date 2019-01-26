@@ -8,9 +8,22 @@
 class VulkanSet
 {
 public:
+
+	//////////////////////////
+	//// Constructors / Descructor
+	/////////////////////////
 	
 	VulkanSet(VulkanContextRef ctx, VulkanSetLayoutRef layout);
 
+	~VulkanSet();
+
+	//////////////////////////
+	//// Functions
+	/////////////////////////
+
+	//////////////////////////
+	//// Getters / Setters
+	/////////////////////////
 
 	void bindBuffer(uint32_t binding, VulkanBufferRef buffer);
 
@@ -42,7 +55,7 @@ public:
 		return _layout;
 	}
 
-	~VulkanSet();
+	
 
 private:
 

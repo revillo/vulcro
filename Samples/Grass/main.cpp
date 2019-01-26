@@ -45,16 +45,16 @@ int main()
 
 		auto sceneRenderer = vctx->makeRenderer();
 
-		VulkanImageRef colorTarget, emissiveTarget;
+		VulkanImage2DRef colorTarget, emissiveTarget;
 
 		auto sceneSize = windowSize * UPSAMPLE_FACTOR;
 
-		colorTarget = vctx->makeImage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, sceneSize, vk::Format::eR8G8B8A8Unorm);
+		colorTarget = vctx->makeImage2D(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, vk::Format::eR8G8B8A8Unorm, sceneSize);
 		colorTarget->allocateDeviceMemory();
 		colorTarget->createImageView();
 		colorTarget->setSampler(vctx->getLinearSampler());
 
-		emissiveTarget = vctx->makeImage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, sceneSize, vk::Format::eR8G8B8A8Unorm);
+		emissiveTarget = vctx->makeImage2D(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled, vk::Format::eR8G8B8A8Unorm, sceneSize);
 		emissiveTarget->allocateDeviceMemory();
 		emissiveTarget->createImageView();
 		emissiveTarget->setSampler(vctx->getLinearSampler());

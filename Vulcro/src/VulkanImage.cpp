@@ -4,32 +4,54 @@
 vk::ImageUsageFlags VulkanImage::SAMPLED_STORAGE = vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled;
 vk::ImageUsageFlags VulkanImage::SAMPLED_COLOR_ATTACHMENT = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled;
 
-VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format)
-	:_ctx(ctx),
-	_format(format),
-	_size(size),
-	_usage(usage)
+VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, vk::Format format, glm::ivec3 size, vk::ImageType imageType)
+	:mContext(ctx),
+	mFormat(format),
+	mUsage(usage),
+	mSize(size),
+	mImageType(imageType)
 {
-
 
 }
 
-VulkanImage::VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format)
-	:_ctx(ctx),
-	_format(format),
-	_size(size),
-	_image(image)
+VulkanImage::VulkanImage(VulkanContextRef ctx, vk::Image image, vk::Format format, glm::ivec3 size, vk::ImageType imageType)
+	:mContext(ctx),
+	mFormat(format),
+	mImage(image),
+	mSize(size),
+	mImageType(imageType)
 {
-	createSampler();
+	// TODO create a sampler factor
+	mSampler = mContext->getNearestSampler();
+}
 
+void VulkanImage::createImage()
+{
+	mImage = mContext->getDevice().createImage(
+		vk::ImageCreateInfo(vk::ImageCreateFlags(),
+			mImageType,
+			mFormat,
+			vk::Extent3D(mSize.x, mSize.y, mSize.z),
+			1, //Mip Levels
+			1, //Layers
+			vk::SampleCountFlagBits::e1,
+			vk::ImageTiling::eOptimal,
+			mUsage,
+			vk::SharingMode::eExclusive,
+			0,
+			nullptr,
+			vk::ImageLayout::eUndefined
+		)
+	);
+
+	mImageCreated = true;
 }
 
 void VulkanImage::allocateDeviceMemory(vk::MemoryPropertyFlags memFlags)
 {
-	auto memProps = _ctx->getPhysicalDevice().getMemoryProperties();
+	auto memProps = mContext->getPhysicalDevice().getMemoryProperties();
 
-
-	auto req = _ctx->getDevice().getImageMemoryRequirements(_image);
+	auto req = mContext->getDevice().getImageMemoryRequirements(mImage);
 
 	uint32_t memTypeIndex = 1000;
 	auto reqBits = req.memoryTypeBits;
@@ -43,20 +65,28 @@ void VulkanImage::allocateDeviceMemory(vk::MemoryPropertyFlags memFlags)
 			break;
 		}
 	}
+	
+	mMemorySize = req.size;
 
-	_memorySize = req.size;
-
-	_memory = _ctx->getDevice().allocateMemory(
+	mMemory = mContext->getDevice().allocateMemory(
 		vk::MemoryAllocateInfo(req.size, memTypeIndex)
 	);
 
-	_ctx->getDevice().bindImageMemory(_image, _memory, 0);
+	mContext->getDevice().bindImageMemory(mImage, mMemory, 0);
 
+	mMemoryAllocated = true;
 
-	_memoryAllocated = true;
+	// If the memory is host visible then map the memory, keeping the memory mapped does not come at a performance cost
+	if ((memFlags & vk::MemoryPropertyFlagBits::eHostVisible) == vk::MemoryPropertyFlagBits::eHostVisible)
+	{
+		mMemoryMapping = mContext->getDevice().mapMemory(
+			mMemory,
+			0,
+			mMemorySize,
+			vk::MemoryMapFlags()
+		);
+	}
 }
-
-
 
 void VulkanImage::transitionLayout(vk::CommandBuffer * cmd, vk::ImageLayout layout)
 {
@@ -89,181 +119,10 @@ void VulkanImage::transitionLayout(vk::CommandBuffer * cmd, vk::ImageLayout layo
 
 void VulkanImage::upload(uint64_t size, void* data)
 {
-	void * pData = _ctx->getDevice().mapMemory(
-		_memory,
-		0,
-		_memorySize,
-		vk::MemoryMapFlags()
-	);
-
-
-	memcpy(pData, data, size);
-
-	_ctx->getDevice().unmapMemory(
-		_memory
-	);
-
-	//return pData;
+	memcpy(mMemoryMapping, data, size);
 }
 
-void * VulkanImage::getMapped()
-{
-	return  _ctx->getDevice().mapMemory(
-		_memory,
-		0,
-		_memorySize,
-		vk::MemoryMapFlags()
-	);
-}
-
-void VulkanImage::unmap()
-{
-	_ctx->getDevice().unmapMemory(
-		_memory
-	);
-}
-
-void VulkanImage::createImage()
-{
-	_image = _ctx->getDevice().createImage(
-		vk::ImageCreateInfo(vk::ImageCreateFlags(),
-			vk::ImageType::e2D,
-			_format,
-			vk::Extent3D(_size.x, _size.y, 1),
-			1, //Mip Levels
-			1, //Layers
-			vk::SampleCountFlagBits::e1,
-			vk::ImageTiling::eOptimal,
-			_usage,
-			vk::SharingMode::eExclusive,
-			0,
-			nullptr,
-			vk::ImageLayout::eUndefined
-		)
-	);
-
-	_imageCreated = true;
-}
-
-void VulkanImage::createImageView(vk::ImageAspectFlags aspectFlags) {
-	vk::ComponentMapping cmap;
-	cmap.r = vk::ComponentSwizzle::eR;
-	cmap.g = vk::ComponentSwizzle::eG;
-	cmap.b = vk::ComponentSwizzle::eB;
-	cmap.a = vk::ComponentSwizzle::eA;
-
-	vk::ImageSubresourceRange irange;
-	irange.baseMipLevel = 0;
-	irange.levelCount = 1;
-	irange.setBaseArrayLayer(0);
-	irange.layerCount = 1;
-	irange.aspectMask = aspectFlags;
-
-	_imageView = _ctx->getDevice().createImageView(
-		vk::ImageViewCreateInfo(
-			vk::ImageViewCreateFlags(),
-			_image,
-			vk::ImageViewType::e2D,
-			_format,
-			cmap,
-			irange
-		)
-	);
-
-	_viewCreated = true;
-
-}
-
-void VulkanImage::createSampler()
-{
-	_sampler = _ctx->getNearestSampler();
-}
-
-
-
-vk::DescriptorImageInfo VulkanImage::getDII()
-{
-
-	vk::ImageLayout layout;
-
-	if (_usage & vk::ImageUsageFlagBits::eColorAttachment)
-		layout = vk::ImageLayout::eColorAttachmentOptimal;
-	else if (_usage & vk::ImageUsageFlagBits::eDepthStencilAttachment)
-		layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-	else
-		layout = vk::ImageLayout::eGeneral;
-	return vk::DescriptorImageInfo(
-		_sampler,
-		_imageView,
-		layout
-	);
-}
-
-vk::DescriptorType VulkanImage::getDescriptorType()
-{
-	if (_usage & vk::ImageUsageFlagBits::eSampled) {
-		return vk::DescriptorType::eCombinedImageSampler;
-	}
-	else if (_usage & vk::ImageUsageFlagBits::eStorage) {
-		return vk::DescriptorType::eStorageImage;
-	}
-};
-
-VulkanImage::~VulkanImage()
-{
-
-	if (_viewCreated) _ctx->getDevice().destroyImageView(_imageView);
-	if (_imageCreated) _ctx->getDevice().destroyImage(_image);
-	if (_memoryAllocated) _ctx->getDevice().freeMemory(_memory);
-
-	//if (_sampler) _ctx->getDevice().destroySampler(_sampler);
-
-}
-
-void VulkanImage::resize(ivec2 size)
-{
-	if (_viewCreated) _ctx->getDevice().destroyImageView(_imageView);
-	if (_imageCreated) _ctx->getDevice().destroyImage(_image);
-	if (_memoryAllocated) _ctx->getDevice().freeMemory(_memory);
-	
-	_size = size;
-
-	if (_imageCreated) createImage();
-	if (_memoryAllocated) allocateDeviceMemory();
-	if (_viewCreated) createImageView();
-
-}
-
-
-void VulkanCubeImage::createImage()
-{
-	_image = _ctx->getDevice().createImage(
-		vk::ImageCreateInfo(vk::ImageCreateFlagBits::eCubeCompatible,
-			vk::ImageType::e2D,
-			_format,
-			vk::Extent3D(_size.x, _size.y, 1),
-			1, //Mip Levels
-			6, //Layers
-			vk::SampleCountFlagBits::e1,
-			vk::ImageTiling::eOptimal,
-			_usage,
-			vk::SharingMode::eExclusive,
-			0,
-			nullptr,
-			vk::ImageLayout::eUndefined
-		)
-	);
-
-	_imageCreated = true;
-}
-
-VulkanCubeImage::VulkanCubeImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format) :
-	VulkanImage(ctx, usage, size, format)
-{
-	//_sampler = _ctx->getLinearSampler();
-}
-
-void VulkanCubeImage::createImageView(vk::ImageAspectFlags aspectFlags)
+void VulkanImage::createImageView(vk::ImageAspectFlags aspectFlags)
 {
 	vk::ComponentMapping cmap;
 	cmap.r = vk::ComponentSwizzle::eR;
@@ -278,16 +137,256 @@ void VulkanCubeImage::createImageView(vk::ImageAspectFlags aspectFlags)
 	irange.layerCount = 6;
 	irange.aspectMask = aspectFlags;
 
-	_imageView = _ctx->getDevice().createImageView(
+	mImageView = mContext->getDevice().createImageView(
 		vk::ImageViewCreateInfo(
 			vk::ImageViewCreateFlags(),
-			_image,
+			mImage,
 			vk::ImageViewType::eCube,
-			_format,
+			mFormat,
 			cmap,
 			irange
 		)
 	);
 
-	_viewCreated = true;
+	mViewCreated = true;
+}
+
+
+vk::DescriptorImageInfo VulkanImage::getDII()
+{
+
+	vk::ImageLayout layout;
+
+	if (mUsage & vk::ImageUsageFlagBits::eColorAttachment)
+		layout = vk::ImageLayout::eColorAttachmentOptimal;
+	else if (mUsage & vk::ImageUsageFlagBits::eDepthStencilAttachment)
+		layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+	else
+		layout = vk::ImageLayout::eGeneral;
+	return vk::DescriptorImageInfo(
+		mSampler,
+		mImageView,
+		layout
+	);
+}
+
+vk::DescriptorType VulkanImage::getDescriptorType()
+{
+	if (mUsage & vk::ImageUsageFlagBits::eSampled) {
+		return vk::DescriptorType::eCombinedImageSampler;
+	}
+	else if (mUsage & vk::ImageUsageFlagBits::eStorage) {
+		return vk::DescriptorType::eStorageImage;
+	}
+};
+
+VulkanImage::~VulkanImage()
+{
+	mContext->getDevice().unmapMemory(
+		mMemory
+	);
+
+	if (mViewCreated) mContext->getDevice().destroyImageView(mImageView);
+	if (mImageCreated) mContext->getDevice().destroyImage(mImage);
+	if (mMemoryAllocated) mContext->getDevice().freeMemory(mMemory);
+
+	//if (_sampler) _ctx->getDevice().destroySampler(_sampler);
+
+}
+
+/**************************************************
+ * 1D
+ * ************************************************/
+
+VulkanImage1D::VulkanImage1D(VulkanContextRef ctx, vk::ImageUsageFlags usage, vk::Format format, float size) : VulkanImage(ctx, usage, format, glm::ivec3(size, 1, 1), vk::ImageType::e1D)
+{
+
+}
+
+VulkanImage1D::VulkanImage1D(VulkanContextRef ctx, vk::Image image, vk::Format format, int size) : VulkanImage(ctx, image, format, glm::ivec3(size, 1, 1), vk::ImageType::e1D)
+{
+
+}
+
+void VulkanImage1D::createImageView(vk::ImageAspectFlags aspectFlags)
+{
+	vk::ComponentMapping cmap;
+	cmap.r = vk::ComponentSwizzle::eR;
+	cmap.g = vk::ComponentSwizzle::eG;
+	cmap.b = vk::ComponentSwizzle::eB;
+	cmap.a = vk::ComponentSwizzle::eA;
+
+	vk::ImageSubresourceRange irange;
+	irange.baseMipLevel = 0;
+	irange.levelCount = 1;
+	irange.setBaseArrayLayer(0);
+	irange.layerCount = 1;
+	irange.aspectMask = aspectFlags;
+
+	mImageView = mContext->getDevice().createImageView(
+		vk::ImageViewCreateInfo(
+			vk::ImageViewCreateFlags(),
+			mImage,
+			vk::ImageViewType::e1D,
+			mFormat,
+			cmap,
+			irange
+		)
+	);
+
+	mViewCreated = true;
+}
+
+void VulkanImage1D::resize(float size)
+{
+	if (mViewCreated) mContext->getDevice().destroyImageView(mImageView);
+	if (mImageCreated) mContext->getDevice().destroyImage(mImage);
+	if (mMemoryAllocated) mContext->getDevice().freeMemory(mMemory);
+
+	mSize.x = size;
+
+	if (mImageCreated) createImage();
+	if (mMemoryAllocated) allocateDeviceMemory();
+	if (mViewCreated) createImageView();
+}
+
+/**************************************************
+ * 2D
+ * ************************************************/
+
+VulkanImage2D::VulkanImage2D(VulkanContextRef ctx, vk::ImageUsageFlags usage, vk::Format format, glm::ivec2 size) : 
+	VulkanImage(ctx, usage, format, glm::ivec3(size.x, size.y, 1),  vk::ImageType::e2D)
+{
+
+}
+
+VulkanImage2D::VulkanImage2D(VulkanContextRef ctx, vk::Image image, vk::Format format, glm::ivec2 size) :
+	VulkanImage(ctx, image, format, glm::ivec3(size.x, size.y, 1), vk::ImageType::e2D)
+{
+
+}
+
+void VulkanImage2D::createImageView(vk::ImageAspectFlags aspectFlags) {
+	vk::ComponentMapping cmap;
+	cmap.r = vk::ComponentSwizzle::eR;
+	cmap.g = vk::ComponentSwizzle::eG;
+	cmap.b = vk::ComponentSwizzle::eB;
+	cmap.a = vk::ComponentSwizzle::eA;
+
+	vk::ImageSubresourceRange irange;
+	irange.baseMipLevel = 0;
+	irange.levelCount = 1;
+	irange.setBaseArrayLayer(0);
+	irange.layerCount = 1;
+	irange.aspectMask = aspectFlags;
+
+	mImageView = mContext->getDevice().createImageView(
+		vk::ImageViewCreateInfo(
+			vk::ImageViewCreateFlags(),
+			mImage,
+			vk::ImageViewType::e2D,
+			mFormat,
+			cmap,
+			irange
+		)
+	);
+
+	mViewCreated = true;
+}
+
+void VulkanImage2D::resize(ivec2 size)
+{
+	if (mViewCreated) mContext->getDevice().destroyImageView(mImageView);
+	if (mImageCreated) mContext->getDevice().destroyImage(mImage);
+	if (mMemoryAllocated) mContext->getDevice().freeMemory(mMemory);
+
+	mSize = ivec3(size.x, size.y, 1);
+
+	if (mImageCreated) createImage();
+	if (mMemoryAllocated) allocateDeviceMemory();
+	if (mViewCreated) createImageView();
+}
+
+/**************************************************
+* 3D
+* ************************************************/
+
+VulkanImage3D::VulkanImage3D(VulkanContextRef ctx, vk::ImageUsageFlags usage, vk::Format format, glm::ivec3 size) :
+	VulkanImage(ctx, usage, format, glm::ivec3(size.x, size.y, size.z), vk::ImageType::e3D)
+{
+
+}
+
+VulkanImage3D::VulkanImage3D(VulkanContextRef ctx, vk::Image image, vk::Format format, glm::ivec3 size) :
+	VulkanImage(ctx, image, format, glm::ivec3(size.x, size.y, size.z), vk::ImageType::e3D)
+{
+
+}
+
+void VulkanImage3D::createImageView(vk::ImageAspectFlags aspectFlags)
+{
+	vk::ComponentMapping cmap;
+	cmap.r = vk::ComponentSwizzle::eR;
+	cmap.g = vk::ComponentSwizzle::eG;
+	cmap.b = vk::ComponentSwizzle::eB;
+	cmap.a = vk::ComponentSwizzle::eA;
+
+	vk::ImageSubresourceRange irange;
+	irange.baseMipLevel = 0;
+	irange.levelCount = 1;
+	irange.setBaseArrayLayer(0);
+	irange.layerCount = 1;
+	irange.aspectMask = aspectFlags;
+
+	mImageView = mContext->getDevice().createImageView(
+		vk::ImageViewCreateInfo(
+			vk::ImageViewCreateFlags(),
+			mImage,
+			vk::ImageViewType::e3D,
+			mFormat,
+			cmap,
+			irange
+		)
+	);
+
+	mViewCreated = true;
+}
+
+/**************************************************
+ * Cube
+ * ************************************************/
+
+VulkanImageCube::VulkanImageCube(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format) :
+	VulkanImage(ctx, usage, format, glm::ivec3(size.x, size.y, 1), vk::ImageType::e2D)
+{
+	
+}
+
+void VulkanImageCube::createImageView(vk::ImageAspectFlags aspectFlags)
+{
+	vk::ComponentMapping cmap;
+	cmap.r = vk::ComponentSwizzle::eR;
+	cmap.g = vk::ComponentSwizzle::eG;
+	cmap.b = vk::ComponentSwizzle::eB;
+	cmap.a = vk::ComponentSwizzle::eA;
+
+	vk::ImageSubresourceRange irange;
+	irange.baseMipLevel = 0;
+	irange.levelCount = 1;
+	irange.setBaseArrayLayer(0);
+	irange.layerCount = 6;
+	irange.aspectMask = aspectFlags;
+
+	mImageView = mContext->getDevice().createImageView(
+		vk::ImageViewCreateInfo(
+			vk::ImageViewCreateFlags(),
+			mImage,
+			vk::ImageViewType::eCube,
+			mFormat,
+			cmap,
+			irange
+		)
+	);
+
+	mViewCreated = true;
 }
