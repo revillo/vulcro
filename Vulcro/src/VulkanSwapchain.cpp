@@ -1,26 +1,33 @@
 #include "VulkanSwapchain.h"
 
 VulkanSwapchain::VulkanSwapchain(VulkanContextRef ctx, vk::SurfaceKHR surface) :
-	_ctx(ctx),
-	_surface(surface)
+	mContext(ctx),
+	mSurface(surface)
 {
 	init(surface);
 	createSemaphore();
 }
 
+VulkanSwapchain::~VulkanSwapchain()
+{
+	mContext->getDevice().destroySwapchainKHR(mSwapchain);
+	mContext->getDevice().destroySemaphore(mSemaphore);
+}
+
+
 bool VulkanSwapchain::init(vk::SurfaceKHR surface) {
 	
-	auto &physicalDevice = _ctx->getPhysicalDevice();
+	auto &physicalDevice = mContext->getPhysicalDevice();
 	
 	bool supported = physicalDevice.getSurfaceSupportKHR(0, surface);
 
 	auto surfCap = physicalDevice.getSurfaceCapabilitiesKHR(surface);
 	auto surfFormats = physicalDevice.getSurfaceFormatsKHR(surface);
 	auto presentModes = physicalDevice.getSurfacePresentModesKHR(surface);
-	_format = surfFormats[0].format;
-	_extent = surfCap.currentExtent;
+	mFormat = surfFormats[0].format;
+	mExtent = surfCap.currentExtent;
 
-	if (_extent.width == 0) return false;
+	if (mExtent.width == 0) return false;
 
 	auto presentMode = vk::PresentModeKHR::eImmediate;
 
@@ -34,14 +41,14 @@ bool VulkanSwapchain::init(vk::SurfaceKHR surface) {
 		}
 	}
 
-	vk::SwapchainKHR oldSwapchain = swapchainInited ? _swapchain : vk::SwapchainKHR();
+	vk::SwapchainKHR oldSwapchain = mSwapchainInited ? mSwapchain : vk::SwapchainKHR();
 
-	_swapchain = _ctx->getDevice().createSwapchainKHR(
+	mSwapchain = mContext->getDevice().createSwapchainKHR(
 		vk::SwapchainCreateInfoKHR(
 			vk::SwapchainCreateFlagsKHR(),
 			surface,
 			surfCap.minImageCount,
-			_format,
+			mFormat,
 			surfFormats[0].colorSpace,
 			surfCap.currentExtent,
 			1, // imageArrayLayers
@@ -57,43 +64,43 @@ bool VulkanSwapchain::init(vk::SurfaceKHR surface) {
 		)
 	);
 
-	_images.clear();
+	mImages.clear();
 
-	auto swapImages = _ctx->getDevice().getSwapchainImagesKHR(_swapchain);
+	auto swapImages = mContext->getDevice().getSwapchainImagesKHR(mSwapchain);
 	
 	for (auto &swapImage : swapImages)
 	{
-		auto vi = _ctx->makeImage2D(swapImage, _format, ivec2(surfCap.currentExtent.width, surfCap.currentExtent.height));
+		auto vi = mContext->makeImage2D(swapImage, mFormat, ivec2(surfCap.currentExtent.width, surfCap.currentExtent.height));
 		vi->createImageView(vk::ImageAspectFlagBits::eColor);
-		_images.push_back(vi);
+		mImages.push_back(vi);
 	}
 
-	if (swapchainInited)
+	if (mSwapchainInited)
 	{
-		_ctx->getDevice().destroySwapchainKHR(oldSwapchain);
+		mContext->getDevice().destroySwapchainKHR(oldSwapchain);
 	}
 
-	swapchainInited = true;
+	mSwapchainInited = true;
 
 	return true;
 }
 
 void VulkanSwapchain::createSemaphore()
 {
-	_semaphore = _ctx->getDevice().createSemaphore(
+	mSemaphore = mContext->getDevice().createSemaphore(
 		vk::SemaphoreCreateInfo()
 	);
 }
 
 bool VulkanSwapchain::present(vector<vk::Semaphore> inSems) {
 	try {
-		_ctx->getQueue().presentKHR(
+		mContext->getQueue().presentKHR(
 			vk::PresentInfoKHR(
 				static_cast<uint32_t>(inSems.size()),
 				inSems.size() > 0 ? &inSems[0] : nullptr,
 				1,
-				&_swapchain,
-				&_renderingIndex
+				&mSwapchain,
+				&mRenderingIndex
 			)
 		);
 
@@ -108,44 +115,35 @@ bool VulkanSwapchain::present(vector<vk::Semaphore> inSems) {
 bool VulkanSwapchain::nextFrame()
 {
 
-	if (_extent.width == 0) return false;
+	if(mExtent.width == 0) return false;
 
 	try {
-
-
-		auto ret = _ctx->getDevice().acquireNextImageKHR(
-			_swapchain,
+		auto ret = mContext->getDevice().acquireNextImageKHR(
+			mSwapchain,
 			UINT64_MAX,
-			_semaphore,
+			mSemaphore,
 			vk::Fence()
 		);
 
-		_renderingIndex = ret.value;
-		_frameFailed = false;
+		mRenderingIndex = ret.value;
+		mFrameFailed = false;
 		return true;
 	}
 	catch (vk::SystemError error) {
 		return false;
 	}
-	}
+}
 
 bool VulkanSwapchain::resize()
 {
-	return init(_surface);
+	return init(mSurface);
 }
 
 vk::Rect2D VulkanSwapchain::getRect()
 {
 	return vk::Rect2D(
 		vk::Offset2D(0, 0),
-		_extent
+		mExtent
 	);
 }
 
-
-
-VulkanSwapchain::~VulkanSwapchain()
-{
-	_ctx->getDevice().destroySwapchainKHR(_swapchain);
-	_ctx->getDevice().destroySemaphore(_semaphore);
-}

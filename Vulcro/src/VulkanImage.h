@@ -34,8 +34,7 @@ public:
 
 	void allocateDeviceMemory(vk::MemoryPropertyFlags memFlags = vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-	void createSampler();
-	void setSampler(vk::Sampler sampler) { _sampler = sampler; }
+	void setSampler(vk::Sampler sampler) { mSampler = sampler; }
 
 	vk::DescriptorImageInfo getDII();
 	vk::DescriptorType getDescriptorType();
@@ -48,67 +47,62 @@ public:
 	//// Getters / Setters
 	/////////////////////////
 
-	inline bool isMemoryMapped()
-	{
+	inline bool isMemoryMapped() {
 		return mMemoryMapping != nullptr;
 	}
 
-	inline void* getMemoryMapping()
-	{
+	inline void* getMemoryMapping() {
 		return mMemoryMapping;
 	}
 
-	inline vk::Format getFormat()
-	{
-		return _format;
+	inline vk::Format getFormat() {
+		return mFormat;
 	}
 
-	inline vk::Sampler getSampler()
-	{
-		return _sampler;
+	inline vk::Sampler getSampler() {
+		return mSampler;
 	}
 
-	inline vk::Image getImage()
-	{
-		return _image;
+	inline vk::ImageType getImageType() {
+		return mImageType;
 	}
 
-	inline vk::ImageView getImageView()
-	{
-		return _imageView;
+	inline vk::ImageView getImageView() {
+		return mImageView;
 	}
 
-	inline ivec3 getSize()
-	{
+	inline vk::Image getImage() {
+		return mImage;
+	}
+
+	inline ivec3 getSize() {
 		return mSize;
 	}
 
+	inline uint64_t getMemorySize() {
+		return mMemorySize;
+	}
 
 protected:
 
+	VulkanContextRef mContext;
+
 	void *mMemoryMapping = nullptr;
+	vk::Format mFormat;
+	vk::Sampler mSampler = nullptr;
 	vk::ImageType mImageType;
+	vk::ImageView mImageView = nullptr;
+	vk::ImageUsageFlags mUsage;
+	vk::Image mImage;
 	glm::ivec3 mSize;
 
-	VulkanContextRef _ctx;
-
-	vk::Format _format;
-	vk::ImageView _imageView = nullptr;
-	vk::DeviceMemory _memory;
-
-	vk::Sampler _sampler = nullptr;
-
-	bool _imageCreated = false;
-	bool _memoryAllocated = false;
-	bool _viewCreated = false;
-
-	vk::ImageUsageFlags _usage;
-
-	vk::Image _image;
+	vk::DeviceMemory mMemory;
+	uint64_t mMemorySize;
 	
-	uint64_t _memorySize;
+	bool mImageCreated = false;
+	bool mMemoryAllocated = false;
+	bool mViewCreated = false;
 };
-
 
 /**************************************************
  * 1D
@@ -134,7 +128,6 @@ public:
 
 	void resize(float size);
 };
-
 
 /**************************************************
  * 2D

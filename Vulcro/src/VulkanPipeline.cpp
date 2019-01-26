@@ -1,6 +1,6 @@
 #include "VulkanPipeline.h"
 
-VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, VulkanRendererRef renderer,
+VulkanRenderPipeline::VulkanRenderPipeline(VulkanContextRef ctx, VulkanShaderRef shader, VulkanRendererRef renderer,
 	PipelineConfig config,
 	vector<ColorBlendConfig> colorBlendConfigs
 ) :
@@ -120,7 +120,7 @@ VulkanPipeline::VulkanPipeline(VulkanContextRef ctx, VulkanShaderRef shader, Vul
 	);
 }
 
-void VulkanPipeline::bind(vk::CommandBuffer * cmd)
+void VulkanRenderPipeline::bind(vk::CommandBuffer * cmd)
 {
 	cmd->bindPipeline(
 		vk::PipelineBindPoint::eGraphics,
@@ -129,7 +129,7 @@ void VulkanPipeline::bind(vk::CommandBuffer * cmd)
 
 }
 
-void VulkanPipeline::bindSets(vk::CommandBuffer * cmd, vk::ArrayProxy<const VulkanSetRef> descriptorSets)
+void VulkanRenderPipeline::bindSets(vk::CommandBuffer * cmd, vk::ArrayProxy<const VulkanSetRef> descriptorSets)
 {
 	int numSets = descriptorSets.size();
 	const VulkanSetRef * sets = descriptorSets.begin();
@@ -172,7 +172,7 @@ void VulkanPipeline::bindSets(vk::CommandBuffer * cmd, vk::ArrayProxy<const Vulk
 	);
 }
 
-VulkanPipeline::~VulkanPipeline() {
+VulkanRenderPipeline::~VulkanRenderPipeline() {
 
 	_ctx->getDevice().destroyPipeline(_pipeline);
 	
@@ -180,7 +180,7 @@ VulkanPipeline::~VulkanPipeline() {
 	
 }
 
-vector<vk::PipelineColorBlendAttachmentState> VulkanPipeline::configureBlending()
+vector<vk::PipelineColorBlendAttachmentState> VulkanRenderPipeline::configureBlending()
 {
     int numTargets = _renderer->getNumTargets();
     vector<vk::PipelineColorBlendAttachmentState> pcbas;
@@ -206,7 +206,7 @@ vector<vk::PipelineColorBlendAttachmentState> VulkanPipeline::configureBlending(
     return pcbas;
 }
 
-vk::PipelineDepthStencilStateCreateInfo VulkanPipeline::configureDepthTest()
+vk::PipelineDepthStencilStateCreateInfo VulkanRenderPipeline::configureDepthTest()
 {
 
 	auto sopstate = vk::StencilOpState();

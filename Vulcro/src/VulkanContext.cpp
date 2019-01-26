@@ -193,11 +193,11 @@ shared_ptr<VulkanRenderer> VulkanContext::makeRenderer()
 }
 
 #include "VulkanPipeline.h"
-shared_ptr<VulkanPipeline> VulkanContext::makePipeline(VulkanShaderRef shader, VulkanRendererRef renderer, PipelineConfig config,
+shared_ptr<VulkanRenderPipeline> VulkanContext::makePipeline(VulkanShaderRef shader, VulkanRendererRef renderer, PipelineConfig config,
 	vector<ColorBlendConfig> colorBlendConfigs
 )
 {
-	return make_shared<VulkanPipeline>(this, shader, renderer, config, colorBlendConfigs);
+	return make_shared<VulkanRenderPipeline>(this, shader, renderer, config, colorBlendConfigs);
 }
 
 VulkanComputePipelineRef VulkanContext::makeComputePipeline(VulkanShaderRef shader)

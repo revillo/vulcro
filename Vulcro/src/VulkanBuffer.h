@@ -11,6 +11,10 @@ public:
 
 	typedef uint32_t IndexType;
 
+	//////////////////////////
+	//// Constants
+	/////////////////////////
+
 	static const vk::BufferUsageFlags UNIFORM_BUFFER;
 	static const vk::BufferUsageFlags STORAGE_BUFFER;
 	static const vk::BufferUsageFlags CLEARABLE_STORAGE_BUFFER;
@@ -19,6 +23,9 @@ public:
 	static const vk::MemoryPropertyFlags CPU_ALOT;
 	static const vk::MemoryPropertyFlags CPU_NEVER;
 
+	//////////////////////////
+	//// Constructors / Descructor
+	/////////////////////////
 
 	VulkanBuffer(VulkanContextRef ctx, vk::BufferUsageFlags usage, uint64_t size, 
 		vk::MemoryPropertyFlags memFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, 
@@ -27,6 +34,10 @@ public:
 	VULCRO_DONT_COPY(VulkanBuffer)
 
 	~VulkanBuffer();
+
+	//////////////////////////
+	//// Functions
+	/////////////////////////
 	
 	void bindVertex(vk::CommandBuffer * cmd, vk::DeviceSize offset = 0);
 	
@@ -34,6 +45,9 @@ public:
 
 	void upload(uint64_t size, void* data, uint32_t offset = 0);
 
+	//////////////////////////
+	//// Getters / Setters
+	/////////////////////////
 	/*
 	* Set size to -1 for full buffer
 	*/
@@ -42,15 +56,18 @@ public:
 	vk::DescriptorType getDescriptorType();
 
 
-	VulkanUniformLayoutBinding getBinding() {
+	inline VulkanUniformLayoutBinding getBinding()
+	{
 		return ULB(1, getDescriptorType());
 	}
 
-	void recordClear(vk::CommandBuffer * cmd) {
+	inline void recordClear(vk::CommandBuffer * cmd)
+	{
 		cmd->fillBuffer(_buffer, 0, _size, 0);
 	}
 
-	vk::Buffer &getBuffer() {
+	inline vk::Buffer &getBuffer()
+	{
 		return _buffer;
 	}
 

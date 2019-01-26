@@ -1,12 +1,18 @@
 #pragma once
+
 #include "VulkanContext.h"
 #include "VulkanRenderer.h"
 #include "VulkanSet.h"
 
-class VulkanPipeline {
-
+class VulkanRenderPipeline
+{
 public:
-	VulkanPipeline(
+
+	//////////////////////////
+	//// Constructors / Descructor
+	/////////////////////////
+
+	VulkanRenderPipeline(
 		VulkanContextRef ctx, 
 		VulkanShaderRef shader, 
 		VulkanRendererRef renderer, 
@@ -14,19 +20,29 @@ public:
 		vector<ColorBlendConfig> colorBlendConfigs = {}
     );
 
-	vk::Pipeline getPipeline() {
-		return _pipeline;
-	}
+	~VulkanRenderPipeline();
 
-	vk::PipelineLayout getLayout() {
-		return _pipelineLayout;
-	}
+	//////////////////////////
+	//// Functions
+	/////////////////////////
 
 	void bind(vk::CommandBuffer * cmd);
 
 	void bindSets(vk::CommandBuffer * cmd, vk::ArrayProxy<const VulkanSetRef> sets);
 
-	~VulkanPipeline();
+	//////////////////////////
+	//// Getters /Setters
+	/////////////////////////
+
+	inline vk::Pipeline getPipeline()
+	{
+		return _pipeline;
+	}
+
+	inline vk::PipelineLayout getLayout()
+	{
+		return _pipelineLayout;
+	}
 
 private:
 

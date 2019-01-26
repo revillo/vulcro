@@ -40,7 +40,7 @@ class VulkanSet;
 class VulkanVertexLayout;
 class VulkanRenderer;
 class VulkanShader;
-class VulkanPipeline;
+class VulkanRenderPipeline;
 class VulkanComputePipeline;
 class VulkanSwapchain;
 class VulkanBuffer;
@@ -77,7 +77,7 @@ class ibo;
 
 typedef shared_ptr<VulkanShader> VulkanShaderRef;
 typedef shared_ptr<VulkanRenderer> VulkanRendererRef;
-typedef shared_ptr<VulkanPipeline> VulkanPipelineRef;
+typedef shared_ptr<VulkanRenderPipeline> VulkanRenderPipelineRef;
 typedef shared_ptr<VulkanSetLayout> VulkanSetLayoutRef;
 typedef shared_ptr<VulkanVertexLayout> VulkanVertexLayoutRef;
 typedef shared_ptr<VulkanSwapchain> VulkanSwapchainRef;
@@ -129,7 +129,7 @@ public:
 	VulkanVertexLayoutRef makeVertexLayout(vk::ArrayProxy<const vk::Format> fields);
 	VulkanRendererRef makeRenderer();
 
-	VulkanPipelineRef makePipeline(VulkanShaderRef shader, VulkanRendererRef renderer, PipelineConfig config = PipelineConfig(),
+	VulkanRenderPipelineRef makePipeline(VulkanShaderRef shader, VulkanRendererRef renderer, PipelineConfig config = PipelineConfig(),
 		vector<ColorBlendConfig> colorBlendConfigs = {}
 	);
 
