@@ -32,8 +32,6 @@ public:
 	virtual void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor) = 0;
 	void createImage();
 
-	void allocateDeviceMemory(vk::MemoryPropertyFlags memFlags = vk::MemoryPropertyFlagBits::eDeviceLocal);
-
 	void setSampler(vk::Sampler sampler) { mSampler = sampler; }
 
 	vk::DescriptorImageInfo getDII();
@@ -84,6 +82,7 @@ public:
 	}
 
 protected:
+	void allocateDeviceMemory(vk::MemoryPropertyFlags memFlags = vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 	VulkanContextRef mContext;
 
@@ -93,10 +92,10 @@ protected:
 	vk::ImageType mImageType;
 	vk::ImageView mImageView = nullptr;
 	vk::ImageUsageFlags mUsage;
-	vk::Image mImage;
+	vk::Image mImage = nullptr;
 	glm::ivec3 mSize;
 
-	vk::DeviceMemory mMemory;
+	vk::DeviceMemory mMemory = nullptr;
 	uint64_t mMemorySize;
 	
 	bool mImageCreated = false;

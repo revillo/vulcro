@@ -12,8 +12,6 @@ void VulkanRenderer::createDepthBuffer() {
 	_depthImage = _ctx->makeImage2D(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
         vk::Format::eD32Sfloat, glm::ivec2(_fullRect.extent.width, _fullRect.extent.height));
 	
-    _depthImage->allocateDeviceMemory();
-	_depthImage->createImageView(vk::ImageAspectFlagBits::eDepth);
 	_depthImage->setSampler(_ctx->getShadowSampler());
 }
 

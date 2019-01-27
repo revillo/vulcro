@@ -201,13 +201,7 @@ public:
 	VulkanImage3DRef makeImage3D(vk::ImageUsageFlags usage, vk::Format format, glm::ivec3 size);
 	VulkanImage3DRef makeImage3D(vk::Image image, vk::Format format, glm::ivec3 size);
 	
-	template <class T>
-	VulkanImage2DRef makeImageTyped(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format) {
-		auto r = make_shared<T>(this, usage, size, format);
-		r->createImage();
-		r->setSampler(getNearestSampler());
-		return r;
-	};
+	VulkanImageCubeRef makeImageCube(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format);
 
 	template <class T>
 	shared_ptr<ubo<T>> makeUBO(uint32_t arrayCount, T * data = nullptr) {

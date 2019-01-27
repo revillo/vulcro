@@ -119,38 +119,9 @@ void VulkanImage::transitionLayout(vk::CommandBuffer * cmd, vk::ImageLayout layo
 
 void VulkanImage::upload(uint64_t size, void* data)
 {
+	assert(isMemoryMapped());
 	memcpy(mMemoryMapping, data, size);
 }
-
-void VulkanImage::createImageView(vk::ImageAspectFlags aspectFlags)
-{
-	vk::ComponentMapping cmap;
-	cmap.r = vk::ComponentSwizzle::eR;
-	cmap.g = vk::ComponentSwizzle::eG;
-	cmap.b = vk::ComponentSwizzle::eB;
-	cmap.a = vk::ComponentSwizzle::eA;
-
-	vk::ImageSubresourceRange irange;
-	irange.baseMipLevel = 0;
-	irange.levelCount = 1;
-	irange.setBaseArrayLayer(0);
-	irange.layerCount = 6;
-	irange.aspectMask = aspectFlags;
-
-	mImageView = mContext->getDevice().createImageView(
-		vk::ImageViewCreateInfo(
-			vk::ImageViewCreateFlags(),
-			mImage,
-			vk::ImageViewType::eCube,
-			mFormat,
-			cmap,
-			irange
-		)
-	);
-
-	mViewCreated = true;
-}
-
 
 vk::DescriptorImageInfo VulkanImage::getDII()
 {
@@ -182,13 +153,17 @@ vk::DescriptorType VulkanImage::getDescriptorType()
 
 VulkanImage::~VulkanImage()
 {
-	mContext->getDevice().unmapMemory(
-		mMemory
-	);
+	if (isMemoryMapped()) {
+		mContext->getDevice().unmapMemory(
+			mMemory
+		);
+	}
 
 	if (mViewCreated) mContext->getDevice().destroyImageView(mImageView);
 	if (mImageCreated) mContext->getDevice().destroyImage(mImage);
-	if (mMemoryAllocated) mContext->getDevice().freeMemory(mMemory);
+	if (mMemoryAllocated) {
+		mContext->getDevice().freeMemory(mMemory);
+	}
 
 	//if (_sampler) _ctx->getDevice().destroySampler(_sampler);
 
@@ -200,7 +175,9 @@ VulkanImage::~VulkanImage()
 
 VulkanImage1D::VulkanImage1D(VulkanContextRef ctx, vk::ImageUsageFlags usage, vk::Format format, float size) : VulkanImage(ctx, usage, format, glm::ivec3(size, 1, 1), vk::ImageType::e1D)
 {
-
+	createImage();
+	allocateDeviceMemory();
+	createImageView(vk::ImageAspectFlagBits::eColor);
 }
 
 VulkanImage1D::VulkanImage1D(VulkanContextRef ctx, vk::Image image, vk::Format format, int size) : VulkanImage(ctx, image, format, glm::ivec3(size, 1, 1), vk::ImageType::e1D)
@@ -257,7 +234,15 @@ void VulkanImage1D::resize(float size)
 VulkanImage2D::VulkanImage2D(VulkanContextRef ctx, vk::ImageUsageFlags usage, vk::Format format, glm::ivec2 size) : 
 	VulkanImage(ctx, usage, format, glm::ivec3(size.x, size.y, 1),  vk::ImageType::e2D)
 {
+	createImage();
+	allocateDeviceMemory();
 
+	if (usage & vk::ImageUsageFlagBits::eDepthStencilAttachment) {
+		createImageView(vk::ImageAspectFlagBits::eDepth);
+	}
+	else {
+		createImageView(vk::ImageAspectFlagBits::eColor);
+	}
 }
 
 VulkanImage2D::VulkanImage2D(VulkanContextRef ctx, vk::Image image, vk::Format format, glm::ivec2 size) :
@@ -314,7 +299,9 @@ void VulkanImage2D::resize(ivec2 size)
 VulkanImage3D::VulkanImage3D(VulkanContextRef ctx, vk::ImageUsageFlags usage, vk::Format format, glm::ivec3 size) :
 	VulkanImage(ctx, usage, format, glm::ivec3(size.x, size.y, size.z), vk::ImageType::e3D)
 {
-
+	createImage();
+	allocateDeviceMemory();
+	createImageView(vk::ImageAspectFlagBits::eColor);
 }
 
 VulkanImage3D::VulkanImage3D(VulkanContextRef ctx, vk::Image image, vk::Format format, glm::ivec3 size) :
@@ -359,7 +346,9 @@ void VulkanImage3D::createImageView(vk::ImageAspectFlags aspectFlags)
 VulkanImageCube::VulkanImageCube(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format) :
 	VulkanImage(ctx, usage, format, glm::ivec3(size.x, size.y, 1), vk::ImageType::e2D)
 {
-	
+	createImage();
+	allocateDeviceMemory();
+	createImageView(vk::ImageAspectFlagBits::eColor);
 }
 
 void VulkanImageCube::createImageView(vk::ImageAspectFlags aspectFlags)

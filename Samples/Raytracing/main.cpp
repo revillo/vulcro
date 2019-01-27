@@ -14,18 +14,13 @@ int main()
 	glm::ivec2 sceneSize(512, 512);
 
 	auto colorTarget = vctx->makeImage2D(VulkanImage2D::SAMPLED_STORAGE, vk::Format::eR8G8B8A8Unorm, sceneSize);
-	colorTarget->allocateDeviceMemory();
-	colorTarget->createImageView();
 	colorTarget->setSampler(vctx->getNearestSampler());
 
 	auto renderer = vctx->makeRenderer();
 	auto swapchain = vctx->makeSwapchain(window.getSurface());
-	//renderer->addStorageImage(colorTarget);
 	renderer->targetSwapcahin(swapchain);
 
-
 	//Make buffers for a triangle and add to a ray tracing scene
-
 	glm::vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
 	glm::vec4 blue = vec4(0.0, 0.0, 1.0, 1.0);
 	glm::vec4 green = vec4(0.0, 1.0, 0.0, 1.0);
@@ -55,6 +50,8 @@ int main()
 		0, 1, 2
 	});
 
+
+	//vertex buffer windows
 	auto topTriangleVB = vctx->makeVBO(vbuf, 0, 3);
 	auto bottomTriangleVB = vctx->makeVBO(vbuf, 3, 3);
 

@@ -322,7 +322,6 @@ VulkanTaskGroupRef VulkanContext::makeTaskGroup(uint32_t numTasks, uint32_t pool
 VulkanImage1DRef VulkanContext::makeImage1D(vk::ImageUsageFlags usage, vk::Format format, float size)
 {
 	auto r = make_shared<VulkanImage1D>(this, usage, format, size);
-	r->createImage();
 	r->setSampler(getNearestSampler());
 	return r;
 }
@@ -335,7 +334,6 @@ VulkanImage1DRef VulkanContext::makeImage1D(vk::Image image, vk::Format format, 
 VulkanImage2DRef VulkanContext::makeImage2D(vk::ImageUsageFlags usage, vk::Format format, glm::ivec2 size)
 {
 	auto r = make_shared<VulkanImage2D>(this, usage, format, size);
-	r->createImage();
 	r->setSampler(getNearestSampler());
 	return r;
 }
@@ -348,7 +346,6 @@ VulkanImage2DRef VulkanContext::makeImage2D(vk::Image image, vk::Format format, 
 VulkanImage3DRef VulkanContext::makeImage3D(vk::ImageUsageFlags usage, vk::Format format, glm::ivec3 size)
 {
 	auto r = make_shared<VulkanImage3D>(this, usage, format, size);
-	r->createImage();
 	r->setSampler(getNearestSampler());
 	return r;
 }
@@ -356,6 +353,11 @@ VulkanImage3DRef VulkanContext::makeImage3D(vk::ImageUsageFlags usage, vk::Forma
 VulkanImage3DRef VulkanContext::makeImage3D(vk::Image image, vk::Format format, glm::ivec3 size)
 {
 	return make_shared<VulkanImage3D>(this, image, format, size);
+}
+
+VulkanImageCubeRef VulkanContext::makeImageCube(vk::ImageUsageFlags usage, glm::ivec2 size, vk::Format format)
+{
+	return make_shared<VulkanImageCube>(this, usage, size, format);
 }
 
 #include "rtx/RTPipeline.h"
