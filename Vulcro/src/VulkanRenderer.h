@@ -16,7 +16,7 @@ public:
 
 	void createDepthBuffer();
 	void targetSwapcahin(VulkanSwapchainRef swapchain, bool useDepth = true);
-	void targetImages(vector<VulkanImageRef> images, bool useDepth = true);
+	void targetImages(vector<VulkanImage2DRef> images, bool useDepth = true);
 	void targetDepth(glm::ivec2 size);
 
 	void setClearColors(vector<std::array<float, 4>> colors) {
@@ -65,7 +65,7 @@ public:
 		return _renderPass;
 	}
 
-	VulkanImageRef getDepthBuffer() {
+	VulkanImage2DRef getDepthBuffer() {
 		return _depthImage;
 	}
 	
@@ -77,10 +77,10 @@ private:
 	void createImagesFramebuffer();
 
 	VulkanContextRef _ctx;
-	VulkanImageRef _depthImage;
+	VulkanImage2DRef _depthImage;
 
 	VulkanSwapchainRef _swapchain = nullptr;
-	vector<VulkanImageRef> _images;
+	vector<VulkanImage2DRef> _images;
 
 	vector<vk::Framebuffer> _framebuffers;
 

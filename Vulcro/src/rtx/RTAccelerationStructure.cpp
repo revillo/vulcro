@@ -60,6 +60,7 @@ RTAccelerationStructure::RTAccelerationStructure(VulkanContextRef ctx, RTGeometr
 RTAccelerationStructure::~RTAccelerationStructure()
 {
 	_ctx->getDevice().destroyAccelerationStructureNV(_accelStruct, nullptr, _ctx->getDynamicDispatch());
+	_ctx->getDevice().freeMemory(_memory, nullptr, _ctx->getDynamicDispatch());
 }
 
 void RTAccelerationStructure::allocateDeviceMemory()

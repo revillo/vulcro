@@ -15,9 +15,7 @@ int main()
 	auto vctx = window.getContext();
 	glm::ivec2 sceneSize(1024, 1024);
 
-	auto colorTarget = vctx->makeImage(VulkanImage::SAMPLED_STORAGE, sceneSize, vk::Format::eR8G8B8A8Unorm);
-	colorTarget->allocateDeviceMemory();
-	colorTarget->createImageView();
+	auto colorTarget = vctx->makeImage2D(VulkanImage::SAMPLED_STORAGE, vk::Format::eR8G8B8A8Unorm, sceneSize);
 	colorTarget->setSampler(vctx->getLinearSampler());
 
 	auto renderer = vctx->makeRenderer();

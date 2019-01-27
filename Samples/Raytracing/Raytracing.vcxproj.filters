@@ -19,6 +19,9 @@
     <Filter Include="Vulcro\rtx">
       <UniqueIdentifier>{e55c48de-0217-460f-8f8d-3a8988fe64ef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Vulcro\images">
+      <UniqueIdentifier>{a4146bee-3c30-42e2-9cc8-b701c8814ab3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

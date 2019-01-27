@@ -19,6 +19,9 @@
     <Filter Include="Vulcro\rtx">
       <UniqueIdentifier>{1d0b551e-8704-4fab-9f98-1e03d7ba545f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Vulcro\images">
+      <UniqueIdentifier>{094e7310-872d-4896-bdd9-4f6dc2347ffa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -28,9 +31,6 @@
       <Filter>Vulcro</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Vulcro\src\VulkanContext.cpp">
-      <Filter>Vulcro</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Vulcro\src\VulkanImage.cpp">
       <Filter>Vulcro</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Vulcro\src\VulkanPipeline.cpp">
@@ -69,6 +69,9 @@
     <ClCompile Include="..\..\Vulcro\src\rtx\RTPipeline.cpp">
       <Filter>Vulcro\rtx</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanImage.cpp">
+      <Filter>Vulcro\images</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Vulcro\src\General.h">
@@ -81,9 +84,6 @@
       <Filter>Vulcro</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Vulcro\src\VulkanContext.h">
-      <Filter>Vulcro</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Vulcro\src\VulkanImage.h">
       <Filter>Vulcro</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Vulcro\src\VulkanPipeline.h">
@@ -121,6 +121,9 @@
     </ClInclude>
     <ClInclude Include="..\..\Vulcro\src\rtx\RTPipeline.h">
       <Filter>Vulcro\rtx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanImage.h">
+      <Filter>Vulcro\images</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
