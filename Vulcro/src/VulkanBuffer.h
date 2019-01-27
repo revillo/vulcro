@@ -335,7 +335,7 @@ public:
 	ibo(VulkanContextRef ctx, vk::ArrayProxy<const VulkanBuffer::IndexType> indices) {
 
 		_vbr = ctx->makeFastBuffer(
-			vk::BufferUsageFlagBits::eIndexBuffer,
+			vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eStorageBuffer,
 			sizeof(VulkanBuffer::IndexType) * indices.size(),
 			(void*)indices.begin()
 		);

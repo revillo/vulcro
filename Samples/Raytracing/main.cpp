@@ -20,7 +20,6 @@ int main()
 
 	auto renderer = vctx->makeRenderer();
 	auto swapchain = vctx->makeSwapchain(window.getSurface());
-	//renderer->addStorageImage(colorTarget);
 	renderer->targetSwapcahin(swapchain);
 
 

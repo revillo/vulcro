@@ -259,7 +259,7 @@ VulkanBufferRef VulkanContext::makeFastBuffer(vk::BufferUsageFlags usage, uint64
 	if (data != nullptr) {
 		auto buffer = makeBuffer(usage | vk::BufferUsageFlagBits::eTransferDst, size, VulkanBuffer::CPU_NEVER);
 
-		auto staging = makeBuffer(usage | vk::BufferUsageFlagBits::eTransferSrc, size, VulkanBuffer::CPU_ALOT, data);
+		auto staging = makeBuffer(vk::BufferUsageFlagBits::eTransferSrc, size, VulkanBuffer::CPU_ALOT, data);
 		auto task = makeTask(0);
 
 		auto BufferCopy = vk::BufferCopy(0, 0, size);

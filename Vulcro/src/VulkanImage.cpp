@@ -11,7 +11,6 @@ VulkanImage::VulkanImage(VulkanContextRef ctx, vk::ImageUsageFlags usage, glm::i
 	_usage(usage)
 {
 
-
 }
 
 VulkanImage::VulkanImage(VulkanContextRef ctx, vk::Image image, glm::ivec2 size, vk::Format format)

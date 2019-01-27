@@ -140,7 +140,6 @@ RTGeometry::RTGeometry(iboRef ibuf, vboRef vbuf)
 	geometry.setTriangles(triangles);
 
 	vk::GeometryAABBNV aabb;
-
 	geometry.setAabbs(aabb);
 
 	_geometry.setGeometryType(vk::GeometryTypeNV::eTriangles);
@@ -204,7 +203,7 @@ void RTScene::build(vk::CommandBuffer * cmd)
 		instanceData.instanceId = id++;
 		instanceData.instanceOffset = 0;
 		instanceData.mask = 0xff;
-		instanceData.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE_BIT_NV;
+		instanceData.flags = (uint32_t)vk::GeometryInstanceFlagBitsNV::eTriangleFrontCounterclockwise;
 		instanceData.accelerationStructureHandle = bs->getHandle();
 		_instanceData.push_back(instanceData);
 	}

@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Vulcro">
+      <UniqueIdentifier>{e09564ee-2019-4bc8-b408-cadfaed8aed9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vulcro\rtx">
+      <UniqueIdentifier>{e55c48de-0217-460f-8f8d-3a8988fe64ef}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanBuffer.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanContext.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanImage.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanPipeline.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanRenderer.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanShader.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanSwapchain.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanTask.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanTaskGroup.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanVertexLayout.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanWindow.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanSetLayout.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\VulkanSet.cpp">
+      <Filter>Vulcro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\rtx\RTPipeline.cpp">
+      <Filter>Vulcro\rtx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Vulcro\src\rtx\RTAccelerationStructure.cpp">
+      <Filter>Vulcro\rtx</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Vulcro\src\General.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\Vulcro.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanBuffer.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanContext.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanImage.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanPipeline.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanRenderer.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanShader.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanSwapchain.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanTask.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanTaskGroup.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanVertexLayout.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanWindow.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanSetLayout.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\VulkanSet.h">
+      <Filter>Vulcro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\rtx\RTAccelerationStructure.h">
+      <Filter>Vulcro\rtx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Vulcro\src\rtx\RTPipeline.h">
+      <Filter>Vulcro\rtx</Filter>
+    </ClInclude>
+    <ClInclude Include="PerlinNoise.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

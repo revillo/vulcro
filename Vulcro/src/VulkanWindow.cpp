@@ -146,6 +146,14 @@ void VulkanWindow::run(std::function<void()> update) {
                 return;
             }	
 
+			if (event.type == SDL_MOUSEBUTTONDOWN) {
+				_isMouseDown = true;
+			} 
+
+			if (event.type == SDL_MOUSEBUTTONUP) {
+				_isMouseDown = false;
+			}
+
 			handleEvent(event);
 
 		}
