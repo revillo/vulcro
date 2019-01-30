@@ -88,7 +88,6 @@ void RTPipeline::bindSets(vk::CommandBuffer * cmd, vk::ArrayProxy<const VulkanSe
 		}
 	}
 
-
 	cmd->bindDescriptorSets(
 		vk::PipelineBindPoint::eRayTracingNV,
 		_pipelineLayout,

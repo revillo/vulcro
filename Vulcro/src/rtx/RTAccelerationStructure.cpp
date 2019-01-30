@@ -117,7 +117,9 @@ void RTAccelerationStructure::allocateDeviceMemory()
 }
 
 RTGeometry::RTGeometry(iboRef ibuf, vboRef vbuf)
-	:_geometry()
+	:_geometry(),
+	_indexBuffer(ibuf),
+	_vertexBuffer(vbuf)
 {
 	
 	vk::GeometryTrianglesNV triangles;

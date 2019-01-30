@@ -78,6 +78,7 @@ class ibo;
 typedef shared_ptr<VulkanShader> VulkanShaderRef;
 typedef shared_ptr<VulkanRenderer> VulkanRendererRef;
 typedef shared_ptr<VulkanRenderPipeline> VulkanRenderPipelineRef;
+typedef VulkanRenderPipelineRef VulkanPipelineRef;
 typedef shared_ptr<VulkanSetLayout> VulkanSetLayoutRef;
 typedef shared_ptr<VulkanVertexLayout> VulkanVertexLayoutRef;
 typedef shared_ptr<VulkanSwapchain> VulkanSwapchainRef;

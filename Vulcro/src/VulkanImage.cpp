@@ -351,6 +351,30 @@ VulkanImageCube::VulkanImageCube(VulkanContextRef ctx, vk::ImageUsageFlags usage
 	createImageView(vk::ImageAspectFlagBits::eColor);
 }
 
+void VulkanImageCube::createImage()
+{
+
+	mImage = mContext->getDevice().createImage(
+		vk::ImageCreateInfo(vk::ImageCreateFlagBits::eCubeCompatible,
+			mImageType,
+			mFormat,
+			vk::Extent3D(mSize.x, mSize.y, mSize.z),
+			1, //Mip Levels
+			6, //Layers
+			vk::SampleCountFlagBits::e1,
+			vk::ImageTiling::eOptimal,
+			mUsage,
+			vk::SharingMode::eExclusive,
+			0,
+			nullptr,
+			vk::ImageLayout::eUndefined
+		)
+	);
+
+	mImageCreated = true;
+	
+}
+
 void VulkanImageCube::createImageView(vk::ImageAspectFlags aspectFlags)
 {
 	vk::ComponentMapping cmap;

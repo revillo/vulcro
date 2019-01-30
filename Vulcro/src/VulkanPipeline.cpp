@@ -131,42 +131,20 @@ void VulkanRenderPipeline::bind(vk::CommandBuffer * cmd)
 
 void VulkanRenderPipeline::bindSets(vk::CommandBuffer * cmd, vk::ArrayProxy<const VulkanSetRef> descriptorSets)
 {
-	int numSets = descriptorSets.size();
-	const VulkanSetRef * sets = descriptorSets.begin();
+	int i = 0;
 
-	int skips = 0;
-
-	for (int i = 0; i < numSets; i++) {
-		if (sets[i] != nullptr) 
-			_descriptorSets[i] = sets[i]->getDescriptorSet();
-		else ++skips;
+	for (auto &set : descriptorSets) {
+		if (set != nullptr) {
+			_descriptorSets[i++] = set->getDescriptorSet();
+		}
 	}
-
-	numSets -= skips;
 
 	cmd->bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics,
 		_pipelineLayout,
 		0,
-		numSets,
-		numSets > 0 ? _descriptorSets : nullptr,
-		0,
-		nullptr
-	);
-	for (int i = 0; i < numSets; i++) {
-		if (sets[i] != nullptr)
-			_descriptorSets[i] = sets[i]->getDescriptorSet();
-		else ++skips;
-	}
-
-	numSets -= skips;
-
-	cmd->bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics,
-		_pipelineLayout,
-		0,
-		numSets,
-		numSets > 0 ? _descriptorSets : nullptr,
+		i,
+		i > 0 ? _descriptorSets : nullptr,
 		0,
 		nullptr
 	);
@@ -266,25 +244,21 @@ void VulkanComputePipeline::bind(vk::CommandBuffer * cmd)
 
 void VulkanComputePipeline::bindSets(vk::CommandBuffer * cmd, vk::ArrayProxy<const VulkanSetRef> descriptorSets)
 {
-	int numSets = descriptorSets.size();
-	const VulkanSetRef * sets = descriptorSets.begin();
 
-	int skips = 0;
+	int i = 0;
 
-	for (int i = 0; i < numSets; i++) {
-		if (sets[i] != nullptr)
-			_descriptorSets[i] = sets[i]->getDescriptorSet();
-		else ++skips;
+	for (auto &set : descriptorSets) {
+		if (set != nullptr) {
+			_descriptorSets[i++] = set->getDescriptorSet();
+		}
 	}
-
-	numSets -= skips;
 
 	cmd->bindDescriptorSets(
 		vk::PipelineBindPoint::eCompute,
 		_pipelineLayout,
 		0,
-		numSets,
-		numSets > 0 ? _descriptorSets : nullptr,
+		i,
+		i > 0 ? _descriptorSets : nullptr,
 		0,
 		nullptr
 	);

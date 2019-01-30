@@ -30,7 +30,7 @@ public:
 	/////////////////////////
 
 	virtual void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor) = 0;
-	void createImage();
+	virtual void createImage();
 
 	void setSampler(vk::Sampler sampler) { mSampler = sampler; }
 
@@ -205,4 +205,6 @@ public:
 	/////////////////////////
 
 	void createImageView(vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor) override;
+
+	void createImage() override;
 };

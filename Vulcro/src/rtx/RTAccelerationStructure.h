@@ -6,12 +6,22 @@
 
 class RTGeometry {
 public:
-	RTGeometry(iboRef ibo, vboRef vbo);
+	RTGeometry(iboRef indexBuffer, vboRef vertexBuffer);
 	vk::GeometryNV getGeometry() const {
 		return _geometry;
 	}
-protected:
 
+	iboRef getIndexBuffer() {
+		return _indexBuffer;
+	}
+
+	vboRef getVertexBuffer() {
+		return _vertexBuffer;
+	}
+
+protected:
+	iboRef _indexBuffer;
+	vboRef _vertexBuffer;
 	vk::GeometryNV _geometry;
 
 };

@@ -174,14 +174,6 @@ void VulkanSet::bindRTScene(uint32_t binding, RTSceneRef rtscene)
 	);
 }
 
-void VulkanSet::bindImages(vector<VulkanImageRef> images, vk::DescriptorType type)
-{
-	uint32_t binding = 0;
-	for (auto &img : images) {
-		bindImage(binding++, img, type);
-	}
-}
-
 void VulkanSet::update() {
 
 	if (_writes.size() == 0) return;
