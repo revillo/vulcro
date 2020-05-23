@@ -1,4 +1,5 @@
 #include "Vulcro.h"
+using namespace glm;
 
 float rand1() {
 	return (float)rand() / RAND_MAX;
@@ -16,9 +17,13 @@ struct ExampleUniform {
 int main()
 {
 	{
-		auto window = VulkanWindow(0, 0, 400, 400, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+		VulkanWindow window(0, 0, 400, 400, SDL_WINDOW_VULKAN);
 
-		auto vctx = window.getContext();
+        vector<const char *> extensions = { "VK_KHR_swapchain", "VK_KHR_get_memory_requirements2" };
+        auto vdm = std::make_unique<vke::VulkanDeviceManager>(window.getInstance());
+        auto devices = vdm->findPhysicalDevicesWithCapabilities(extensions, vk::QueueFlagBits::eGraphics);
+        auto vctx = window.createContext(vdm->getPhysicalDevice(devices[0]), extensions);
+
 
 		auto renderer = vctx->makeRenderer();
 		auto swapchain = vctx->makeSwapchain(window.getSurface());
@@ -29,7 +34,7 @@ int main()
 
 		//Make the tree triangle vertices, and specify the format of each field
 		int numVerts = 3;
-
+        
 		auto vbuf = vctx->makeDynamicVBO<Vertex>(
 			{
 				//Position
@@ -99,7 +104,7 @@ int main()
 				glm::vec4(1, rand1(), rand1(), rand1())
 			});
 			
-			vbuf->sync();
+			//vbuf->sync();
 			
 
 			ubuf->at().color = vec4(rand1(), rand1(), rand1(), 1.0);
@@ -142,7 +147,7 @@ int main()
 				return;
 			}
 			renderer->resize();
-			vctx->resetTasks();
+			//vctx->resetTasks();
 			recordTasks();
 		};
 
@@ -150,7 +155,9 @@ int main()
 		window.run([&]() {
 
 			//Randomize Triangle Buffers
-			randomizeTriangle();
+
+            if (rand() % 10 == 1)
+			    randomizeTriangle();
 
 			//Wait for next available frame
 			if (!swapchain->nextFrame()) {
@@ -169,12 +176,9 @@ int main()
 				return;
 			}
 
-			SDL_Delay(100);
 		});
 	}
 
-	int i;
-	std::cin >> i;
 
     return 0;
 }

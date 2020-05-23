@@ -42,7 +42,7 @@ auto rayScene = vctx->makeRayTracingScene();
 rayScene->addGeometry(RTGeometry(ibuf, topTriangleVB));
 rayScene->addGeometry(RTGeometry(ibuf, bottomTriangleVB));
 
-auto buildSceneTask = vctx->makeTask(BUILD_SCENE_POOL, false);
+auto buildSceneTask = vctx->makeTask();
 
 buildSceneTask->record([&](vk::CommandBuffer * cmd) {
 	rayScene->build(cmd);
@@ -75,7 +75,7 @@ rtSet->bindRTScene(0, rayScene);
 rtSet->bindStorageImage(1, colorTarget);
 rtSet->bindBuffer(2, vbuf->getSharedBuffer());
 
-auto rtTask = vctx->makeTask(BUILD_SCENE_POOL, false);
+auto rtTask = vctx->makeTask();
 
 rtTask->record([&](vk::CommandBuffer * cmd) {
 

@@ -4,14 +4,17 @@
 
 #include "shaders/common.h"
 
-#define BUILD_SCENE_POOL 1
-#define RENDER_POOL 2
 
 int main()
 {
-	auto window = VulkanWindow(0, 0, 512, 512, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-	auto vctx = window.getContext();
-	glm::ivec2 sceneSize(512, 512);
+	VulkanWindow window(0, 0, 512, 512, SDL_WINDOW_RESIZABLE);
+
+    std::vector<const char *> extensions = { "VK_KHR_swapchain", "VK_KHR_get_memory_requirements2", "VK_NV_ray_tracing" };
+    auto vdm = std::make_unique<vke::VulkanDeviceManager>(window.getInstance());
+    auto devices = vdm->findPhysicalDevicesWithCapabilities(extensions, vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute);
+    auto vctx = window.createContext(vdm->getPhysicalDevice(devices[0]), extensions);
+
+    glm::ivec2 sceneSize(512, 512);
 
 	auto colorTarget = vctx->makeImage2D(VulkanImage2D::SAMPLED_STORAGE, vk::Format::eR8G8B8A8Unorm, sceneSize);
 	colorTarget->setSampler(vctx->getNearestSampler());
@@ -57,10 +60,13 @@ int main()
 
 	auto rayScene = vctx->makeRayTracingScene();
 
-	rayScene->addGeometry(RTGeometry(ibuf, topTriangleVB));
-	rayScene->addGeometry(RTGeometry(ibuf, bottomTriangleVB));
+	rayScene->addGeometry(1, vctx->makeRayTracingGeometry(ibuf, topTriangleVB));
+	rayScene->addGeometry(2, vctx->makeRayTracingGeometry(ibuf, bottomTriangleVB));
+    
+    rayScene->addInstance(1, glm::mat4(1.0f));
+    rayScene->addInstance(2, glm::mat4(1.0f));
 
-	auto buildSceneTask = vctx->makeTask(BUILD_SCENE_POOL, false);
+	auto buildSceneTask = vctx->makeTask();
 
 	buildSceneTask->record([&](vk::CommandBuffer * cmd) {
 		rayScene->build(cmd);
@@ -91,7 +97,7 @@ int main()
 	rtSet->bindStorageImage(1, colorTarget);
 	rtSet->bindBuffer(2, vbuf->getSharedBuffer());
 	
-	auto rtTask = vctx->makeTask(BUILD_SCENE_POOL, false);
+	auto rtTask = vctx->makeTask();
 
 	rtTask->record([&](vk::CommandBuffer * cmd) {
 
@@ -105,9 +111,8 @@ int main()
 
 	rtTask->execute(true);
 	
-
 	auto finalSet = vctx->makeSet({
-		ULB(1, vk::DescriptorType::eCombinedImageSampler, &colorTarget->getSampler())
+		SLB(1, vk::DescriptorType::eCombinedImageSampler, &colorTarget->getSampler())
 	});
 
 	//finalSet->bindStorageImage(0, colorTarget);
@@ -129,7 +134,7 @@ int main()
 		}
 	);
 
-	auto finalTasks = vctx->makeTaskGroup(swapchain->numImages(), RENDER_POOL);
+	auto finalTasks = vctx->makeTaskGroup(swapchain->numImages());
 
 	finalTasks->record([&](vk::CommandBuffer * cmd, uint32_t taskNumber) {
 
@@ -164,7 +169,7 @@ int main()
 			return;
 		}
 
-		SDL_Delay(100);
+		SDL_Delay(1);
 	});
 
     return 0;

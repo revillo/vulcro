@@ -2,16 +2,12 @@
 
 ![alt text](grass.png "Grass")
 
-This demo renders 160k individually animated blades of grass, and runs at a cool 200fps on a GTX 970 with essentially zero cpu utilization.
-
-The goal is to show off some more advanced capabilities with Vulkan.
-
-There is still some bloat left to cut down on, so check back soon!
+This demo renders 160k individually animated blades of grass.
+The goal is to show off deferred rendering by rendering out to color and emissive buffers before a final pass.
 
 ### Deferred Rendering
 
 Instead of targeting the swapchain, we can target a group of images to render different buffers to.
-
 Here, I'll render color and emissive, which is used for the bloom effect.
 
 ```c++
@@ -67,7 +63,7 @@ int z = gl_InstanceIndex % gridSize;
 Premultiply the glm projection matrices by the included fix to get OpenGL clipping coordinates into Vulkan coordinates.
 
 ```c++
-usb.perspective = VULCRO_glProjFixYZ * glm::perspective(
+usb.perspective = vulcro::glProjFixYZ * glm::perspective(
 				radians(60.0f), 
 				(float)windowSize.x / (float)windowSize.y, 
 				1.0f, 100.0f);

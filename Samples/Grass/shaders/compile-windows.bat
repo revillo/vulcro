@@ -1,5 +1,7 @@
-C:\vulkan\glslangValidator -V grass.frag -o grass_frag.spv
-C:\vulkan\glslangValidator -V grass.vert -o grass_vert.spv
+set validator=..\..\..\Lib\glslangValidator.exe
 
-C:\vulkan\glslangValidator -V final_pass.frag -o final_pass_frag.spv
-C:\vulkan\glslangValidator -V final_pass.vert -o final_pass_vert.spv
+%validator% -V grass.frag -o grass_frag.spv
+%validator% -V grass.vert -o grass_vert.spv
+
+%validator% -V final_pass.frag -o final_pass_frag.spv
+%validator% -V final_pass.vert -o final_pass_vert.spv

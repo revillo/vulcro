@@ -14,7 +14,7 @@ layout (set = 0, binding = 2) buffer VertexList {
 
 } VertexData;
 
-#define INSTANCE nonuniformEXT(gl_InstanceCustomIndexNV)
+#define INSTANCE gl_InstanceID
 #define VERTICES VertexData.v       
                       
 void main() {

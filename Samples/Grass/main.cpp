@@ -3,6 +3,8 @@
 #include <chrono>
 #include <ctime>
 
+using namespace glm;
+
 #define SCENE_TASK_POOL 0
 #define FINAL_TASK_POOL 1
 #define UPSAMPLE_FACTOR 2
@@ -35,9 +37,13 @@ int main()
 		glm::ivec2 windowSize(455, 455);
 
 
-		auto window = VulkanWindow(0, 0, windowSize.x, windowSize.y, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-		
-		auto vctx = window.getContext();
+        VulkanWindow window(0, 0, windowSize.x, windowSize.y, SDL_WINDOW_VULKAN);
+
+        vector<const char *> extensions = { "VK_KHR_swapchain", "VK_KHR_get_memory_requirements2" };
+        auto vdm = std::make_unique<vke::VulkanDeviceManager>(window.getInstance());
+        auto devices = vdm->findPhysicalDevicesWithCapabilities(extensions, vk::QueueFlagBits::eGraphics);
+        auto vctx = window.createContext(vdm->getPhysicalDevice(devices[0]), extensions);
+
 
 		auto finalRenderer = vctx->makeRenderer();
 		auto swapchain = vctx->makeSwapchain(window.getSurface());
@@ -70,7 +76,7 @@ int main()
 		{
 			auto &usb = sceneUBO->at(0);
 
-			usb.perspective = VULCRO_glProjFixYZ * perspective(
+			usb.perspective = vulcro::glProjFixYZ * perspective(
 				radians(60.0f), 
 				(float)windowSize.x / (float)windowSize.y, 
 				1.0f, 100.0f);
@@ -99,7 +105,7 @@ int main()
 			sceneUBO->at(0).view = lookAt(pos, vec3(0.0, 12.0, 0.0), vec3(0.0, 1.0, 0.0));
 			sceneUBO->at(0).time.x = now;
 			sceneUBO->sync();
-			sceneUBO->at(0).perspective = VULCRO_glProjFixYZ * perspective(
+			sceneUBO->at(0).perspective = vulcro::glProjFixYZ * perspective(
 				radians(60.0f),
 				(float)sceneSize.x / (float)sceneSize.y,
 				1.0f, 100.0f);
@@ -136,7 +142,6 @@ int main()
 			grassVBO->set(i * 2 + 1, { {0.5, h, 0.0, 1.0} });
 		}
 
-		grassVBO->sync();
 
 		int verticesPerBlade = grassLevels * 2;
 
@@ -204,8 +209,8 @@ int main()
 			finalRenderer
 		);
 	
-		auto sceneTask = vctx->makeTask(SCENE_TASK_POOL);
-		auto finalTask = vctx->makeTask(FINAL_TASK_POOL);
+		auto sceneTask = vctx->makeTask();
+		auto finalTask = vctx->makeTask();
 
 		auto recordTasks = [&]() {
 			sceneTask->record([&](vk::CommandBuffer * cmd) {
@@ -255,7 +260,6 @@ int main()
 			blitUniformSet->bindImage(0, colorTarget);
 			blitUniformSet->bindImage(1, emissiveTarget);
 
-			vctx->resetTasks(SCENE_TASK_POOL);
 
 			recordTasks();
 		};
@@ -301,9 +305,6 @@ int main()
 			//Submit command buffer
 			finalTask->execute(true, { swapchain->getSemaphore(), sceneSemaphore });
 			
-			//Reset command buffers
-			vctx->resetTasks(FINAL_TASK_POOL);
-
 			//Present current frame to screen
 			if (!swapchain->present()) {
 				resize();

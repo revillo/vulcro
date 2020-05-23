@@ -29,8 +29,7 @@ void main() {
     vec3 Y = dFdy(worldPos.xyz);
     vec3 normal = normalize(cross(X,Y));    
     
-   
-    
+  
     if (height < 0.8)
       OutColor.rgb *= 0.9 + (0.1 * pow(sin(uv.x * pi * 4.0), 2.0));
         
