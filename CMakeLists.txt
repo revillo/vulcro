@@ -4,14 +4,14 @@ project("Vulcro")
 SET (SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Vulcro/src")
 SET (LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Lib")
 
-OPTION (BUILD_SAMPLES "Build Samples" TRUE)
+OPTION (VULCRO_INCLUDE_GLM_SDL "Include GLM + SDL" TRUE)
+OPTION (VULCRO_BUILD_SAMPLES "Build Samples" TRUE)
 
 file(GLOB_RECURSE src_cpp
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     "${SOURCE_PATH}/*.cpp"
     "${SOURCE_PATH}/*.h"
 )
-
 
 foreach(source IN LISTS src_cpp)
     get_filename_component(source_path "${source}" PATH)
@@ -22,7 +22,11 @@ endforeach()
 add_library(vulcro-lib ${src_cpp})
 
 include_directories( ${SOURCE_PATH} )
+
+if (VULCRO_INCLUDE_GLM_SDL)
 include_directories( ${LIB_PATH} )
+endif()
+
 
 if(BUILD_SAMPLES)
 
