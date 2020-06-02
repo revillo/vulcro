@@ -2,7 +2,7 @@
 
 #include "../vulkan-core/VulkanContext.h"
 #include "../vulkan-core/VulkanBuffer.h"
-
+#include "../vulkan-core/VulkanTask.h"
 
 class RTGeometry {
 
@@ -29,7 +29,7 @@ protected:
 	iboRef _indexBuffer;
 	vboRef _vertexBuffer;
 
-    VulkanBufferRef mFaceVertexBuffer;
+    VulkanBufferRef mFaceVertexBuffer = nullptr;
     VulkanBufferRef mAABBBuffer = nullptr;
    
 	vk::GeometryNV _geometry;
@@ -87,10 +87,49 @@ protected:
 };
 typedef shared_ptr<RTAccelerationStructure> RTAccelStructRef;
 
+
+class RTGeometryRepo
+{
+public:
+    using GeometryId = uint64_t;
+
+    RTGeometryRepo(VulkanContextPtr ctx);
+
+    void flagUpdateGeometry(const GeometryId & id);
+
+    void addGeometry(const GeometryId & id, RTGeometryRef geom, bool allowUpdate = false);
+
+    //Can return nullptr
+    RTAccelStructRef getBLAS(const GeometryId & id);
+    
+
+    void rebuildDirtyGeometries();
+    
+
+    VulkanContextPtr mCtx;
+    std::unordered_map<GeometryId, RTAccelStructRef> mBlas;
+    std::vector<GeometryId> mDirtyBlas;
+    VulkanBufferRef mScratch = nullptr;
+    VulkanTaskRef mRebuildTask;
+};
+typedef shared_ptr<RTGeometryRepo> RTGeometryRepoRef;
+
 class RTScene
 {
+    using GeometryId = uint64_t;
+
 	struct VkGeometryInstance {
         //Row major affine transform
+
+        VkGeometryInstance()
+        {
+            transform = { { 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 } };
+            mask = 0xff;
+            instanceShaderBindingTableRecordOffset = 0;
+            flags = 0;
+            accelerationStructureHandle = 0;
+        }
+
 		std::array<float, 12> transform = {{ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 }};
 		
         //Custom instance index mapped to glsl gl_InstanceCustomIndexNV
@@ -110,9 +149,6 @@ class RTScene
 	};
 
 	struct GeometryData {
-        //The geometry containing vertex buffer data
-		RTGeometryRef geometry;
-
         //An array of instances for this geometry
 		vector<VkGeometryInstance> instances;
 
@@ -127,18 +163,17 @@ class RTScene
 	};
 
 public:
-    using GeometryId = uint64_t;
     typedef std::string const & StringProxy;
 
     struct InstanceData
     {
         uint32_t sbtOffset = 0; //hit group index
-        uint8_t mask = 0; //Visibility Mask
+        uint8_t mask = 0xFF; //Visibility Mask
         vk::GeometryInstanceFlagsNV flags = vk::GeometryInstanceFlagsNV();
         uint32_t customIndexU24 = 0; // User Custom Data (only uses bottom 24 bits)
     };
 
-	RTScene(VulkanContextPtr ctx);
+	RTScene(VulkanContextPtr ctx, RTGeometryRepoRef geoRepo = nullptr);
     //Pass true for allowUpdate to support skeletal meshes / vertex updates
 	void addGeometry(const GeometryId& geometryName, RTGeometryRef geometry, bool allowUpdate = false);
     void flagGeometryRebuild(const GeometryId& geometryName);
@@ -147,14 +182,15 @@ public:
 	uint32_t getInstanceGlobalIndex(const GeometryId& geometryName, uint32_t instanceIndex);
 	uint32_t getInstanceCount(const GeometryId& geometryName);
 	void setInstanceTransform(const GeometryId& geometryName, uint32_t instanceIndex, glm::mat4 const & transform);
-	void addInstance(const GeometryId& geometryName, glm::mat4 const & transform, InstanceData const & data = InstanceData());
-	std::array<float, 12> getInstanceTransform(const GeometryId & geometryName, uint32_t instanceIndex);
-	/*
-	RTGeometryRef getGeometry(uint32_t index) {
-		return _geometries[index];
-	}*/
+    
+    void setInstanceData(const GeometryId& id, uint32_t instanceIndex, const InstanceData& data);
+    
+    void addInstance(const GeometryId& geometryName, glm::mat4 const & transform, InstanceData const & data = InstanceData());
+	
+    std::array<float, 12> getInstanceTransform(const GeometryId & geometryName, uint32_t instanceIndex);
 
 	void build(vk::CommandBuffer * cmd);
+    
     void build(VulkanTaskRef task);
 
 	vk::WriteDescriptorSetAccelerationStructureNV getWriteDescriptor();
@@ -173,4 +209,5 @@ protected:
 	VulkanBufferRef _scratchBuffer;
 	VulkanBufferRef _instanceBuffer = nullptr;
 	vector<VkGeometryInstance> _instanceData;
+    RTGeometryRepoRef mGeoRepo = nullptr;
 };

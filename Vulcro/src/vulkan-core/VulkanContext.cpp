@@ -445,6 +445,11 @@ VulkanImageCubeRef VulkanContext::makeImageCube(vk::ImageUsageFlags usage, glm::
 	return make_shared<VulkanImageCube>(this, usage, size, format);
 }
 
+RTGeometryRepoRef VulkanContext::makeRayTracingGeometryRepo()
+{
+    return RTGeometryRepoRef(new RTGeometryRepo(this));
+}
+
 RTGeometryRef VulkanContext::makeRayTracingGeometry(iboRef indexBuffer, vboRef vertexBuffer)
 {
 	return make_shared<RTGeometry>(indexBuffer, vertexBuffer);

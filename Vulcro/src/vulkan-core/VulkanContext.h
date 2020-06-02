@@ -63,6 +63,7 @@ class VulkanImage3D;
 class VulkanImageCube;
 
 class RTGeometry;
+class RTGeometryRepo;
 class RTScene;
 class RTPipeline;
 class RTShaderBuilder;
@@ -105,6 +106,7 @@ typedef shared_ptr<VulkanComputePipeline> VulkanComputePipelineRef;
 typedef shared_ptr<VulkanTaskPool> VulkanTaskPoolRef;
 
 typedef shared_ptr<RTGeometry> RTGeometryRef;
+typedef shared_ptr<RTGeometryRepo> RTGeometryRepoRef;
 typedef shared_ptr<RTShaderBuilder> RTShaderBuilderRef;
 typedef shared_ptr<RTPipeline> RTPipelineRef;
 typedef shared_ptr<RTScene> RTSceneRef;
@@ -366,6 +368,7 @@ public:
 	RTGeometryRef makeRayTracingGeometry(iboRef indexBuffer, vboRef vertexBuffer);
     RTGeometryRef makeRayTracingGeometry(uint64_t aabbCount, uint64_t aabbOffset, VulkanBufferRef aabbBuffer);
     RTGeometryRef makeRayTracingGeometry(VulkanBufferRef vertexBuffer, uint64_t vertexCount, uint32_t vertexStride, uint32_t positionOffset = 0, vk::Format positionFormat = vk::Format::eR32G32B32A32Sfloat);
+    RTGeometryRepoRef makeRayTracingGeometryRepo();
 
 	RTShaderBuilderRef makeRayTracingShaderBuilder(const char * raygenPath, vk::ArrayProxy<const VulkanSetLayoutRef> setLayouts);
 	RTPipelineRef makeRayTracingPipeline(RTShaderBuilderRef shader);
