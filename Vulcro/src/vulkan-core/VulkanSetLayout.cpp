@@ -8,8 +8,12 @@ VulkanSetLayout::VulkanSetLayout(VulkanContextPtr ctx, vk::ArrayProxy<const Bind
 	vector<vk::DescriptorSetLayoutBinding> vkbindings;
 	vector<vk::DescriptorPoolSize> poolSizes;
 
+    bool usePartialBinding = false;
 
 	for (auto &binding : bindings) {
+
+        if (binding.arrayCount > 1) usePartialBinding = true;
+
 		vkbindings.push_back(vk::DescriptorSetLayoutBinding(
 			static_cast<uint32_t>(vkbindings.size()),
 			binding.type,
@@ -26,16 +30,33 @@ VulkanSetLayout::VulkanSetLayout(VulkanContextPtr ctx, vk::ArrayProxy<const Bind
 		);
 	}
 
+    vk::DescriptorBindingFlagsEXT bindingFlags = vk::DescriptorBindingFlagBitsEXT::ePartiallyBound;
+
+    //        VkDescriptorSetLayoutBindingFlagsCreateInfoEXT;
+    vk::DescriptorSetLayoutBindingFlagsCreateInfoEXT bindingsExt;
+    bindingsExt.bindingCount = vkbindings.size();
+    bindingsExt.setPBindingFlags(&bindingFlags);
+    bindingsExt.setPNext(nullptr);
+
+    vk::DescriptorSetLayoutCreateInfo layoutCreateInfo(
+        vk::DescriptorSetLayoutCreateFlags(),
+        static_cast<uint32_t>(vkbindings.size()),
+        &vkbindings[0]
+    );
+
+    if (usePartialBinding)  
+        layoutCreateInfo.pNext = &bindingsExt;
+
+
 	_descriptorLayout = _ctx->getDevice().createDescriptorSetLayout(
 		vk::DescriptorSetLayoutCreateInfo(
-			vk::DescriptorSetLayoutCreateFlags(),
-			static_cast<uint32_t>(vkbindings.size()),
-			&vkbindings[0]
+            layoutCreateInfo
 		), nullptr,
 		_ctx->getDynamicDispatch()
 	);
 
-	_pool = _ctx->getDevice().createDescriptorPool(
+
+    _pool = _ctx->getDevice().createDescriptorPool(
 		vk::DescriptorPoolCreateInfo(
 			vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
 			maxSets,

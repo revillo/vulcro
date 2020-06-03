@@ -204,9 +204,9 @@ protected:
 	//std::unordered_map<std::string, RTAccelStructRef> _bottomStructMap;
 	//std::unordered_map<std::string, vector<VkGeometryInstance>> _instanceMap;
 
-	VulkanContextPtr _ctx;
-	RTAccelStructRef _topStruct;
-	VulkanBufferRef _scratchBuffer;
+	VulkanContextPtr _ctx = nullptr;
+	RTAccelStructRef _topStruct = nullptr;
+	VulkanBufferRef _scratchBuffer = nullptr;
 	VulkanBufferRef _instanceBuffer = nullptr;
 	vector<VkGeometryInstance> _instanceData;
     RTGeometryRepoRef mGeoRepo = nullptr;

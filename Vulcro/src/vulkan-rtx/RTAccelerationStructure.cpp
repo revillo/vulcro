@@ -108,8 +108,7 @@ void RTAccelerationStructure::build(vk::CommandBuffer * cmd, VulkanBufferRef scr
 			_ctx->getDynamicDispatch()
 		);
 
-        cmd->pipelineBarrier(vk::PipelineStageFlagBits::eRayTracingShaderNV, vk::PipelineStageFlagBits::eRayTracingShaderNV, vk::DependencyFlags(0), { memoryBarrier }, nullptr, nullptr);
-
+        cmd->pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildNV, vk::PipelineStageFlagBits::eAccelerationStructureBuildNV, vk::DependencyFlags(0), { memoryBarrier }, nullptr, nullptr);
 	}
 	else {
 
@@ -125,7 +124,7 @@ void RTAccelerationStructure::build(vk::CommandBuffer * cmd, VulkanBufferRef scr
 			_ctx->getDynamicDispatch()
 		);
         
-        cmd->pipelineBarrier(vk::PipelineStageFlagBits::eRayTracingShaderNV, vk::PipelineStageFlagBits::eRayTracingShaderNV, vk::DependencyFlags(0), { memoryBarrier }, nullptr, nullptr);
+        cmd->pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildNV, vk::PipelineStageFlagBits::eAccelerationStructureBuildNV, vk::DependencyFlags(0), { memoryBarrier }, nullptr, nullptr);
 	}
 
     _built = true;
@@ -399,7 +398,6 @@ void RTScene::build(VulkanTaskRef task)
 void RTScene::build(vk::CommandBuffer * cmd)
 {
 	//TODO only make buffer when instances change size?
-	makeScratchBuffer();
 
     int instanceGlobalIndex = 0;
 	int bindingIndex = 0;
@@ -446,6 +444,7 @@ void RTScene::build(vk::CommandBuffer * cmd)
     if (_instanceData.size() != _topStruct->getInfo().instanceCount) {
         _topStruct = std::make_shared<RTAccelerationStructure>(_ctx, _instanceData.size(), true /* Allow Updates */);
         _topStruct->setNeedsRebuild(true);
+        makeScratchBuffer();
     }
 
     VkMemoryBarrier memoryBarrier;
@@ -453,7 +452,7 @@ void RTScene::build(vk::CommandBuffer * cmd)
     memoryBarrier.pNext = nullptr;
     memoryBarrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_NV | VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_NV;
     memoryBarrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_NV | VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_NV;
-
+    
 	_topStruct->build(cmd, _scratchBuffer, memoryBarrier, _instanceBuffer);
 }
 
@@ -485,6 +484,7 @@ void RTScene::makeScratchBuffer()
             _topStruct->getAccelerationStruct()
         ), _ctx->getDynamicDispatch()
     );
+
 
     scratchSize = glm::max<uint64_t>(memReqs.memoryRequirements.size, scratchSize);
 
