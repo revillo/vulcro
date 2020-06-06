@@ -431,6 +431,7 @@ void RTScene::build(vk::CommandBuffer * cmd)
     if (newSize == 0)
     {
         _instanceBuffer = nullptr;
+        return;
     }
     else if (!_instanceBuffer || newSize > _instanceBuffer->getSize())
     {
