@@ -136,11 +136,6 @@ public:
 	virtual ~iubo() {};
 };
 
-
-typedef shared_ptr<iubo> iuboRef;
-
-
-
 template <class T>
 class ubo : public iubo {
 public:
@@ -222,8 +217,6 @@ public:
 	virtual vk::DeviceSize getOffset() = 0;
 	virtual VulkanBufferRef getSharedBuffer() = 0;
 };
-
-typedef shared_ptr<ivbo> vboRef;
 
 template <class T>
 class static_vbo : public ivbo {
@@ -394,7 +387,7 @@ public:
 	}
 
 	vk::IndexType getType() {
-		return vk::IndexType::eUint16;
+		return vk::IndexType::eUint32;
 	}
 
 private:
@@ -405,8 +398,6 @@ private:
 
 };
 
-typedef shared_ptr<ibo> iboRef;
-
 class issbo {
 public:
 
@@ -414,7 +405,6 @@ public:
 	virtual ~issbo() {};
 };
 
-typedef shared_ptr<issbo> ssboRef;
 
 template<class T>
 class dynamic_ssbo : public issbo {

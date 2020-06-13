@@ -21,13 +21,10 @@ public:
 	//// Functions
 	/////////////////////////
 
-	//////////////////////////
-	//// Getters / Setters
-	/////////////////////////
 
 	void bindBuffer(uint32_t binding, VulkanBufferRef buffer);
 
-	void bindBuffer(uint32_t binding, ssboRef buffer) {
+	void bindBuffer(uint32_t binding, issboRef buffer) {
 		bindBuffer(binding, buffer->getBuffer());
 	}
 
@@ -48,6 +45,11 @@ public:
 	void bindRTScene(uint32_t binding, RTSceneRef rtscene);
 
 	void update();
+
+
+    //////////////////////////
+    //// Getters / Setters
+    /////////////////////////
 
 	vk::DescriptorSet getDescriptorSet() const {
 		return _descriptorSet;
