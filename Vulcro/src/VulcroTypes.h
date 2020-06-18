@@ -1,43 +1,8 @@
 #pragma once
+
 #include <memory>
 using std::shared_ptr;
 
-struct VulkanSetLayoutBinding {
-
-    VulkanSetLayoutBinding(uint32_t _arrayCount, vk::DescriptorType _type, vk::Sampler const * _samplers = nullptr, vk::ShaderStageFlags _stageFlags = vk::ShaderStageFlagBits::eAll) :
-        type(_type),
-        arrayCount(_arrayCount),
-        samplers(_samplers),
-        stageFlags(_stageFlags)
-    {}
-
-    VulkanSetLayoutBinding()
-    {}
-
-    vk::DescriptorType type = vk::DescriptorType::eUniformBuffer;
-    uint32_t arrayCount = 1;
-    vk::Sampler const * samplers = nullptr;
-    vk::ShaderStageFlags stageFlags = vk::ShaderStageFlagBits::eAll;
-};
-
-struct PipelineConfig {
-    vk::PrimitiveTopology topology = vk::PrimitiveTopology::eTriangleList;
-    uint32_t patchCount = 3;
-    vk::CullModeFlags cullFlags = vk::CullModeFlagBits::eBack;
-    vk::FrontFace frontFace = vk::FrontFace::eCounterClockwise;
-};
-
-enum VulkanColorBlend {
-    VULCRO_BLEND_OPAQUE,
-    VULCRO_BLEND_ALPHA
-};
-
-struct ColorBlendConfig {
-    VulkanColorBlend blend = VULCRO_BLEND_ALPHA;
-};
-
-
-typedef VulkanSetLayoutBinding SLB;
 
 class VulkanContext;
 class VulkanSetLayout;
@@ -60,10 +25,14 @@ class VulkanImage3D;
 class VulkanImageCube;
 
 class RTGeometry;
-class RTGeometryRepo;
+class RTBlasRepo;
 class RTScene;
 class RTPipeline;
 class RTShaderBuilder;
+class RTAccelerationStructure;
+class RTBottomStructure;
+class RTTopStructure;
+class RTTopStructureManager;
 
 template <class T>
 class ubo;
@@ -75,12 +44,13 @@ template <class T>
 class static_vbo;
 
 template <class T>
-#pragma once
-
 class dynamic_vbo;
 
 template <class T>
 class dynamic_ssbo;
+
+template <class T>
+class VulkanCoherentArray;
 
 class ibo;
 class ivbo;
@@ -109,9 +79,13 @@ typedef shared_ptr<VulkanComputePipeline> VulkanComputePipelineRef;
 typedef shared_ptr<VulkanTaskPool> VulkanTaskPoolRef;
 
 typedef shared_ptr<RTGeometry> RTGeometryRef;
-typedef shared_ptr<RTGeometryRepo> RTGeometryRepoRef;
+typedef shared_ptr<RTBlasRepo> RTBlasRepoRef;
 typedef shared_ptr<RTShaderBuilder> RTShaderBuilderRef;
 typedef shared_ptr<RTPipeline> RTPipelineRef;
+typedef shared_ptr<RTAccelerationStructure> RTAccelStructRef;
+typedef shared_ptr<RTTopStructure> RTTopStructureRef;
+typedef shared_ptr<RTTopStructureManager> RTTopStructureManagerRef;
+typedef shared_ptr<RTBottomStructure> RTBottomStructureRef;
 typedef shared_ptr<RTScene> RTSceneRef;
 typedef shared_ptr<ibo> iboRef;
 typedef shared_ptr<ivbo> vboRef;
@@ -124,3 +98,6 @@ using uboRef = shared_ptr<ubo<T>>;
 
 template<typename T>
 using ssboRef = shared_ptr<dynamic_ssbo<T>>;
+
+template<typename T>
+using VulkanCoherentArrayRef = shared_ptr<VulkanCoherentArray<T>>;

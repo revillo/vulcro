@@ -7,12 +7,14 @@ VulkanSetLayout::VulkanSetLayout(VulkanContextPtr ctx, vk::ArrayProxy<const Bind
 
 	vector<vk::DescriptorSetLayoutBinding> vkbindings;
 	vector<vk::DescriptorPoolSize> poolSizes;
+    vector<vk::DescriptorBindingFlagsEXT> bindingFlags;
 
-    bool usePartialBinding = false;
 
 	for (auto &binding : bindings) {
 
-        if (binding.arrayCount > 1) usePartialBinding = true;
+        if (binding.arrayCount > 1) bindingFlags.push_back(vk::DescriptorBindingFlagBitsEXT::ePartiallyBound);
+        else bindingFlags.push_back(vk::DescriptorBindingFlagsEXT(0));
+
 
 		vkbindings.push_back(vk::DescriptorSetLayoutBinding(
 			static_cast<uint32_t>(vkbindings.size()),
@@ -30,12 +32,10 @@ VulkanSetLayout::VulkanSetLayout(VulkanContextPtr ctx, vk::ArrayProxy<const Bind
 		);
 	}
 
-    vk::DescriptorBindingFlagsEXT bindingFlags = vk::DescriptorBindingFlagBitsEXT::ePartiallyBound;
 
-    //        VkDescriptorSetLayoutBindingFlagsCreateInfoEXT;
     vk::DescriptorSetLayoutBindingFlagsCreateInfoEXT bindingsExt;
-    bindingsExt.bindingCount = vkbindings.size();
-    bindingsExt.setPBindingFlags(&bindingFlags);
+    bindingsExt.bindingCount = bindingFlags.size();
+    bindingsExt.setPBindingFlags(bindingFlags.data());
     bindingsExt.setPNext(nullptr);
 
     vk::DescriptorSetLayoutCreateInfo layoutCreateInfo(
@@ -44,14 +44,11 @@ VulkanSetLayout::VulkanSetLayout(VulkanContextPtr ctx, vk::ArrayProxy<const Bind
         &vkbindings[0]
     );
 
-    if (usePartialBinding)  
-        layoutCreateInfo.pNext = &bindingsExt;
+     layoutCreateInfo.pNext = &bindingsExt;
 
 
 	_descriptorLayout = _ctx->getDevice().createDescriptorSetLayout(
-		vk::DescriptorSetLayoutCreateInfo(
-            layoutCreateInfo
-		), nullptr,
+		layoutCreateInfo, nullptr,
 		_ctx->getDynamicDispatch()
 	);
 

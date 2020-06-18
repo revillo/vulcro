@@ -25,6 +25,8 @@ public:
 	void bindBuffer(uint32_t binding, VulkanBufferRef buffer);
 
 	void bindBuffer(uint32_t binding, issboRef buffer) {
+        if (!buffer) return;
+
 		bindBuffer(binding, buffer->getBuffer());
 	}
 
@@ -43,6 +45,8 @@ public:
 	}
 
 	void bindRTScene(uint32_t binding, RTSceneRef rtscene);
+
+    void bindTopStructure(uint32_t binding, RTTopStructureRef topStructure);
 
 	void update();
 

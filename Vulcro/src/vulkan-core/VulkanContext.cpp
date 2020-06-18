@@ -13,6 +13,7 @@
 #include "VulkanShader.h"
 #include "../vulkan-rtx/RTPipeline.h"
 #include "../vulkan-rtx/RTAccelerationStructure.h"
+#include "../vulkan-rtx/RTScene.h"
 
 VulkanContext::VulkanContext(vk::Instance instance, vk::PhysicalDevice& pDevice, const std::vector<const char *> & deviceExtensions)
 	:_instance(instance),
@@ -81,7 +82,8 @@ VulkanContext::VulkanContext(vk::Instance instance, vk::PhysicalDevice& pDevice,
     indexingFeatures.setRuntimeDescriptorArray(true);
     indexingFeatures.setDescriptorBindingPartiallyBound(true);
     indexingFeatures.setDescriptorBindingVariableDescriptorCount(true);
-    
+    indexingFeatures.setShaderStorageTexelBufferArrayDynamicIndexing(true);
+
     indexingFeatures.setPNext(nullptr);
 
 
@@ -463,9 +465,9 @@ VulkanImageCubeRef VulkanContext::makeImageCube(vk::ImageUsageFlags usage, glm::
 	return make_shared<VulkanImageCube>(this, usage, size, format);
 }
 
-RTGeometryRepoRef VulkanContext::makeRayTracingGeometryRepo()
+RTBlasRepoRef VulkanContext::makeRayTracingBlasRepo()
 {
-    return RTGeometryRepoRef(new RTGeometryRepo(this));
+    return RTBlasRepoRef(new RTBlasRepo(this));
 }
 
 RTGeometryRef VulkanContext::makeRayTracingGeometry(iboRef indexBuffer, vboRef vertexBuffer)
@@ -496,4 +498,14 @@ shared_ptr<RTPipeline> VulkanContext::makeRayTracingPipeline(RTShaderBuilderRef 
 shared_ptr<RTScene> VulkanContext::makeRayTracingScene()
 {
 	return make_shared<RTScene>(this);
+}
+
+shared_ptr<RTScene> VulkanContext::makeRayTracingScene(RTBlasRepoRef geoRepoRef)
+{
+    return shared_ptr<RTScene>(new RTScene(this, geoRepoRef));
+}
+
+RTTopStructureManagerRef VulkanContext::makeRayTracingTopStructureManager(uint32_t numInstances)
+{
+    return RTTopStructureManagerRef(new RTTopStructureManager(this, numInstances));
 }

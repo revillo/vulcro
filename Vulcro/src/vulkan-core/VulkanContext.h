@@ -1,9 +1,79 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
 #include "General.h"
 #include <unordered_map>
+#include <vulkan/vulkan.hpp>
 #include "../VulcroTypes.h"
+
+struct VulkanSetLayoutBinding {
+
+    VulkanSetLayoutBinding(uint32_t _arrayCount, vk::DescriptorType _type, vk::Sampler const * _samplers = nullptr, vk::ShaderStageFlags _stageFlags = vk::ShaderStageFlagBits::eAll) :
+        type(_type),
+        arrayCount(_arrayCount),
+        samplers(_samplers),
+        stageFlags(_stageFlags)
+    {}
+
+    VulkanSetLayoutBinding()
+    {}
+
+    vk::DescriptorType type = vk::DescriptorType::eUniformBuffer;
+    uint32_t arrayCount = 1;
+    vk::Sampler const * samplers = nullptr;
+    vk::ShaderStageFlags stageFlags = vk::ShaderStageFlagBits::eAll;
+};
+
+
+struct VkGeometryInstance {
+    //Row major affine transform
+
+    VkGeometryInstance()
+    {
+        transform = { { 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 } };
+        mask = 0xff;
+        instanceShaderBindingTableRecordOffset = 0;
+        flags = 0;
+        accelerationStructureHandle = 0;
+    }
+
+    std::array<float, 12> transform = { { 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 } };
+
+    //Custom instance index mapped to glsl gl_InstanceCustomIndexNV
+    uint32_t instanceCustomIndex : 24;
+
+    //Visibilty mask for TraceNV
+    uint32_t mask : 8;
+
+    //Index of hit shader group to use when ray hits this instance
+    uint32_t instanceShaderBindingTableRecordOffset : 24;
+
+    //see VkGeometryInstanceFlagBitsKHR / VkGeometryInstanceFlagBitsNV
+    uint32_t flags : 8;
+
+    //The handle to the corresponding geometry BLAS
+    uint64_t accelerationStructureHandle;
+};
+
+
+
+struct PipelineConfig {
+    vk::PrimitiveTopology topology = vk::PrimitiveTopology::eTriangleList;
+    uint32_t patchCount = 3;
+    vk::CullModeFlags cullFlags = vk::CullModeFlagBits::eBack;
+    vk::FrontFace frontFace = vk::FrontFace::eCounterClockwise;
+};
+
+enum VulkanColorBlend {
+    VULCRO_BLEND_OPAQUE,
+    VULCRO_BLEND_ALPHA
+};
+
+struct ColorBlendConfig {
+    VulkanColorBlend blend = VULCRO_BLEND_ALPHA;
+};
+
+
+typedef VulkanSetLayoutBinding SLB;
 
 class VulkanContext
 {
@@ -246,6 +316,12 @@ public:
 
 	shared_ptr<ibo> makeIBO(shared_ptr<ibo> sourceIbo, uint32_t indexOffset, uint32_t numIndices);
 
+    template <class T>
+    VulkanCoherentArrayRef<T> makeCoherentArray(uint32_t arrayCount, vk::BufferUsageFlags usageFlags)
+    {
+        return VulkanCoherentArrayRef<T>(new VulkanCoherentArray<T>(this, arrayCount, usageFlags));
+    }
+
     /****************************
         RTX
     ****************************/
@@ -253,11 +329,13 @@ public:
 	RTGeometryRef makeRayTracingGeometry(iboRef indexBuffer, vboRef vertexBuffer);
     RTGeometryRef makeRayTracingGeometry(uint64_t aabbCount, uint64_t aabbOffset, VulkanBufferRef aabbBuffer);
     RTGeometryRef makeRayTracingGeometry(VulkanBufferRef vertexBuffer, uint64_t vertexCount, uint32_t vertexStride, uint32_t positionOffset = 0, vk::Format positionFormat = vk::Format::eR32G32B32A32Sfloat);
-    RTGeometryRepoRef makeRayTracingGeometryRepo();
+    RTBlasRepoRef makeRayTracingBlasRepo();
+    RTTopStructureManagerRef makeRayTracingTopStructureManager(uint32_t numInstances);
 
 	RTShaderBuilderRef makeRayTracingShaderBuilder(const char * raygenPath, vk::ArrayProxy<const VulkanSetLayoutRef> setLayouts);
 	RTPipelineRef makeRayTracingPipeline(RTShaderBuilderRef shader);
 	RTSceneRef makeRayTracingScene();
+	RTSceneRef makeRayTracingScene(RTBlasRepoRef repo);
 		
 	uint32_t getFamilyIndex() {
 		return _familyIndex;
