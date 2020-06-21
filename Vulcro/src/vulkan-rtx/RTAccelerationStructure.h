@@ -127,6 +127,11 @@ public:
         return mTopStructure;
     }
 
+    uint32_t getNumInstances()
+    {
+        return mNumInstances;
+    }
+
     void resize(uint32_t numInstances);
 
     VkGeometryInstance & getInstance(uint32_t index);
