@@ -3,7 +3,6 @@
 RTAccelerationStructure::RTAccelerationStructure(VulkanContextPtr ctx, uint32_t numInstances, bool allowUpdate)
 	:_ctx(ctx),
 	_isTop(true),
-	_needsRebuild(true),
     _allowUpdate(allowUpdate)
 {
 
@@ -21,7 +20,7 @@ RTAccelerationStructure::RTAccelerationStructure(VulkanContextPtr ctx, uint32_t 
 	_info = vk::AccelerationStructureInfoNV(
 		vk::AccelerationStructureTypeNV::eTopLevel,
 		flags, //flags
-		numInstances,  //InstanceCount -- does this even matter? Just overwritten later...
+		numInstances,
 		0,  //GeometryCount
 		nullptr //Geometry
 	);
@@ -36,12 +35,11 @@ RTAccelerationStructure::RTAccelerationStructure(VulkanContextPtr ctx, uint32_t 
 }
 
 
-RTAccelerationStructure::RTAccelerationStructure(VulkanContextPtr ctx, RTGeometryRef geometry, bool allowUpdate)
+RTAccelerationStructure::RTAccelerationStructure(VulkanContextPtr ctx, std::vector<RTGeometryRef> && geometries, bool allowUpdate)
 	:_ctx(ctx),
 	_isTop(false),
-	_needsRebuild(true),
     _allowUpdate(allowUpdate),
-    mGeoRef(geometry)
+    mGeoRefs(geometries)
 {
 
     vk::BuildAccelerationStructureFlagBitsNV flags;
@@ -56,12 +54,10 @@ RTAccelerationStructure::RTAccelerationStructure(VulkanContextPtr ctx, RTGeometr
         flags = vk::BuildAccelerationStructureFlagBitsNV::ePreferFastTrace;
     }
 
-
-	/*
+	
 	for (auto &g : geometries) {
-		geos.push_back(g.getGeometry());
-	}*/
-	_geometries.push_back(geometry->getGeometry());
+        _geometries.push_back(g->getGeometry());
+	}
 
 	_info = vk::AccelerationStructureInfoNV(
 		vk::AccelerationStructureTypeNV::eBottomLevel,
@@ -88,12 +84,45 @@ RTAccelerationStructure::~RTAccelerationStructure()
 	_ctx->getDevice().freeMemory(_memory, nullptr, _ctx->getDynamicDispatch());
 }
 
-void RTAccelerationStructure::build(vk::CommandBuffer * cmd, VulkanBufferRef scratchBuffer, VkMemoryBarrier &memoryBarrier, VulkanBufferRef instanceBuffer)
+uint64_t RTAccelerationStructure::computeScratchMemorySize()
 {
-	if (!_needsRebuild) {
-		return;
-	}
+    uint64_t scratchSize = 0;
 
+
+    auto memReqs = _ctx->getDevice().getAccelerationStructureMemoryRequirementsNV(
+        vk::AccelerationStructureMemoryRequirementsInfoNV(
+            vk::AccelerationStructureMemoryRequirementsTypeNV::eBuildScratch,
+            getAccelerationStruct()
+        ), _ctx->getDynamicDispatch()
+    );
+
+    scratchSize = glm::max<uint64_t>(scratchSize, memReqs.memoryRequirements.size);
+
+    if (_allowUpdate)
+    {
+
+        memReqs = _ctx->getDevice().getAccelerationStructureMemoryRequirementsNV(
+            vk::AccelerationStructureMemoryRequirementsInfoNV(
+                vk::AccelerationStructureMemoryRequirementsTypeNV::eUpdateScratch,
+                getAccelerationStruct()
+            ), _ctx->getDynamicDispatch()
+        );
+
+        scratchSize = glm::max<uint64_t>(memReqs.memoryRequirements.size, scratchSize);
+    }
+
+    return scratchSize;
+
+}
+
+static const vk::MemoryBarrier MemoryBarrier { vk::AccessFlags(vk::AccessFlagBits::eAccelerationStructureWriteNV | vk::AccessFlagBits::eAccelerationStructureReadNV),
+    vk::AccessFlags(vk::AccessFlagBits::eAccelerationStructureWriteNV | vk::AccessFlagBits::eAccelerationStructureReadNV)
+};
+   
+
+void RTAccelerationStructure::build(vk::CommandBuffer * cmd, VulkanBufferRef scratchBuffer, VulkanBufferRef instanceBuffer)
+{
+   
 	if (_isTop) {
 
 		cmd->buildAccelerationStructureNV(
@@ -108,8 +137,7 @@ void RTAccelerationStructure::build(vk::CommandBuffer * cmd, VulkanBufferRef scr
 			_ctx->getDynamicDispatch()
 		);
 
-        cmd->pipelineBarrier(vk::PipelineStageFlagBits::eRayTracingShaderNV, vk::PipelineStageFlagBits::eRayTracingShaderNV, vk::DependencyFlags(0), { memoryBarrier }, nullptr, nullptr);
-
+        cmd->pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildNV, vk::PipelineStageFlagBits::eAccelerationStructureBuildNV, vk::DependencyFlags(0), { MemoryBarrier }, nullptr, nullptr);
 	}
 	else {
 
@@ -125,16 +153,14 @@ void RTAccelerationStructure::build(vk::CommandBuffer * cmd, VulkanBufferRef scr
 			_ctx->getDynamicDispatch()
 		);
         
-        cmd->pipelineBarrier(vk::PipelineStageFlagBits::eRayTracingShaderNV, vk::PipelineStageFlagBits::eRayTracingShaderNV, vk::DependencyFlags(0), { memoryBarrier }, nullptr, nullptr);
+        cmd->pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildNV, vk::PipelineStageFlagBits::eAccelerationStructureBuildNV, vk::DependencyFlags(0), { MemoryBarrier }, nullptr, nullptr);
 	}
 
     _built = true;
-	_needsRebuild = false;
 }
 
 void RTAccelerationStructure::allocateDeviceMemory()
 {
-
     if (_memorySize > 0)
     {
         _ctx->getDevice().freeMemory(_memory, nullptr, _ctx->getDynamicDispatch());
@@ -153,23 +179,7 @@ void RTAccelerationStructure::allocateDeviceMemory()
 
     auto memRes = _ctx->getBestMemoryIndex(memReqs.memoryRequirements, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-    /*
-    for (uint32_t i = 0; i < memProps.memoryTypeCount; i++)
-    {
-        auto type = memProps.memoryTypes[i];
-        if ((reqBits & (1 << i)) && ((type.propertyFlags & p) == p))
-        {
-
-            memTypeIndex = i;
-            break;
-        }
-    }*/
-
-
-
     _memorySize = req.size;
-
-
 
     _memory = _ctx->getDevice().allocateMemory(
         vk::MemoryAllocateInfo(req.size, memRes.value)
@@ -189,6 +199,13 @@ void RTAccelerationStructure::allocateDeviceMemory()
         sizeof(uint64_t),
         &_handle,
         _ctx->getDynamicDispatch()
+    );
+}
+
+vk::WriteDescriptorSetAccelerationStructureNV RTTopStructure::getWriteDescriptor()
+{
+    return vk::WriteDescriptorSetAccelerationStructureNV(
+        1, &getAccelerationStruct()
     );
 }
 
@@ -285,224 +302,125 @@ RTGeometry::RTGeometry(iboRef ibuf, vboRef vbuf)
 
 }
 
-RTScene::RTScene(VulkanContextPtr ctx)
-	:_ctx(ctx)
+
+RTBlasRepo::RTBlasRepo(VulkanContextPtr ctx)
+    :mCtx(ctx)
 {
-	_topStruct = std::make_shared<RTAccelerationStructure>(ctx, 1, true /* Allow Updates */);
-	_topStruct->setNeedsRebuild(true);
+    mRebuildTask = ctx->makeTask();
 }
 
-void RTScene::addGeometry(const GeometryId& name, RTGeometryRef geom, bool allowUpdate)
+
+void RTBlasRepo::flagUpdateGeometry(GeometryId id)
 {
-
-	//auto as = std::make_shared<RTAccelerationStructure>(_ctx, geom, allowUpdate);
-    auto as = RTAccelStructRef(new RTAccelerationStructure(_ctx, geom, allowUpdate));
-
-	_geometryMap[name].accelStruct = as;
-	as->setNeedsRebuild(true);
+    assert(mBlas.count(id) != 0);
+    mDirtyBlas.push_back(id);
 }
 
-void RTScene::flagGeometryRebuild(const GeometryId& geometryName)
+//Can return nullptr
+RTBottomStructureRef RTBlasRepo::getBLAS(GeometryId id)
 {
-    assert(_geometryMap.count(geometryName) > 0);
-    assert(_geometryMap[geometryName].accelStruct->supportsUpdate());
-    
-    _geometryMap[geometryName].accelStruct->setNeedsRebuild(true);
-    _topStruct->setNeedsRebuild(true);
+    if (mBlas.count(id) == 0) return nullptr;
+    return mBlas[id];
 }
 
-void RTScene::setInstanceCount(const GeometryId& geometryName, uint32_t numInstances)
+void RTBlasRepo::addGeometry(GeometryId id, RTGeometryRef geom, bool allowUpdate)
 {
-	assert(_geometryMap.count(geometryName) > 0);
-	_geometryMap[geometryName].instances.resize(numInstances);
+    auto as = RTBottomStructureRef(new RTBottomStructure(mCtx, {geom}, allowUpdate));
+    mBlas[id] = as;
+
+    auto newSize = as->computeScratchMemorySize();
+
+    if (!mScratch || (mScratch->getSize() < newSize))
+    {
+        mScratch = mCtx->makeBuffer(vk::BufferUsageFlagBits::eRayTracingNV, newSize, VulkanBuffer::CPU_NEVER);
+    }
+
+    flagUpdateGeometry(id);
 }
 
-uint32_t RTScene::getInstanceCount(const GeometryId& geometryName)
+void RTBlasRepo::removeGeometry(GeometryId id)
 {
-	assert(_geometryMap.count(geometryName) > 0);
-	return static_cast<uint32_t>(_geometryMap[geometryName].instances.size());
+    mBlas.erase(id);
 }
 
-std::array<float, 12> RTScene::getInstanceTransform(const GeometryId & geometryName, uint32_t instanceIndex)
+void RTBlasRepo::rebuildDirtyGeometries(VulkanTaskRef task)
 {
-	assert(_geometryMap.count(geometryName) > 0);
-	assert(_geometryMap[geometryName].instances.size() > instanceIndex);
+    task = task ? task : mRebuildTask;
 
-	return _geometryMap[geometryName].instances[instanceIndex].transform;
-}
+    if (mDirtyBlas.size() == 0) return;
 
-void RTScene::setInstanceTransform(const GeometryId& geometryName, uint32_t instanceIndex, glm::mat4 const & transformTranspose)
-{
-	assert(_geometryMap.count(geometryName) > 0);
-	assert(_geometryMap[geometryName].instances.size() > instanceIndex);
-
-    glm::mat4 transform = glm::transpose(transformTranspose);
-
-    _geometryMap[geometryName].instances[instanceIndex].transform = std::array<float, 12>{transform[0][0], transform[0][1], transform[0][2], transform[0][3], transform[1][0], transform[1][1], transform[1][2], transform[1][3], transform[2][0], transform[2][1], transform[2][2], transform[2][3]};
-	_topStruct->setNeedsRebuild(true);
-}
-
-void RTScene::addInstance(const GeometryId& geometryName, glm::mat4 const & transformTranspose, InstanceData const & data)
-{
-    assert(_geometryMap.count(geometryName) > 0);
-
-    auto & instances = _geometryMap[geometryName].instances;
-
-    VkGeometryInstance instance;
-    instance.mask = data.mask;
-    instance.instanceCustomIndex = data.customIndexU24;
-    instance.instanceShaderBindingTableRecordOffset = data.sbtOffset;
-    instances.push_back(instance);
-    
-    setInstanceTransform(geometryName, instances.size() - 1, transformTranspose);
-}
-
-uint32_t RTScene::getGeometryIndex(const GeometryId& geometryName)
-{
-	assert(_geometryMap.count(geometryName) > 0);
-
-	return _geometryMap[geometryName].bindingIndex;
-}
-
-uint32_t RTScene::getInstanceGlobalIndex(const GeometryId& geometryName, uint32_t instanceIndex)
-{
-	assert(_geometryMap.count(geometryName) > 0);
-	assert(_geometryMap[geometryName].instances.size() > instanceIndex);
-	return _geometryMap[geometryName].instanceOffset + instanceIndex;
-}
-
-#include "../vulkan-core/VulkanTask.h"
-void RTScene::build(VulkanTaskRef task)
-{
     task->begin();
-    build(&task->getCommandBuffer());
+
+
+    for (auto id : mDirtyBlas)
+    {
+        mBlas[id]->build(&task->getCommandBuffer(), mScratch);
+    }
+
+    task->end();
+    task->execute(true);
+
+    for (auto id : mDirtyBlas)
+    {
+        //Discard geometry if no future updates to release buffers
+        if (!mBlas[id]->supportsUpdate())
+        {
+            mBlas[id]->dropGeometryRefs();
+        }
+    }
+
+    mDirtyBlas.clear();
+}
+
+RTTopStructureManager::RTTopStructureManager(VulkanContextPtr context, uint32_t numInstances)
+    :mNumInstances(0)
+    ,mCtx(context)
+{
+    resize(numInstances);
+}
+
+void RTTopStructureManager::resize(uint32_t newSize)
+{
+    if (mNumInstances < newSize)
+    {
+        mInstanceBuffer = mCtx->makeBuffer(vk::BufferUsageFlagBits::eRayTracingNV, newSize * sizeof(VkGeometryInstance), VulkanBuffer::CPU_ALOT);
+        mInstancePtr = (VkGeometryInstance*)mInstanceBuffer->getMapped();
+        mTopStructure = RTTopStructureRef(new RTTopStructure(mCtx, newSize, true));
+
+        auto scratchSize = mTopStructure->computeScratchMemorySize();
+
+        if (!mScratchBuffer || mScratchBuffer->getSize() < scratchSize)
+        {
+            mScratchBuffer = mCtx->makeDeviceBuffer(vk::BufferUsageFlagBits::eRayTracingNV, scratchSize);
+        }
+
+    }
+    else if (mNumInstances > newSize)
+    {
+        mTopStructure = RTTopStructureRef(new RTTopStructure(mCtx, newSize, true));
+    }
+
+
+    mNumInstances = newSize;
+}
+
+VkGeometryInstance& RTTopStructureManager::getInstance(uint32_t index)
+{
+    return mInstancePtr[index];
+}
+
+void RTTopStructureManager::rebuild(VulkanTaskRef task)
+{
+    if (!task)
+    {
+        task = mTask ? mTask : mCtx->makeTask();
+    }
+
+    task->begin();
+
+    mTopStructure->build(&task->getCommandBuffer(), mScratchBuffer, mInstanceBuffer);
+
     task->end();
 
     task->execute(true);
-}
-
-void RTScene::build(vk::CommandBuffer * cmd)
-{
-	//TODO only make buffer when new struct added
-	makeScratchBuffer();
-
-	VkMemoryBarrier memoryBarrier;
-	memoryBarrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
-	memoryBarrier.pNext = nullptr;
-	memoryBarrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_NV | VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_NV;
-	memoryBarrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_NV | VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_NV;
-
-	for (auto & iter : _geometryMap) {
-		auto &geo = iter.second;
-		geo.accelStruct->build(cmd, _scratchBuffer, memoryBarrier, nullptr);
-	}
-
-    int instanceGlobalIndex = 0;
-	int bindingIndex = 0;
-
-	_instanceData.clear();
-	for (auto &iter : _geometryMap) {
-
-		iter.second.bindingIndex = bindingIndex;
-		iter.second.instanceOffset = instanceGlobalIndex;
-
-		for (auto &instance : iter.second.instances) {
-			VkGeometryInstance instanceData;
-            instanceData.instanceCustomIndex = instanceGlobalIndex;// (instanceGlobalIndex << 8) + bindingIndex;
-			instanceData.instanceShaderBindingTableRecordOffset = 0;
-			instanceData.mask = 0xff;
-
-			instanceData.transform = instance.transform;
-
-			//instanceData.flags = (uint32_t)vk::GeometryInstanceFlagBitsNV::eTriangleFrontCounterclockwise;
-			instanceData.flags = (uint32_t)vk::GeometryInstanceFlagBitsNV::eTriangleCullDisable;
-			instanceData.accelerationStructureHandle = iter.second.accelStruct->getHandle();
-			_instanceData.push_back(instanceData);
-
-			++instanceGlobalIndex;
-		}
-
-		++bindingIndex;
-	}
-
-	auto newSize = sizeof(VkGeometryInstance) * _instanceData.size();
-
-    if (newSize == 0)
-    {
-        _instanceBuffer = nullptr;
-    }
-    else if (!_instanceBuffer || newSize > _instanceBuffer->getSize())
-    {
-		_instanceBuffer = _ctx->makeBuffer(vk::BufferUsageFlagBits::eRayTracingNV, newSize * 10, VulkanBuffer::CPU_ALOT);
-	}
-	
-	auto * p = _instanceBuffer->getMapped();
-	memcpy(p, _instanceData.data(), newSize);
-	_instanceBuffer->unmap();
-	
-    if (_instanceData.size() != _topStruct->getInfo().instanceCount) {
-        _topStruct = std::make_shared<RTAccelerationStructure>(_ctx, _instanceData.size(), true /* Allow Updates */);
-        _topStruct->setNeedsRebuild(true);
-    }
-
-	_topStruct->build(cmd, _scratchBuffer, memoryBarrier, _instanceBuffer);
-}
-
-vk::WriteDescriptorSetAccelerationStructureNV RTScene::getWriteDescriptor()
-{
-	auto as = _topStruct->getAccelerationStruct();
-
-	return vk::WriteDescriptorSetAccelerationStructureNV(
-		1, &_topStruct->getAccelerationStruct()
-	);
-}
-
-void RTScene::makeScratchBuffer()
-{
-	uint64_t scratchSize = 0;
-
-	auto memReqs = _ctx->getDevice().getAccelerationStructureMemoryRequirementsNV(
-		vk::AccelerationStructureMemoryRequirementsInfoNV(
-			vk::AccelerationStructureMemoryRequirementsTypeNV::eBuildScratch,
-			_topStruct->getAccelerationStruct()
-		), _ctx->getDynamicDispatch()
-	);
-
-	scratchSize = glm::max<uint64_t>(memReqs.memoryRequirements.size, scratchSize);
-
-    memReqs = _ctx->getDevice().getAccelerationStructureMemoryRequirementsNV(
-        vk::AccelerationStructureMemoryRequirementsInfoNV(
-            vk::AccelerationStructureMemoryRequirementsTypeNV::eUpdateScratch,
-            _topStruct->getAccelerationStruct()
-        ), _ctx->getDynamicDispatch()
-    );
-
-    scratchSize = glm::max<uint64_t>(memReqs.memoryRequirements.size, scratchSize);
-
-	for (auto & iter : _geometryMap) {
-		auto &bs = iter.second.accelStruct;
-
-		auto memReqs = _ctx->getDevice().getAccelerationStructureMemoryRequirementsNV(
-			vk::AccelerationStructureMemoryRequirementsInfoNV(
-				vk::AccelerationStructureMemoryRequirementsTypeNV::eBuildScratch,
-				bs->getAccelerationStruct()
-			), _ctx->getDynamicDispatch()
-		);
-
-		scratchSize = glm::max<uint64_t>(scratchSize, memReqs.memoryRequirements.size);
-
-        memReqs = _ctx->getDevice().getAccelerationStructureMemoryRequirementsNV(
-            vk::AccelerationStructureMemoryRequirementsInfoNV(
-                vk::AccelerationStructureMemoryRequirementsTypeNV::eUpdateScratch,
-                bs->getAccelerationStruct()
-            ), _ctx->getDynamicDispatch()
-        );
-
-        scratchSize = glm::max<uint64_t>(memReqs.memoryRequirements.size, scratchSize);
-
-	}
-
-	if (!_scratchBuffer || _scratchBuffer->getSize() < scratchSize) {
-		_scratchBuffer = _ctx->makeBuffer(vk::BufferUsageFlagBits::eRayTracingNV, scratchSize, VulkanBuffer::CPU_NEVER);
-	}
 }

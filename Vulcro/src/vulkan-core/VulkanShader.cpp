@@ -245,8 +245,7 @@ vk::ShaderModule VulkanShader::createModule(VulkanContextPtr ctx, const char * p
 		ctx->getDynamicDispatch()
 	);
 
-	delete cdata;
-
+    delete[] cdata;
 	return module;
 }
 

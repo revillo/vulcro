@@ -1,34 +1,66 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
 #include "General.h"
 #include <unordered_map>
-
-typedef const char * FilePath;
+#include <vulkan/vulkan.hpp>
+#include "../VulcroTypes.h"
 
 struct VulkanSetLayoutBinding {
 
-	VulkanSetLayoutBinding(uint32_t _arrayCount, vk::DescriptorType _type, vk::Sampler const * _samplers = nullptr, vk::ShaderStageFlags _stageFlags = vk::ShaderStageFlagBits::eAll) :
-		type(_type), 
-		arrayCount(_arrayCount),
-		samplers(_samplers),
+    VulkanSetLayoutBinding(uint32_t _arrayCount, vk::DescriptorType _type, vk::Sampler const * _samplers = nullptr, vk::ShaderStageFlags _stageFlags = vk::ShaderStageFlagBits::eAll) :
+        type(_type),
+        arrayCount(_arrayCount),
+        samplers(_samplers),
         stageFlags(_stageFlags)
-	{}
+    {}
 
     VulkanSetLayoutBinding()
     {}
 
-	vk::DescriptorType type = vk::DescriptorType::eUniformBuffer;
-	uint32_t arrayCount = 1;
-	vk::Sampler const * samplers = nullptr;
+    vk::DescriptorType type = vk::DescriptorType::eUniformBuffer;
+    uint32_t arrayCount = 1;
+    vk::Sampler const * samplers = nullptr;
     vk::ShaderStageFlags stageFlags = vk::ShaderStageFlagBits::eAll;
 };
 
+
+struct VkGeometryInstance {
+    //Row major affine transform
+
+    VkGeometryInstance()
+    {
+        transform = { { 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 } };
+        mask = 0xff;
+        instanceShaderBindingTableRecordOffset = 0;
+        flags = 0;
+        accelerationStructureHandle = 0;
+    }
+
+    std::array<float, 12> transform = { { 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 } };
+
+    //Custom instance index mapped to glsl gl_InstanceCustomIndexNV
+    uint32_t instanceCustomIndex : 24;
+
+    //Visibilty mask for TraceNV
+    uint32_t mask : 8;
+
+    //Index of hit shader group to use when ray hits this instance
+    uint32_t instanceShaderBindingTableRecordOffset : 24;
+
+    //see VkGeometryInstanceFlagBitsKHR / VkGeometryInstanceFlagBitsNV
+    uint32_t flags : 8;
+
+    //The handle to the corresponding geometry BLAS
+    uint64_t accelerationStructureHandle;
+};
+
+
+
 struct PipelineConfig {
-	vk::PrimitiveTopology topology = vk::PrimitiveTopology::eTriangleList;
-	uint32_t patchCount = 3;
-	vk::CullModeFlags cullFlags = vk::CullModeFlagBits::eBack;
-	vk::FrontFace frontFace = vk::FrontFace::eCounterClockwise;
+    vk::PrimitiveTopology topology = vk::PrimitiveTopology::eTriangleList;
+    uint32_t patchCount = 3;
+    vk::CullModeFlags cullFlags = vk::CullModeFlagBits::eBack;
+    vk::FrontFace frontFace = vk::FrontFace::eCounterClockwise;
 };
 
 enum VulkanColorBlend {
@@ -43,83 +75,8 @@ struct ColorBlendConfig {
 
 typedef VulkanSetLayoutBinding SLB;
 
-class VulkanSetLayout;
-class VulkanSet;
-class VulkanVertexLayout;
-class VulkanRenderer;
-class VulkanShader;
-class VulkanRenderPipeline;
-class VulkanComputePipeline;
-class VulkanSwapchain;
-class VulkanBuffer;
-class VulkanSet;
-class VulkanTask;
-class VulkanTaskGroup;
-class VulkanTaskPool;
-class VulkanImage;
-class VulkanImage1D;
-class VulkanImage2D;
-class VulkanImage3D;
-class VulkanImageCube;
-
-class RTGeometry;
-class RTScene;
-class RTPipeline;
-class RTShaderBuilder;
-
-template <class T>
-class ubo;
-
-template <class T>
-class vbo;
-
-template <class T>
-class static_vbo;
-
-template <class T>
-class dynamic_vbo;
-
-template <class T>
-class dynamic_ssbo;
-
-class ibo;
-class ivbo;
-
-typedef shared_ptr<VulkanShader> VulkanShaderRef;
-typedef shared_ptr<VulkanRenderer> VulkanRendererRef;
-typedef shared_ptr<VulkanRenderPipeline> VulkanRenderPipelineRef;
-typedef VulkanRenderPipelineRef VulkanPipelineRef;
-typedef shared_ptr<VulkanSetLayout> VulkanSetLayoutRef;
-typedef shared_ptr<VulkanVertexLayout> VulkanVertexLayoutRef;
-typedef shared_ptr<VulkanSwapchain> VulkanSwapchainRef;
-typedef shared_ptr<VulkanBuffer> VulkanBufferRef;
-typedef shared_ptr<VulkanSet> VulkanSetRef;
-typedef shared_ptr<VulkanTask> VulkanTaskRef;
-typedef shared_ptr<VulkanImage> VulkanImageRef;
-typedef shared_ptr<VulkanImage1D> VulkanImage1DRef;
-typedef shared_ptr<VulkanImage2D> VulkanImage2DRef;
-typedef shared_ptr<VulkanImage3D> VulkanImage3DRef;
-typedef shared_ptr<VulkanImageCube> VulkanImageCubeRef;
-typedef shared_ptr<VulkanTaskGroup> VulkanTaskGroupRef;
-typedef shared_ptr<VulkanComputePipeline> VulkanComputePipelineRef;
-typedef shared_ptr<VulkanTaskPool> VulkanTaskPoolRef;
-
-typedef shared_ptr<RTGeometry> RTGeometryRef;
-typedef shared_ptr<RTShaderBuilder> RTShaderBuilderRef;
-typedef shared_ptr<RTPipeline> RTPipelineRef;
-typedef shared_ptr<RTScene> RTSceneRef;
-typedef shared_ptr<ibo> iboRef;
-typedef shared_ptr<ivbo> vboRef;
-//typedef shared_ptr<issbo> ssboRef;
-
-template<typename T>
-using uboRef = shared_ptr<ubo<T>>;
-
 class VulkanContext
 {
-
-
-
     template<typename T, typename ErrorCode>
     struct res {
 
@@ -359,6 +316,12 @@ public:
 
 	shared_ptr<ibo> makeIBO(shared_ptr<ibo> sourceIbo, uint32_t indexOffset, uint32_t numIndices);
 
+    template <class T>
+    VulkanCoherentArrayRef<T> makeCoherentArray(uint32_t arrayCount, vk::BufferUsageFlags usageFlags)
+    {
+        return VulkanCoherentArrayRef<T>(new VulkanCoherentArray<T>(this, arrayCount, usageFlags));
+    }
+
     /****************************
         RTX
     ****************************/
@@ -366,10 +329,13 @@ public:
 	RTGeometryRef makeRayTracingGeometry(iboRef indexBuffer, vboRef vertexBuffer);
     RTGeometryRef makeRayTracingGeometry(uint64_t aabbCount, uint64_t aabbOffset, VulkanBufferRef aabbBuffer);
     RTGeometryRef makeRayTracingGeometry(VulkanBufferRef vertexBuffer, uint64_t vertexCount, uint32_t vertexStride, uint32_t positionOffset = 0, vk::Format positionFormat = vk::Format::eR32G32B32A32Sfloat);
+    RTBlasRepoRef makeRayTracingBlasRepo();
+    RTTopStructureManagerRef makeRayTracingTopStructureManager(uint32_t numInstances);
 
 	RTShaderBuilderRef makeRayTracingShaderBuilder(const char * raygenPath, vk::ArrayProxy<const VulkanSetLayoutRef> setLayouts);
 	RTPipelineRef makeRayTracingPipeline(RTShaderBuilderRef shader);
 	RTSceneRef makeRayTracingScene();
+	RTSceneRef makeRayTracingScene(RTBlasRepoRef repo);
 		
 	uint32_t getFamilyIndex() {
 		return _familyIndex;
@@ -408,5 +374,3 @@ private:
 	vk::Sampler createSampler2D(vk::Filter filter);
 };
 
-typedef VulkanContext * VulkanContextPtr;
-typedef std::shared_ptr<VulkanContext> VulkanContextRef;

@@ -6,6 +6,7 @@
 #include "vulkan-core/VulkanTaskPool.h"
 #include "vulkan-core/VulkanSwapchain.h"
 #include "vulkan-rtx/RTAccelerationStructure.h"
+#include "vulkan-rtx/RTScene.h"
 #include "vulkan-rtx/RTPipeline.h"
 #include "vulkan-core/VulkanInstance.h"
 #include "vulkan-window/VulkanWindowSDL.h"

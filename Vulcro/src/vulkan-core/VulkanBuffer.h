@@ -136,11 +136,6 @@ public:
 	virtual ~iubo() {};
 };
 
-
-typedef shared_ptr<iubo> iuboRef;
-
-
-
 template <class T>
 class ubo : public iubo {
 public:
@@ -222,8 +217,6 @@ public:
 	virtual vk::DeviceSize getOffset() = 0;
 	virtual VulkanBufferRef getSharedBuffer() = 0;
 };
-
-typedef shared_ptr<ivbo> vboRef;
 
 template <class T>
 class static_vbo : public ivbo {
@@ -394,7 +387,7 @@ public:
 	}
 
 	vk::IndexType getType() {
-		return vk::IndexType::eUint16;
+		return vk::IndexType::eUint32;
 	}
 
 private:
@@ -405,8 +398,6 @@ private:
 
 };
 
-typedef shared_ptr<ibo> iboRef;
-
 class issbo {
 public:
 
@@ -414,54 +405,57 @@ public:
 	virtual ~issbo() {};
 };
 
-typedef shared_ptr<issbo> ssboRef;
-
-template<class T>
-class dynamic_ssbo : public issbo {
+template<typename T>
+class VulkanCoherentArray
+{
 public:
+    VulkanCoherentArray(VulkanContextPtr ctx, uint32_t arrayCount, vk::BufferUsageFlags usageFlags = vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc) :
+        _arrayCount(arrayCount)
+    {
+        _vbr = ctx->makeBuffer(usageFlags, sizeof(T) * arrayCount, VulkanBuffer::CPU_ALOT, nullptr);
+        _values = (T*)_vbr->getMapped();
+    }
 
-    dynamic_ssbo(VulkanContextPtr ctx, uint32_t arrayCount) :
-		_arrayCount(arrayCount) 
-	{
-		_vbr = ctx->makeBuffer(vk::BufferUsageFlagBits::eStorageBuffer, sizeof(T) * arrayCount, VulkanBuffer::CPU_ALOT, nullptr);
-        _values = _vbr->getMapped();
-	}
+    VULCRO_DONT_COPY(VulkanCoherentArray)
 
-	VULCRO_DONT_COPY(dynamic_ssbo)
-
-
-    /*
-	T* getMapped() {
-		return static_cast<T*>(_vbr->getMapped());
-	}
-	
-	void unmap() {
-		_vbr->unmap();
-	}*/
+    uint32_t getArrayCount()
+    {
+        return _arrayCount;
+    }
 
     void set(uint32_t i, T const & value)
     {
-        values[i] = value;
+        _values[i] = value;
     }
 
-    T & at(uint32_t)
+
+    T & at(uint32_t i)
     {
-        return values[i];
+        return _values[i];
     }
 
-	VulkanBufferRef getBuffer() override {
-		return _vbr;
-	}
-
-	~dynamic_ssbo() {
-		if (_heapBuffer != nullptr) {
-			delete _heapBuffer;
-		}
-	}
+    VulkanBufferRef getBuffer() {
+        return _vbr;
+    }
 
 protected:
 
-	T* _values = nullptr;
-	uint32_t _arrayCount;
-	VulkanBufferRef _vbr;
+    T* _values = nullptr;
+    uint32_t _arrayCount;
+    VulkanBufferRef _vbr;
+};
+
+
+template<class T>
+class dynamic_ssbo : public issbo, public VulkanCoherentArray<T> {
+public:
+
+    dynamic_ssbo(VulkanContextPtr ctx, uint32_t arrayCount) :
+        VulkanCoherentArray(ctx, arrayCount, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc)
+    {}
+
+    VulkanBufferRef getBuffer() {
+        return _vbr;
+    }
+
 };

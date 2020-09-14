@@ -13,6 +13,7 @@
 #include "VulkanShader.h"
 #include "../vulkan-rtx/RTPipeline.h"
 #include "../vulkan-rtx/RTAccelerationStructure.h"
+#include "../vulkan-rtx/RTScene.h"
 
 VulkanContext::VulkanContext(vk::Instance instance, vk::PhysicalDevice& pDevice, const std::vector<const char *> & deviceExtensions)
 	:_instance(instance),
@@ -65,29 +66,48 @@ VulkanContext::VulkanContext(vk::Instance instance, vk::PhysicalDevice& pDevice,
 		addExtensionSafe(ext);
 	}
 
-	auto features = vk::PhysicalDeviceFeatures();
+    auto features = vk::PhysicalDeviceFeatures();
 
 	features.setTessellationShader(true);
 	features.setGeometryShader(true);
 	features.setShaderStorageImageExtendedFormats(true);
 	features.setFragmentStoresAndAtomics(true);
 	features.setVertexPipelineStoresAndAtomics(true);
+    features.setShaderUniformBufferArrayDynamicIndexing(true);
+
+    auto features2 = vk::PhysicalDeviceFeatures2();
+    features2.setFeatures(features);
+
+    auto indexingFeatures = vk::PhysicalDeviceDescriptorIndexingFeaturesEXT();
+    indexingFeatures.setRuntimeDescriptorArray(true);
+    indexingFeatures.setDescriptorBindingPartiallyBound(true);
+    indexingFeatures.setDescriptorBindingVariableDescriptorCount(true);
+    indexingFeatures.setShaderStorageTexelBufferArrayDynamicIndexing(true);
+
+    indexingFeatures.setPNext(nullptr);
+
+
+    features2.setPNext(&indexingFeatures);
+
 
 	float qpriors[1] = { 0.0f };
 
 	auto devQ = vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), familyIndex, 1, qpriors);
 
-	_device = pDevice.createDevice(
-		vk::DeviceCreateInfo(
-			vk::DeviceCreateFlags(),
-			1,
-			&devQ,
-			0, //Enabled Layers 
-			nullptr, 
-			static_cast<uint32_t>(extensions.size()), &extensions[0],
-			&features //enabled features
-		)
-	);
+    vk::DeviceCreateInfo devCreateInfo;
+    devCreateInfo.flags = vk::DeviceCreateFlags();
+    devCreateInfo.pNext = &features2;
+    devCreateInfo.enabledLayerCount = 0;
+    devCreateInfo.queueCreateInfoCount = 1;
+    devCreateInfo.pQueueCreateInfos = &devQ;
+    devCreateInfo.ppEnabledLayerNames = nullptr;
+    devCreateInfo.enabledExtensionCount = extensions.size();
+    devCreateInfo.ppEnabledExtensionNames = &extensions[0];
+    devCreateInfo.pEnabledFeatures = nullptr;
+   
+
+	_device = pDevice.createDevice(devCreateInfo);
+
     
     mPhysicalDeviceProperties = pDevice.getProperties();
 
@@ -445,6 +465,11 @@ VulkanImageCubeRef VulkanContext::makeImageCube(vk::ImageUsageFlags usage, glm::
 	return make_shared<VulkanImageCube>(this, usage, size, format);
 }
 
+RTBlasRepoRef VulkanContext::makeRayTracingBlasRepo()
+{
+    return RTBlasRepoRef(new RTBlasRepo(this));
+}
+
 RTGeometryRef VulkanContext::makeRayTracingGeometry(iboRef indexBuffer, vboRef vertexBuffer)
 {
 	return make_shared<RTGeometry>(indexBuffer, vertexBuffer);
@@ -473,4 +498,14 @@ shared_ptr<RTPipeline> VulkanContext::makeRayTracingPipeline(RTShaderBuilderRef 
 shared_ptr<RTScene> VulkanContext::makeRayTracingScene()
 {
 	return make_shared<RTScene>(this);
+}
+
+shared_ptr<RTScene> VulkanContext::makeRayTracingScene(RTBlasRepoRef geoRepoRef)
+{
+    return shared_ptr<RTScene>(new RTScene(this, geoRepoRef));
+}
+
+RTTopStructureManagerRef VulkanContext::makeRayTracingTopStructureManager(uint32_t numInstances)
+{
+    return RTTopStructureManagerRef(new RTTopStructureManager(this, numInstances));
 }

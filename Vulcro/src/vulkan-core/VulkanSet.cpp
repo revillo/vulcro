@@ -2,6 +2,7 @@
 
 #include "VulkanSetLayout.h"
 #include "../vulkan-rtx/RTAccelerationStructure.h"
+#include "../vulkan-rtx/RTScene.h"
 
 VulkanSet::VulkanSet(VulkanContextPtr ctx, VulkanSetLayoutRef layout) :
 	_ctx(ctx),
@@ -12,6 +13,8 @@ VulkanSet::VulkanSet(VulkanContextPtr ctx, VulkanSetLayoutRef layout) :
 
 void VulkanSet::bindBuffer(uint32_t binding, VulkanBufferRef buffer)
 {
+    if (!buffer) return;
+
 	vector<VulkanBufferRef> bv = { buffer };
 	bindBufferArray(binding, bv);
 }
@@ -176,6 +179,33 @@ void VulkanSet::bindImage(uint32_t binding, VulkanImageRef image, vk::Descriptor
 
 }
 
+void VulkanSet::bindTopStructure(uint32_t binding, RTTopStructureRef topStructure)
+{
+    if (!topStructure) return;
+
+    auto writeas = topStructure->getWriteDescriptor();
+
+    auto write = vk::WriteDescriptorSet(
+        _descriptorSet,
+        binding,
+        0,
+        1,
+        vk::DescriptorType::eAccelerationStructureNV,
+        nullptr,
+        nullptr,
+        nullptr
+    );
+
+    write.setPNext(&writeas);
+
+    _ctx->getDevice().updateDescriptorSets(
+        1,
+        &write,
+        0,
+        nullptr,
+        _ctx->getDynamicDispatch()
+    );
+}
 
 void VulkanSet::bindRTScene(uint32_t binding, RTSceneRef rtscene)
 {
@@ -212,7 +242,8 @@ void VulkanSet::update() {
 		static_cast<uint32_t>(_writes.size()),
 		&_writes[0],
 		0,
-		nullptr
+		nullptr,
+        _ctx->getDynamicDispatch()
 	);
 
 	_writes.clear();
